@@ -1,0 +1,99 @@
+package com.waad.tba.modules.provider.entity;
+
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+
+@Entity
+@Table(name = "providers")
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class Provider {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(nullable = false, length = 200)
+    private String nameArabic;
+
+    @Column(nullable = false, length = 200)
+    private String nameEnglish;
+
+    @Column(unique = true, nullable = false, length = 100)
+    private String licenseNumber;
+
+    @Column(length = 50)
+    private String taxNumber;
+
+    @Column(length = 100)
+    private String city;
+
+    @Column(length = 500)
+    private String address;
+
+    @Column(length = 50)
+    private String phone;
+
+    @Column(length = 100)
+    private String email;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private ProviderType providerType;
+
+    @Column(nullable = false)
+    @Builder.Default
+    private Boolean active = true;
+
+    private LocalDate contractStartDate;
+
+    private LocalDate contractEndDate;
+
+    @Column(precision = 5, scale = 2)
+    private BigDecimal defaultDiscountRate;
+
+    @Column(updatable = false)
+    private LocalDateTime createdAt;
+
+    private LocalDateTime updatedAt;
+
+    @Column(length = 100)
+    private String createdBy;
+
+    @Column(length = 100)
+    private String updatedBy;
+
+    @OneToMany(mappedBy = "provider", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<ProviderContract> contracts = new ArrayList<>();
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
+
+    public enum ProviderType {
+        HOSPITAL,
+        CLINIC,
+        LAB,
+        PHARMACY,
+        RADIOLOGY
+    }
+}

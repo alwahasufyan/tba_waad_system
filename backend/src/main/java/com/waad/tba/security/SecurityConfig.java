@@ -1,0 +1,137 @@
+package com.waad.tba.security;
+
+import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.util.Arrays;
+import java.util.List;
+
+@Configuration
+@EnableWebSecurity
+@EnableMethodSecurity
+@RequiredArgsConstructor
+public class SecurityConfig {
+
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final SessionAuthenticationFilter sessionAuthenticationFilter; // Phase B: Session support
+    private final UserDetailsService userDetailsService;
+
+    @Bean
+    SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        http
+                // AUDIT FIX: Defense-in-Depth CSRF Protection
+                // Uses CookieCsrfTokenRepository for session-based web clients
+                // Strategy:
+                // - Enable CSRF for session-based endpoints (POST/PUT/DELETE)
+                // - Ignore CSRF for JWT-based mobile endpoints (stateless)
+                // - Ignore CSRF for login/logout (chicken-and-egg problem)
+                // - Frontend reads XSRF-TOKEN cookie and sends X-XSRF-TOKEN header
+                .csrf(csrf -> csrf
+                    .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+                    .ignoringRequestMatchers(
+                        // Authentication endpoints (no CSRF token yet)
+                        "/api/auth/session/login",
+                        "/api/auth/session/logout",
+                        // JWT endpoints (for future mobile clients - stateless)
+                        "/api/auth/login",
+                        "/api/auth/register",
+                        "/api/auth/refresh",
+                        // Public endpoints (no authentication required)
+                        "/v3/api-docs/**",
+                        "/swagger-ui/**"
+                    )
+                )
+                
+                // CORS configuration with credentials support (required for session cookies)
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                
+                // Authorization rules
+                .authorizeHttpRequests(auth -> auth
+                        // Public endpoints - Authentication
+                        .requestMatchers("/api/auth/**").permitAll()
+                        // Swagger / OpenAPI endpoints
+                        .requestMatchers(
+                                "/v3/api-docs/**",
+                                "/swagger-ui/**",
+                                "/swagger-ui.html",
+                                "/swagger-resources/**",
+                                "/webjars/**",
+                                "/error"
+                        ).permitAll()
+                        // All other endpoints require authentication
+                        .anyRequest().authenticated()
+                )
+                
+                // Session management configuration
+                .sessionManagement(session -> session
+                        // Phase C.1: Session Policy Review
+                        // IF_REQUIRED allows Spring to create sessions when needed (session auth)
+                        // while still supporting stateless requests (JWT auth)
+                        // This enables dual authentication support (Session OR JWT)
+                        .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
+                )
+                
+                .authenticationProvider(authenticationProvider())
+                
+                // Phase C.1: Filter Chain Order (CRITICAL for security)
+                // Order matters: SessionAuthenticationFilter → JwtAuthenticationFilter → UsernamePasswordAuthenticationFilter
+                // 1. SessionAuthenticationFilter checks for valid HTTP session first (preferred)
+                // 2. If no session, JwtAuthenticationFilter checks for Bearer token (legacy fallback)
+                // 3. UsernamePasswordAuthenticationFilter handles form-based login (not used in our API)
+                .addFilterBefore(sessionAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+
+        return http.build();
+    }
+
+    @Bean
+    CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        configuration.setAllowedOrigins(List.of("http://localhost:3000", "http://localhost:5173"));
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+        configuration.setAllowedHeaders(Arrays.asList("*"));
+        // AUDIT FIX: Expose CSRF token cookie to frontend
+        configuration.setExposedHeaders(Arrays.asList("Authorization", "X-Employer-ID", "X-XSRF-TOKEN"));
+        configuration.setAllowCredentials(true);
+        
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
+    }
+
+    @Bean
+    AuthenticationProvider authenticationProvider() {
+        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider(passwordEncoder());
+        authProvider.setUserDetailsService(userDetailsService);
+        return authProvider;
+    }
+
+    @Bean
+    AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
+        return config.getAuthenticationManager();
+    }
+
+    @Bean
+    PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
+}
