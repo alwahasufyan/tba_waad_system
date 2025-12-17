@@ -38,12 +38,12 @@ public class VisitService {
 
     @Transactional(readOnly = true)
     public List<VisitResponseDto> findAll() {
-        log.debug("Finding all visits with data-level filtering");
+        log.debug("📋 Finding all visits with data-level filtering");
         
         // Get current user and apply role-based filtering
         User currentUser = authorizationService.getCurrentUser();
         if (currentUser == null) {
-            log.warn("No authenticated user found when accessing visits list");
+            log.warn("⚠️ No authenticated user found when accessing visits list");
             return Collections.emptyList();
         }
         
@@ -51,27 +51,19 @@ public class VisitService {
         
         // Apply data-level security based on user role
         if (authorizationService.isSuperAdmin(currentUser)) {
-            // SUPER_ADMIN: Access to all visits
-            log.debug("SUPER_ADMIN access: returning all visits");
+            // SUPER_ADMIN: Access to ALL visits (no filter)
+            log.debug("✅ SUPER_ADMIN access: returning all visits");
             visits = repository.findAll();
             
         } else if (authorizationService.isInsuranceAdmin(currentUser)) {
-            // INSURANCE_ADMIN: Filter by insurance company
-            Long companyFilter = authorizationService.getCompanyFilterForUser(currentUser);
-            if (companyFilter != null) {
-                log.info("Applying insurance company filter for visits: companyId={} for user {}", 
-                    companyFilter, currentUser.getUsername());
-                // Get visits for members belonging to this insurance company
-                visits = repository.findByMemberInsuranceCompanyId(companyFilter);
-            } else {
-                log.debug("INSURANCE_ADMIN access: returning all visits (no company filter)");
-                visits = repository.findAll();
-            }
+            // INSURANCE_ADMIN: Access to ALL visits (no company filter - single insurance model)
+            log.debug("✅ INSURANCE_ADMIN access: returning all visits");
+            visits = repository.findAll();
             
         } else if (authorizationService.isEmployerAdmin(currentUser)) {
-            // EMPLOYER_ADMIN: Check feature toggle first (Phase 9)
+            // EMPLOYER_ADMIN: Check feature toggle first
             if (!authorizationService.canEmployerViewVisits(currentUser)) {
-                log.warn("FeatureCheck: EMPLOYER_ADMIN user {} attempted to view visits but feature VIEW_VISITS is disabled", 
+                log.warn("❌ FeatureCheck: EMPLOYER_ADMIN user {} attempted to view visits but feature VIEW_VISITS is disabled", 
                     currentUser.getUsername());
                 return Collections.emptyList();
             }
@@ -79,17 +71,17 @@ public class VisitService {
             // Feature enabled: Filter by employer
             Long employerId = authorizationService.getEmployerFilterForUser(currentUser);
             if (employerId == null) {
-                log.warn("EMPLOYER_ADMIN user {} has no employerId assigned", currentUser.getUsername());
+                log.warn("⚠️ EMPLOYER_ADMIN user {} has no employerId assigned", currentUser.getUsername());
                 return Collections.emptyList();
             }
             
-            log.info("Applying employer filter for visits: employerId={} for user {}", 
+            log.info("🔒 Applying employer filter for visits: employerId={} for user {}", 
                 employerId, currentUser.getUsername());
             visits = repository.findByMemberEmployerId(employerId);
             
         } else {
             // REVIEWER, PROVIDER, USER: No access to visits list
-            log.warn("Access denied: user {} with roles {} attempted to access visits list", 
+            log.warn("❌ Access denied: user {} with roles {} attempted to access visits list", 
                 currentUser.getUsername(), 
                 currentUser.getRoles().stream()
                     .map(r -> r.getName())

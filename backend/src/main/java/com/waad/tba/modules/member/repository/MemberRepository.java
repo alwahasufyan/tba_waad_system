@@ -47,6 +47,26 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
            "LOWER(m.cardNumber) LIKE LOWER(CONCAT('%', :search, '%')))")
     Page<Member> searchByEmployer(@Param("employerId") Long employerId, @Param("search") String search, Pageable pageable);
     
+    /**
+     * Search members by employer ID with pagination (alias for searchByEmployer)
+     */
+    @Query("SELECT m FROM Member m WHERE m.employer.id = :employerId AND (" +
+           "LOWER(m.fullNameEnglish) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
+           "LOWER(m.fullNameArabic) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
+           "LOWER(m.civilId) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
+           "LOWER(m.cardNumber) LIKE LOWER(CONCAT('%', :search, '%')))")
+    Page<Member> searchPagedByEmployerId(@Param("search") String search, @Param("employerId") Long employerId, Pageable pageable);
+    
+    /**
+     * Search members by employer ID (non-paginated)
+     */
+    @Query("SELECT m FROM Member m WHERE m.employer.id = :employerId AND (" +
+           "LOWER(m.fullNameEnglish) LIKE LOWER(CONCAT('%', :query, '%')) OR " +
+           "LOWER(m.fullNameArabic) LIKE LOWER(CONCAT('%', :query, '%')) OR " +
+           "LOWER(m.civilId) LIKE LOWER(CONCAT('%', :query, '%')) OR " +
+           "LOWER(m.cardNumber) LIKE LOWER(CONCAT('%', :query, '%')))")
+    List<Member> searchByEmployerId(@Param("query") String query, @Param("employerId") Long employerId);
+    
     @Query("SELECT m FROM Member m WHERE " +
            "LOWER(m.fullNameEnglish) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
            "LOWER(m.fullNameArabic) LIKE LOWER(CONCAT('%', :search, '%')) OR " +

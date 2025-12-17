@@ -20,13 +20,66 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Authorization Service - Phase 8
+ * ================================================================================================
+ * TBA-WAAD Authorization Service - SIMPLIFIED SECURITY MODEL
+ * ================================================================================================
  * 
- * Handles permission-based and data-level access control.
- * Enforces employer-level, insurance-level, and provider-level restrictions.
+ * CRITICAL BUSINESS RULES (DO NOT MODIFY):
  * 
+ * 1. There is ONLY ONE insurance company in the system.
+ * 2. Insurance companies are NOT a security boundary.
+ * 3. Companies table is for SYSTEM-LEVEL settings only (branding, features).
+ * 4. Employers are the ONLY data-level security boundary.
+ * 
+ * ================================================================================================
+ * AUTHORIZATION MODEL:
+ * ================================================================================================
+ * 
+ * SUPER_ADMIN:
+ *   - Bypasses ALL authorization checks immediately.
+ *   - Can access ALL data without any restrictions.
+ *   - Never filtered by employerId or companyId.
+ * 
+ * INSURANCE_ADMIN:
+ *   - Behaves like SUPER_ADMIN for data access (for now).
+ *   - Can access ALL data without restrictions.
+ *   - No companyId filtering (single insurance company model).
+ * 
+ * EMPLOYER_ADMIN:
+ *   - Restricted STRICTLY by their employerId.
+ *   - Can ONLY access data belonging to their employer.
+ *   - Applied to: members, claims, visits, pre-approvals.
+ * 
+ * PROVIDER:
+ *   - Restricted by provider-specific logic (to be implemented).
+ * 
+ * REVIEWER:
+ *   - Can access claims for review purposes only.
+ * 
+ * ================================================================================================
+ * KEY PRINCIPLES:
+ * ================================================================================================
+ * 
+ * 1. RBAC ≠ Data Filtering:
+ *    - RBAC (permissions) decides WHAT modules a user can access.
+ *    - Data filtering decides WHICH rows they can see.
+ *    - These are two SEPARATE concerns.
+ * 
+ * 2. SUPER_ADMIN is GOD MODE:
+ *    - Always returns TRUE for all checks.
+ *    - Always returns NULL for filters (no filtering).
+ * 
+ * 3. EMPLOYER_ADMIN is the ONLY role with data-level restrictions:
+ *    - Filter query: WHERE employer_id = user.employerId
+ * 
+ * 4. Company filtering has been REMOVED:
+ *    - No more companyId checks.
+ *    - No more insuranceCompanyId filtering.
+ * 
+ * ================================================================================================
  * @author TBA WAAD System
- * @version 1.0
+ * @version 2.0 - SIMPLIFIED MODEL
+ * ================================================================================================
  */
 @Service
 @RequiredArgsConstructor
@@ -39,13 +92,19 @@ public class AuthorizationService {
     private final VisitRepository visitRepository;
     private final CompanySettingsService companySettingsService;
 
+    // =============================================================================================
+    // CORE UTILITY METHODS
+    // =============================================================================================
+
     /**
-     * Get currently authenticated user from security context.
+     * Get the currently authenticated user from the security context.
+     * 
+     * @return Current authenticated User, or null if not authenticated
      */
     public User getCurrentUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {
-            log.warn("No authenticated user found in security context");
+            log.warn("⚠️ No authenticated user found in security context");
             return null;
         }
 
@@ -53,8 +112,16 @@ public class AuthorizationService {
         return userRepository.findByUsername(username).orElse(null);
     }
 
+    // =============================================================================================
+    // ROLE CHECK METHODS (RBAC)
+    // =============================================================================================
+
     /**
-     * Check if user is SUPER_ADMIN (bypasses all restrictions).
+     * Check if user has SUPER_ADMIN role.
+     * SUPER_ADMIN bypasses ALL authorization checks.
+     * 
+     * @param user User to check
+     * @return true if user is SUPER_ADMIN
      */
     public boolean isSuperAdmin(User user) {
         if (user == null || user.getRoles() == null) {
@@ -65,7 +132,11 @@ public class AuthorizationService {
     }
 
     /**
-     * Check if user is INSURANCE_ADMIN.
+     * Check if user has INSURANCE_ADMIN role.
+     * INSURANCE_ADMIN behaves like SUPER_ADMIN for data access.
+     * 
+     * @param user User to check
+     * @return true if user is INSURANCE_ADMIN
      */
     public boolean isInsuranceAdmin(User user) {
         if (user == null || user.getRoles() == null) {
@@ -76,7 +147,11 @@ public class AuthorizationService {
     }
 
     /**
-     * Check if user is EMPLOYER_ADMIN.
+     * Check if user has EMPLOYER_ADMIN role.
+     * EMPLOYER_ADMIN is restricted by their employerId.
+     * 
+     * @param user User to check
+     * @return true if user is EMPLOYER_ADMIN
      */
     public boolean isEmployerAdmin(User user) {
         if (user == null || user.getRoles() == null) {
@@ -87,7 +162,10 @@ public class AuthorizationService {
     }
 
     /**
-     * Check if user is PROVIDER.
+     * Check if user has PROVIDER role.
+     * 
+     * @param user User to check
+     * @return true if user is PROVIDER
      */
     public boolean isProvider(User user) {
         if (user == null || user.getRoles() == null) {
@@ -98,7 +176,10 @@ public class AuthorizationService {
     }
 
     /**
-     * Check if user is REVIEWER.
+     * Check if user has REVIEWER role.
+     * 
+     * @param user User to check
+     * @return true if user is REVIEWER
      */
     public boolean isReviewer(User user) {
         if (user == null || user.getRoles() == null) {
@@ -108,29 +189,44 @@ public class AuthorizationService {
                 .anyMatch(role -> "REVIEWER".equals(role.getName()));
     }
 
+    // =============================================================================================
+    // DATA-LEVEL ACCESS CONTROL METHODS
+    // =============================================================================================
+
     /**
      * Check if user can access a specific member.
      * 
-     * Rules:
-     * - SUPER_ADMIN: Full access
-     * - INSURANCE_ADMIN: Access if member's insurance company matches user's company
-     * - EMPLOYER_ADMIN: Access if member's employer matches user's employer
-     * - Others: No access
+     * AUTHORIZATION RULES:
+     * - SUPER_ADMIN: ✅ Full access (always TRUE)
+     * - INSURANCE_ADMIN: ✅ Full access (always TRUE)
+     * - EMPLOYER_ADMIN: ✅ Only if member.employerId == user.employerId
+     * - Others: ❌ No access
+     * 
+     * @param user Current user
+     * @param memberId ID of the member to access
+     * @return true if user can access the member
      */
     public boolean canAccessMember(User user, Long memberId) {
         if (user == null || memberId == null) {
-            log.warn("Access denied: null user or memberId");
+            log.warn("❌ canAccessMember: DENIED - null user or memberId");
             return false;
         }
 
         // SUPER_ADMIN bypasses all checks
         if (isSuperAdmin(user)) {
+            log.debug("✅ canAccessMember: ALLOWED - user={} is SUPER_ADMIN", user.getUsername());
+            return true;
+        }
+
+        // INSURANCE_ADMIN has full access
+        if (isInsuranceAdmin(user)) {
+            log.debug("✅ canAccessMember: ALLOWED - user={} is INSURANCE_ADMIN", user.getUsername());
             return true;
         }
 
         Optional<Member> memberOpt = memberRepository.findById(memberId);
         if (memberOpt.isEmpty()) {
-            log.warn("Access denied: member {} not found", memberId);
+            log.warn("❌ canAccessMember: DENIED - member {} not found", memberId);
             return false;
         }
 
@@ -139,277 +235,307 @@ public class AuthorizationService {
         // EMPLOYER_ADMIN: Check employer match
         if (isEmployerAdmin(user)) {
             if (user.getEmployerId() == null) {
-                log.warn("Access denied: EMPLOYER_ADMIN user {} has no employerId", user.getUsername());
+                log.warn("❌ canAccessMember: DENIED - EMPLOYER_ADMIN user {} has no employerId", user.getUsername());
                 return false;
             }
             if (member.getEmployer() == null || !user.getEmployerId().equals(member.getEmployer().getId())) {
-                log.warn("Access denied: user {} attempted to access member {} from different employer", 
+                log.warn("❌ canAccessMember: DENIED - user {} attempted to access member {} from different employer", 
                         user.getUsername(), memberId);
                 return false;
             }
+            log.debug("✅ canAccessMember: ALLOWED - user={} employer matches", user.getUsername());
             return true;
         }
 
-        // INSURANCE_ADMIN: Can access all members (for now, add company restriction if needed)
-        if (isInsuranceAdmin(user)) {
-            return true;
-        }
-
-        log.warn("Access denied: user {} attempted to access member {}", user.getUsername(), memberId);
+        log.warn("❌ canAccessMember: DENIED - user {} has no valid role for member access", user.getUsername());
         return false;
     }
 
     /**
      * Check if user can access a specific claim.
      * 
-     * Rules:
-     * - SUPER_ADMIN: Full access
-     * - INSURANCE_ADMIN: Access if claim's member belongs to insurance company
-     * - EMPLOYER_ADMIN: Access if claim's member belongs to employer
-     * - PROVIDER: Access if claim was created by this provider
-     * - REVIEWER: Full access to claims for review
-     * - Others: No access
+     * AUTHORIZATION RULES:
+     * - SUPER_ADMIN: ✅ Full access (always TRUE)
+     * - INSURANCE_ADMIN: ✅ Full access (always TRUE)
+     * - REVIEWER: ✅ Full access for review purposes
+     * - EMPLOYER_ADMIN: ✅ Only if claim.member.employerId == user.employerId
+     * - PROVIDER: ✅ Can access claims (provider-specific logic TBD)
+     * - Others: ❌ No access
+     * 
+     * @param user Current user
+     * @param claimId ID of the claim to access
+     * @return true if user can access the claim
      */
     public boolean canAccessClaim(User user, Long claimId) {
         if (user == null || claimId == null) {
-            log.warn("Access denied: null user or claimId");
+            log.warn("❌ canAccessClaim: DENIED - null user or claimId");
             return false;
         }
 
         // SUPER_ADMIN bypasses all checks
         if (isSuperAdmin(user)) {
+            log.debug("✅ canAccessClaim: ALLOWED - user={} is SUPER_ADMIN", user.getUsername());
+            return true;
+        }
+
+        // INSURANCE_ADMIN has full access
+        if (isInsuranceAdmin(user)) {
+            log.debug("✅ canAccessClaim: ALLOWED - user={} is INSURANCE_ADMIN", user.getUsername());
+            return true;
+        }
+
+        // REVIEWER can access all claims for review
+        if (isReviewer(user)) {
+            log.debug("✅ canAccessClaim: ALLOWED - user={} is REVIEWER", user.getUsername());
             return true;
         }
 
         Optional<Claim> claimOpt = claimRepository.findById(claimId);
         if (claimOpt.isEmpty()) {
-            log.warn("Access denied: claim {} not found", claimId);
+            log.warn("❌ canAccessClaim: DENIED - claim {} not found", claimId);
             return false;
         }
 
         Claim claim = claimOpt.get();
 
-        // REVIEWER: Can access all claims for review
-        if (isReviewer(user)) {
-            return true;
-        }
-
-        // INSURANCE_ADMIN: Can access all claims
-        if (isInsuranceAdmin(user)) {
-            return true;
-        }
-
-        // PROVIDER: Can only access claims they created
+        // PROVIDER: Can access claims (TODO: implement createdBy check)
         if (isProvider(user)) {
-            // Note: Need to add createdBy field to Claim entity
-            // For now, allow access (implement after adding createdBy)
-            log.debug("Provider access to claim {} - need to implement createdBy check", claimId);
+            log.debug("✅ canAccessClaim: ALLOWED - user={} is PROVIDER (TODO: add createdBy check)", user.getUsername());
             return true;
         }
 
         // EMPLOYER_ADMIN: Check if claim's member belongs to their employer
         if (isEmployerAdmin(user)) {
             if (user.getEmployerId() == null) {
-                log.warn("Access denied: EMPLOYER_ADMIN user {} has no employerId", user.getUsername());
+                log.warn("❌ canAccessClaim: DENIED - EMPLOYER_ADMIN user {} has no employerId", user.getUsername());
                 return false;
             }
             if (claim.getMember() == null || claim.getMember().getEmployer() == null ||
                 !user.getEmployerId().equals(claim.getMember().getEmployer().getId())) {
-                log.warn("Access denied: user {} attempted to access claim {} from different employer", 
+                log.warn("❌ canAccessClaim: DENIED - user {} attempted to access claim {} from different employer", 
                         user.getUsername(), claimId);
                 return false;
             }
+            log.debug("✅ canAccessClaim: ALLOWED - user={} employer matches", user.getUsername());
             return true;
         }
 
-        log.warn("Access denied: user {} attempted to access claim {}", user.getUsername(), claimId);
+        log.warn("❌ canAccessClaim: DENIED - user {} has no valid role for claim access", user.getUsername());
         return false;
     }
 
     /**
      * Check if user can access a specific visit.
      * 
-     * Rules:
-     * - SUPER_ADMIN: Full access
-     * - INSURANCE_ADMIN: Access if visit's member belongs to insurance company
-     * - EMPLOYER_ADMIN: Access if visit's member belongs to employer
-     * - Others: No access
+     * AUTHORIZATION RULES:
+     * - SUPER_ADMIN: ✅ Full access (always TRUE)
+     * - INSURANCE_ADMIN: ✅ Full access (always TRUE)
+     * - EMPLOYER_ADMIN: ✅ Only if visit.member.employerId == user.employerId
+     * - Others: ❌ No access
+     * 
+     * @param user Current user
+     * @param visitId ID of the visit to access
+     * @return true if user can access the visit
      */
     public boolean canAccessVisit(User user, Long visitId) {
         if (user == null || visitId == null) {
-            log.warn("Access denied: null user or visitId");
+            log.warn("❌ canAccessVisit: DENIED - null user or visitId");
             return false;
         }
 
         // SUPER_ADMIN bypasses all checks
         if (isSuperAdmin(user)) {
+            log.debug("✅ canAccessVisit: ALLOWED - user={} is SUPER_ADMIN", user.getUsername());
+            return true;
+        }
+
+        // INSURANCE_ADMIN has full access
+        if (isInsuranceAdmin(user)) {
+            log.debug("✅ canAccessVisit: ALLOWED - user={} is INSURANCE_ADMIN", user.getUsername());
             return true;
         }
 
         Optional<Visit> visitOpt = visitRepository.findById(visitId);
         if (visitOpt.isEmpty()) {
-            log.warn("Access denied: visit {} not found", visitId);
+            log.warn("❌ canAccessVisit: DENIED - visit {} not found", visitId);
             return false;
         }
 
         Visit visit = visitOpt.get();
 
-        // INSURANCE_ADMIN: Can access all visits
-        if (isInsuranceAdmin(user)) {
-            return true;
-        }
-
         // EMPLOYER_ADMIN: Check if visit's member belongs to their employer
         if (isEmployerAdmin(user)) {
             if (user.getEmployerId() == null) {
-                log.warn("Access denied: EMPLOYER_ADMIN user {} has no employerId", user.getUsername());
+                log.warn("❌ canAccessVisit: DENIED - EMPLOYER_ADMIN user {} has no employerId", user.getEmployerId());
                 return false;
             }
             if (visit.getMember() == null || visit.getMember().getEmployer() == null ||
                 !user.getEmployerId().equals(visit.getMember().getEmployer().getId())) {
-                log.warn("Access denied: user {} attempted to access visit {} from different employer", 
+                log.warn("❌ canAccessVisit: DENIED - user {} attempted to access visit {} from different employer", 
                         user.getUsername(), visitId);
                 return false;
             }
+            log.debug("✅ canAccessVisit: ALLOWED - user={} employer matches", user.getUsername());
             return true;
         }
 
-        log.warn("Access denied: user {} attempted to access visit {}", user.getUsername(), visitId);
+        log.warn("❌ canAccessVisit: DENIED - user {} has no valid role for visit access", user.getUsername());
         return false;
     }
 
+    // =============================================================================================
+    // QUERY FILTERING METHODS (FOR SERVICE LAYER)
+    // =============================================================================================
+
     /**
-     * Filter members query by user's access level.
-     * Returns employerId for EMPLOYER_ADMIN, null for SUPER_ADMIN/INSURANCE_ADMIN.
+     * Get employer filter for queries.
+     * 
+     * USE THIS IN SERVICE LAYER TO FILTER QUERIES BY EMPLOYER.
+     * 
+     * FILTERING LOGIC:
+     * - SUPER_ADMIN: NULL (no filter - sees everything)
+     * - INSURANCE_ADMIN: NULL (no filter - sees everything)
+     * - EMPLOYER_ADMIN: user.employerId (filter by their employer)
+     * - Others: NULL (no filter - controlled by other means)
+     * 
+     * USAGE IN SERVICE:
+     * <pre>
+     * Long employerFilter = authorizationService.getEmployerFilterForUser(currentUser);
+     * if (employerFilter != null) {
+     *     return repository.findByEmployerId(employerFilter);
+     * } else {
+     *     return repository.findAll();
+     * }
+     * </pre>
+     * 
+     * @param user Current user
+     * @return employerId to filter by, or NULL if no filtering needed
      */
     public Long getEmployerFilterForUser(User user) {
         if (user == null) {
+            log.warn("⚠️ getEmployerFilterForUser: user is null, returning null filter");
             return null;
         }
 
-        // SUPER_ADMIN and INSURANCE_ADMIN see all
-        if (isSuperAdmin(user) || isInsuranceAdmin(user)) {
-            return null; // No filter
+        // SUPER_ADMIN sees ALL data - no filter
+        if (isSuperAdmin(user)) {
+            log.debug("🔓 getEmployerFilterForUser: user={} is SUPER_ADMIN - NO FILTER", user.getUsername());
+            return null;
         }
 
-        // EMPLOYER_ADMIN sees only their employer's data
+        // INSURANCE_ADMIN sees ALL data - no filter
+        if (isInsuranceAdmin(user)) {
+            log.debug("🔓 getEmployerFilterForUser: user={} is INSURANCE_ADMIN - NO FILTER", user.getUsername());
+            return null;
+        }
+
+        // EMPLOYER_ADMIN sees only THEIR employer's data
         if (isEmployerAdmin(user)) {
-            return user.getEmployerId();
-        }
-
-        return null;
-    }
-
-    /**
-     * Check if INSURANCE_ADMIN has access to data from specific company.
-     * Phase 8.2: Company-level filtering for insurance admins.
-     */
-    public boolean hasCompanyAccess(User user, Long companyId) {
-        if (user == null || companyId == null) {
-            return false;
-        }
-
-        // SUPER_ADMIN bypasses company restrictions
-        if (isSuperAdmin(user)) {
-            return true;
-        }
-
-        // INSURANCE_ADMIN: Check companyId match
-        if (isInsuranceAdmin(user)) {
-            if (user.getCompanyId() == null) {
-                log.warn("INSURANCE_ADMIN user {} has no companyId assigned", user.getUsername());
-                return false;
+            Long employerId = user.getEmployerId();
+            if (employerId == null) {
+                log.warn("⚠️ getEmployerFilterForUser: EMPLOYER_ADMIN user={} has no employerId!", user.getUsername());
+            } else {
+                log.debug("🔒 getEmployerFilterForUser: user={} filtered by employerId={}", user.getUsername(), employerId);
             }
-            return user.getCompanyId().equals(companyId);
+            return employerId;
         }
 
-        // Other roles don't have company-level restrictions
-        return true;
-    }
-
-    /**
-     * Get insurance company filter for INSURANCE_ADMIN users.
-     * Returns companyId for INSURANCE_ADMIN, null for SUPER_ADMIN.
-     * Phase 8.2: Company-level filtering.
-     */
-    public Long getCompanyFilterForUser(User user) {
-        if (user == null) {
-            return null;
-        }
-
-        // SUPER_ADMIN sees all companies
-        if (isSuperAdmin(user)) {
-            return null; // No filter
-        }
-
-        // INSURANCE_ADMIN sees only their company's data
-        if (isInsuranceAdmin(user)) {
-            return user.getCompanyId();
-        }
-
+        // Other roles: no filtering (for now)
+        log.debug("🔓 getEmployerFilterForUser: user={} has other role - NO FILTER", user.getUsername());
         return null;
     }
 
     /**
-     * Check if user can modify claim (approve/reject).
+     * Check if user can modify a claim (approve/reject).
+     * 
+     * AUTHORIZATION RULES:
+     * - SUPER_ADMIN: ✅ Can modify
+     * - INSURANCE_ADMIN: ✅ Can modify
+     * - REVIEWER: ✅ Can modify
+     * - Others: ❌ Cannot modify
+     * 
+     * @param user Current user
+     * @param claimId ID of the claim to modify
+     * @return true if user can modify the claim
      */
     public boolean canModifyClaim(User user, Long claimId) {
         if (user == null || claimId == null) {
+            log.warn("❌ canModifyClaim: DENIED - null user or claimId");
             return false;
         }
 
         // SUPER_ADMIN can modify
         if (isSuperAdmin(user)) {
+            log.debug("✅ canModifyClaim: ALLOWED - user={} is SUPER_ADMIN", user.getUsername());
             return true;
         }
 
         // INSURANCE_ADMIN can modify
         if (isInsuranceAdmin(user)) {
+            log.debug("✅ canModifyClaim: ALLOWED - user={} is INSURANCE_ADMIN", user.getUsername());
             return true;
         }
 
         // REVIEWER can modify
         if (isReviewer(user)) {
+            log.debug("✅ canModifyClaim: ALLOWED - user={} is REVIEWER", user.getUsername());
             return true;
         }
 
-        log.warn("Access denied: user {} attempted to modify claim {}", user.getUsername(), claimId);
+        log.warn("❌ canModifyClaim: DENIED - user {} cannot modify claim {}", user.getUsername(), claimId);
         return false;
     }
 
-    // =========================================================================
-    // Phase 9: Feature Toggle Methods
-    // =========================================================================
+    // =============================================================================================
+    // FEATURE TOGGLE METHODS (EMPLOYER-SPECIFIC PERMISSIONS)
+    // =============================================================================================
+    //
+    // These methods check feature flags that control what EMPLOYER_ADMIN users can do.
+    // Feature toggles work ON TOP of RBAC permissions.
+    //
+    // KEY POINT: Non-employer users (SUPER_ADMIN, INSURANCE_ADMIN) always pass these checks.
+    // =============================================================================================
 
     /**
      * Check if EMPLOYER_ADMIN user can view claims based on feature toggle.
-     * This works ON TOP of RBAC permissions.
+     * 
+     * LOGIC:
+     * - SUPER_ADMIN: ✅ Always allowed (feature flags don't apply)
+     * - INSURANCE_ADMIN: ✅ Always allowed (feature flags don't apply)
+     * - EMPLOYER_ADMIN: ✅ Allowed only if feature flag is enabled for their employer
+     * - Others: ✅ Always allowed (controlled by RBAC)
      * 
      * @param user Current user
      * @return true if user can view claims
      */
     public boolean canEmployerViewClaims(User user) {
         if (user == null) {
-            log.warn("FeatureCheck: user=null feature=VIEW_CLAIMS result=DENIED (null user)");
+            log.warn("⚠️ FeatureCheck: user=null feature=VIEW_CLAIMS result=DENIED (null user)");
             return false;
+        }
+
+        // SUPER_ADMIN and INSURANCE_ADMIN bypass feature flags
+        if (isSuperAdmin(user) || isInsuranceAdmin(user)) {
+            log.debug("✅ FeatureCheck: user={} feature=VIEW_CLAIMS result=ALLOWED (admin role)", user.getUsername());
+            return true;
         }
 
         // Non-employer users: always allow (controlled by RBAC)
         if (!isEmployerAdmin(user)) {
-            log.debug("FeatureCheck: user={} feature=VIEW_CLAIMS result=ALLOWED (not EMPLOYER_ADMIN)", 
+            log.debug("✅ FeatureCheck: user={} feature=VIEW_CLAIMS result=ALLOWED (not EMPLOYER_ADMIN)", 
                 user.getUsername());
             return true;
         }
 
         // EMPLOYER_ADMIN: check feature toggle
         if (user.getEmployerId() == null) {
-            log.warn("FeatureCheck: user={} feature=VIEW_CLAIMS result=DENIED (no employerId)", 
+            log.warn("❌ FeatureCheck: user={} feature=VIEW_CLAIMS result=DENIED (no employerId)", 
                 user.getUsername());
             return false;
         }
 
         boolean result = companySettingsService.canEmployerViewClaims(user.getEmployerId());
-        log.info("FeatureCheck: employerId={} user={} feature=VIEW_CLAIMS result={}", 
+        log.info("🔧 FeatureCheck: employerId={} user={} feature=VIEW_CLAIMS result={}", 
             user.getEmployerId(), user.getUsername(), result ? "ALLOWED" : "DENIED");
         
         return result;
@@ -423,26 +549,32 @@ public class AuthorizationService {
      */
     public boolean canEmployerViewVisits(User user) {
         if (user == null) {
-            log.warn("FeatureCheck: user=null feature=VIEW_VISITS result=DENIED (null user)");
+            log.warn("⚠️ FeatureCheck: user=null feature=VIEW_VISITS result=DENIED (null user)");
             return false;
+        }
+
+        // SUPER_ADMIN and INSURANCE_ADMIN bypass feature flags
+        if (isSuperAdmin(user) || isInsuranceAdmin(user)) {
+            log.debug("✅ FeatureCheck: user={} feature=VIEW_VISITS result=ALLOWED (admin role)", user.getUsername());
+            return true;
         }
 
         // Non-employer users: always allow (controlled by RBAC)
         if (!isEmployerAdmin(user)) {
-            log.debug("FeatureCheck: user={} feature=VIEW_VISITS result=ALLOWED (not EMPLOYER_ADMIN)", 
+            log.debug("✅ FeatureCheck: user={} feature=VIEW_VISITS result=ALLOWED (not EMPLOYER_ADMIN)", 
                 user.getUsername());
             return true;
         }
 
         // EMPLOYER_ADMIN: check feature toggle
         if (user.getEmployerId() == null) {
-            log.warn("FeatureCheck: user={} feature=VIEW_VISITS result=DENIED (no employerId)", 
+            log.warn("❌ FeatureCheck: user={} feature=VIEW_VISITS result=DENIED (no employerId)", 
                 user.getUsername());
             return false;
         }
 
         boolean result = companySettingsService.canEmployerViewVisits(user.getEmployerId());
-        log.info("FeatureCheck: employerId={} user={} feature=VIEW_VISITS result={}", 
+        log.info("🔧 FeatureCheck: employerId={} user={} feature=VIEW_VISITS result={}", 
             user.getEmployerId(), user.getUsername(), result ? "ALLOWED" : "DENIED");
         
         return result;
@@ -456,26 +588,32 @@ public class AuthorizationService {
      */
     public boolean canEmployerEditMembers(User user) {
         if (user == null) {
-            log.warn("FeatureCheck: user=null feature=EDIT_MEMBERS result=DENIED (null user)");
+            log.warn("⚠️ FeatureCheck: user=null feature=EDIT_MEMBERS result=DENIED (null user)");
             return false;
+        }
+
+        // SUPER_ADMIN and INSURANCE_ADMIN bypass feature flags
+        if (isSuperAdmin(user) || isInsuranceAdmin(user)) {
+            log.debug("✅ FeatureCheck: user={} feature=EDIT_MEMBERS result=ALLOWED (admin role)", user.getUsername());
+            return true;
         }
 
         // Non-employer users: always allow (controlled by RBAC)
         if (!isEmployerAdmin(user)) {
-            log.debug("FeatureCheck: user={} feature=EDIT_MEMBERS result=ALLOWED (not EMPLOYER_ADMIN)", 
+            log.debug("✅ FeatureCheck: user={} feature=EDIT_MEMBERS result=ALLOWED (not EMPLOYER_ADMIN)", 
                 user.getUsername());
             return true;
         }
 
         // EMPLOYER_ADMIN: check feature toggle
         if (user.getEmployerId() == null) {
-            log.warn("FeatureCheck: user={} feature=EDIT_MEMBERS result=DENIED (no employerId)", 
+            log.warn("❌ FeatureCheck: user={} feature=EDIT_MEMBERS result=DENIED (no employerId)", 
                 user.getUsername());
             return false;
         }
 
         boolean result = companySettingsService.canEmployerEditMembers(user.getEmployerId());
-        log.info("FeatureCheck: employerId={} user={} feature=EDIT_MEMBERS result={}", 
+        log.info("🔧 FeatureCheck: employerId={} user={} feature=EDIT_MEMBERS result={}", 
             user.getEmployerId(), user.getUsername(), result ? "ALLOWED" : "DENIED");
         
         return result;
@@ -489,26 +627,32 @@ public class AuthorizationService {
      */
     public boolean canEmployerDownloadAttachments(User user) {
         if (user == null) {
-            log.warn("FeatureCheck: user=null feature=DOWNLOAD_ATTACHMENTS result=DENIED (null user)");
+            log.warn("⚠️ FeatureCheck: user=null feature=DOWNLOAD_ATTACHMENTS result=DENIED (null user)");
             return false;
+        }
+
+        // SUPER_ADMIN and INSURANCE_ADMIN bypass feature flags
+        if (isSuperAdmin(user) || isInsuranceAdmin(user)) {
+            log.debug("✅ FeatureCheck: user={} feature=DOWNLOAD_ATTACHMENTS result=ALLOWED (admin role)", user.getUsername());
+            return true;
         }
 
         // Non-employer users: always allow (controlled by RBAC)
         if (!isEmployerAdmin(user)) {
-            log.debug("FeatureCheck: user={} feature=DOWNLOAD_ATTACHMENTS result=ALLOWED (not EMPLOYER_ADMIN)", 
+            log.debug("✅ FeatureCheck: user={} feature=DOWNLOAD_ATTACHMENTS result=ALLOWED (not EMPLOYER_ADMIN)", 
                 user.getUsername());
             return true;
         }
 
         // EMPLOYER_ADMIN: check feature toggle
         if (user.getEmployerId() == null) {
-            log.warn("FeatureCheck: user={} feature=DOWNLOAD_ATTACHMENTS result=DENIED (no employerId)", 
+            log.warn("❌ FeatureCheck: user={} feature=DOWNLOAD_ATTACHMENTS result=DENIED (no employerId)", 
                 user.getUsername());
             return false;
         }
 
         boolean result = companySettingsService.canEmployerDownloadAttachments(user.getEmployerId());
-        log.info("FeatureCheck: employerId={} user={} feature=DOWNLOAD_ATTACHMENTS result={}", 
+        log.info("🔧 FeatureCheck: employerId={} user={} feature=DOWNLOAD_ATTACHMENTS result={}", 
             user.getEmployerId(), user.getUsername(), result ? "ALLOWED" : "DENIED");
         
         return result;

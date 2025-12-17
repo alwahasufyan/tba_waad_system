@@ -1,5 +1,6 @@
 package com.waad.tba.modules.member.service;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -23,11 +24,15 @@ import com.waad.tba.modules.member.entity.Member;
 import com.waad.tba.modules.member.mapper.MemberMapperV2;
 import com.waad.tba.modules.member.repository.FamilyMemberRepository;
 import com.waad.tba.modules.member.repository.MemberRepository;
+import com.waad.tba.modules.rbac.entity.User;
+import com.waad.tba.security.AuthorizationService;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class MemberService {
 
     private final MemberRepository memberRepository;
@@ -36,19 +41,73 @@ public class MemberService {
 
     private final EmployerRepository employerRepo;
     private final InsuranceCompanyRepository insuranceRepo;
+    private final AuthorizationService authorizationService;
 
+    /**
+     * Get member selector options with data-level filtering.
+     * 
+     * FILTERING:
+     * - SUPER_ADMIN: All members
+     * - INSURANCE_ADMIN: All members
+     * - EMPLOYER_ADMIN: Only members from their employer
+     */
     public List<MemberSelectorDto> getSelectorOptions() {
-        return memberRepository.findAll().stream()
+        log.debug("📋 Getting member selector options with filtering");
+        
+        User currentUser = authorizationService.getCurrentUser();
+        if (currentUser == null) {
+            log.warn("⚠️ No authenticated user found");
+            return Collections.emptyList();
+        }
+        
+        Long employerFilter = authorizationService.getEmployerFilterForUser(currentUser);
+        List<Member> members;
+        
+        if (employerFilter != null) {
+            log.debug("🔒 Filtering members by employerId={}", employerFilter);
+            members = memberRepository.findByEmployerId(employerFilter);
+        } else {
+            log.debug("🔓 No filter - returning all members");
+            members = memberRepository.findAll();
+        }
+        
+        return members.stream()
                 .map(mapper::toSelectorDto)
                 .collect(Collectors.toList());
     }
 
     public long count() {
+        User currentUser = authorizationService.getCurrentUser();
+        if (currentUser == null) {
+            return 0;
+        }
+        
+        Long employerFilter = authorizationService.getEmployerFilterForUser(currentUser);
+        if (employerFilter != null) {
+            return memberRepository.countByEmployerId(employerFilter);
+        }
+        
         return memberRepository.count();
     }
 
     public List<MemberViewDto> search(String query) {
-        return memberRepository.search(query).stream()
+        User currentUser = authorizationService.getCurrentUser();
+        if (currentUser == null) {
+            return Collections.emptyList();
+        }
+        
+        Long employerFilter = authorizationService.getEmployerFilterForUser(currentUser);
+        List<Member> members;
+        
+        if (employerFilter != null) {
+            // Search within employer's members only
+            members = memberRepository.searchByEmployerId(query, employerFilter);
+        } else {
+            // Search all members
+            members = memberRepository.search(query);
+        }
+        
+        return members.stream()
                 .map(member -> {
                     List<FamilyMember> family = familyRepo.findByMemberId(member.getId());
                     return mapper.toViewDto(member, family);
@@ -148,6 +207,19 @@ public class MemberService {
 
     @Transactional(readOnly = true)
     public MemberViewDto getMember(Long id) {
+        log.debug("📋 Getting member by id: {}", id);
+        
+        User currentUser = authorizationService.getCurrentUser();
+        if (currentUser == null) {
+            throw new ResourceNotFoundException("Authentication required");
+        }
+        
+        // Check access authorization
+        if (!authorizationService.canAccessMember(currentUser, id)) {
+            log.warn("❌ Access denied: user {} attempted to access member {}", 
+                currentUser.getUsername(), id);
+            throw new ResourceNotFoundException("Member not found: " + id);
+        }
 
         Member member = memberRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Member not found: " + id));
@@ -159,12 +231,32 @@ public class MemberService {
 
     @Transactional(readOnly = true)
     public Page<MemberViewDto> listMembers(Pageable pageable, String search) {
+        log.debug("📋 Listing members with pagination. search={}", search);
+        
+        User currentUser = authorizationService.getCurrentUser();
+        if (currentUser == null) {
+            return Page.empty(pageable);
+        }
+        
+        Long employerFilter = authorizationService.getEmployerFilterForUser(currentUser);
         Page<Member> memberPage;
         
-        if (search != null && !search.isBlank()) {
-            memberPage = memberRepository.searchPaged(search, pageable);
+        if (employerFilter != null) {
+            // Filter by employer
+            log.debug("🔒 Filtering members by employerId={}", employerFilter);
+            if (search != null && !search.isBlank()) {
+                memberPage = memberRepository.searchPagedByEmployerId(search, employerFilter, pageable);
+            } else {
+                memberPage = memberRepository.findByEmployerId(employerFilter, pageable);
+            }
         } else {
-            memberPage = memberRepository.findAll(pageable);
+            // No filter - return all
+            log.debug("🔓 No filter - returning all members");
+            if (search != null && !search.isBlank()) {
+                memberPage = memberRepository.searchPaged(search, pageable);
+            } else {
+                memberPage = memberRepository.findAll(pageable);
+            }
         }
         
         return memberPage.map(member -> {

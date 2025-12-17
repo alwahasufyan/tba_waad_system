@@ -1,6 +1,7 @@
 package com.waad.tba.modules.claim.service;
 
 import java.math.BigDecimal;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -8,6 +9,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,19 +20,54 @@ import com.waad.tba.modules.claim.entity.Claim;
 import com.waad.tba.modules.claim.entity.ClaimStatus;
 import com.waad.tba.modules.claim.mapper.ClaimMapper;
 import com.waad.tba.modules.claim.repository.ClaimRepository;
+import com.waad.tba.modules.rbac.entity.User;
+import com.waad.tba.security.AuthorizationService;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
 @Transactional
+@Slf4j
 public class ClaimService {
 
     private final ClaimRepository claimRepository;
     private final ClaimMapper claimMapper;
+    private final AuthorizationService authorizationService;
 
+    /**
+     * Search claims with data-level filtering.
+     */
     public List<ClaimViewDto> search(String query) {
-        return claimRepository.search(query).stream()
+        log.debug("🔍 Searching claims with query: {}", query);
+        
+        User currentUser = authorizationService.getCurrentUser();
+        if (currentUser == null) {
+            log.warn("⚠️ No authenticated user");
+            return Collections.emptyList();
+        }
+        
+        // Check feature flags for EMPLOYER_ADMIN
+        if (authorizationService.isEmployerAdmin(currentUser)) {
+            if (!authorizationService.canEmployerViewClaims(currentUser)) {
+                log.warn("❌ EMPLOYER_ADMIN feature VIEW_CLAIMS disabled");
+                return Collections.emptyList();
+            }
+        }
+        
+        Long employerFilter = authorizationService.getEmployerFilterForUser(currentUser);
+        List<Claim> claims;
+        
+        if (employerFilter != null) {
+            log.debug("🔒 Filtering claims by employerId={}", employerFilter);
+            claims = claimRepository.searchByEmployerId(query, employerFilter);
+        } else {
+            log.debug("🔓 No filter - searching all claims");
+            claims = claimRepository.search(query);
+        }
+        
+        return claims.stream()
                 .map(claimMapper::toViewDto)
                 .collect(Collectors.toList());
     }
@@ -54,6 +91,28 @@ public class ClaimService {
 
     @Transactional(readOnly = true)
     public ClaimViewDto getClaim(Long id) {
+        log.debug("📋 Getting claim by id: {}", id);
+        
+        User currentUser = authorizationService.getCurrentUser();
+        if (currentUser == null) {
+            throw new AccessDeniedException("Authentication required");
+        }
+        
+        // Check feature flags for EMPLOYER_ADMIN
+        if (authorizationService.isEmployerAdmin(currentUser)) {
+            if (!authorizationService.canEmployerViewClaims(currentUser)) {
+                log.warn("❌ EMPLOYER_ADMIN feature VIEW_CLAIMS disabled");
+                throw new AccessDeniedException("Your employer account does not have permission to view claims");
+            }
+        }
+        
+        // Check access authorization
+        if (!authorizationService.canAccessClaim(currentUser, id)) {
+            log.warn("❌ Access denied: user {} attempted to access claim {}", 
+                currentUser.getUsername(), id);
+            throw new AccessDeniedException("Access denied to this claim");
+        }
+        
         Claim claim = claimRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Claim not found with id: " + id));
         return claimMapper.toViewDto(claim);
@@ -61,15 +120,53 @@ public class ClaimService {
 
     @Transactional(readOnly = true)
     public Page<ClaimViewDto> listClaims(int page, int size, String search) {
+        log.debug("📋 Listing claims with pagination. page={}, size={}, search={}", page, size, search);
+        
+        User currentUser = authorizationService.getCurrentUser();
+        if (currentUser == null) {
+            return Page.empty();
+        }
+        
+        // Check feature flags for EMPLOYER_ADMIN
+        if (authorizationService.isEmployerAdmin(currentUser)) {
+            if (!authorizationService.canEmployerViewClaims(currentUser)) {
+                log.warn("❌ EMPLOYER_ADMIN feature VIEW_CLAIMS disabled");
+                return Page.empty();
+            }
+        }
+        
         Pageable pageable = PageRequest.of(page - 1, size, Sort.by(Sort.Direction.DESC, "createdAt"));
         String keyword = (search != null && !search.trim().isEmpty()) ? search.trim() : "";
         
-        Page<Claim> claimsPage = claimRepository.searchPaged(keyword, pageable);
+        Long employerFilter = authorizationService.getEmployerFilterForUser(currentUser);
+        Page<Claim> claimsPage;
+        
+        if (employerFilter != null) {
+            log.debug("🔒 Filtering claims by employerId={}", employerFilter);
+            claimsPage = claimRepository.searchPagedByEmployerId(keyword, employerFilter, pageable);
+        } else {
+            log.debug("🔓 No filter - listing all claims");
+            claimsPage = claimRepository.searchPaged(keyword, pageable);
+        }
+        
         return claimsPage.map(claimMapper::toViewDto);
     }
 
     @Transactional(readOnly = true)
     public List<ClaimViewDto> getClaimsByMember(Long memberId) {
+        log.debug("📋 Getting claims for member: {}", memberId);
+        
+        User currentUser = authorizationService.getCurrentUser();
+        if (currentUser == null) {
+            return Collections.emptyList();
+        }
+        
+        // Check if user can access this member
+        if (!authorizationService.canAccessMember(currentUser, memberId)) {
+            log.warn("❌ Access denied to member {}", memberId);
+            return Collections.emptyList();
+        }
+        
         List<Claim> claims = claimRepository.findByMemberId(memberId);
         return claims.stream()
                 .map(claimMapper::toViewDto)
@@ -93,6 +190,16 @@ public class ClaimService {
 
     @Transactional(readOnly = true)
     public long countClaims() {
+        User currentUser = authorizationService.getCurrentUser();
+        if (currentUser == null) {
+            return 0;
+        }
+        
+        Long employerFilter = authorizationService.getEmployerFilterForUser(currentUser);
+        if (employerFilter != null) {
+            return claimRepository.countByMemberEmployerId(employerFilter);
+        }
+        
         return claimRepository.countActive();
     }
 
