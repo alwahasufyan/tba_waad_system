@@ -129,14 +129,14 @@ public class DashboardService {
      */
     private DashboardStatsDto createEmptyStats() {
         return DashboardStatsDto.builder()
-                .totalMembers(0)
-                .totalClaims(0)
-                .pendingClaims(0)
-                .approvedClaims(0)
-                .rejectedClaims(0)
-                .totalEmployers(0)
-                .totalInsuranceCompanies(0)
-                .totalReviewerCompanies(0)
+                .totalMembers(0L)
+                .totalClaims(0L)
+                .pendingClaims(0L)
+                .approvedClaims(0L)
+                .rejectedClaims(0L)
+                .totalEmployers(0L)
+                .totalInsuranceCompanies(0L)
+                .totalReviewerCompanies(0L)
                 .build();
     }
 

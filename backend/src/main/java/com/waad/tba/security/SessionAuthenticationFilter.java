@@ -70,15 +70,23 @@ public class SessionAuthenticationFilter extends OncePerRequestFilter {
                     User user = userRepository.findByUsername(username)
                             .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
                     
-                    // Get current roles from database
+                    // SECURITY FIX: Include both roles and permissions as authorities
+                    // 1. Get role names (e.g., SUPER_ADMIN, EMPLOYER_ADMIN)
                     List<String> roleNames = user.getRoles().stream()
                             .map(role -> role.getName())
                             .collect(Collectors.toList());
                     
-                    // Convert role names to authorities
-                    List<SimpleGrantedAuthority> authorities = roleNames.stream()
-                            .map(SimpleGrantedAuthority::new)
+                    // 2. Get all permissions from roles (e.g., MANAGE_EMPLOYERS, VIEW_MEMBERS)
+                    List<String> permissionNames = user.getRoles().stream()
+                            .flatMap(role -> role.getPermissions().stream())
+                            .map(permission -> permission.getName())
+                            .distinct()
                             .collect(Collectors.toList());
+                    
+                    // 3. Combine both roles and permissions into authorities
+                    List<SimpleGrantedAuthority> authorities = new java.util.ArrayList<>();
+                    roleNames.forEach(role -> authorities.add(new SimpleGrantedAuthority(role)));
+                    permissionNames.forEach(perm -> authorities.add(new SimpleGrantedAuthority(perm)));
                     
                     // Create authentication token
                     UsernamePasswordAuthenticationToken authentication =
@@ -89,9 +97,10 @@ public class SessionAuthenticationFilter extends OncePerRequestFilter {
                     SecurityContextHolder.getContext().setAuthentication(authentication);
                     
                     // AUDIT FIX (TASK A): Log that roles were loaded from DB
-                    log.debug("✅ Session auth successful - User: {}, Roles loaded from DB: {}, Path: {}", 
+                    log.debug("✅ Session auth successful - User: {}, Roles: {}, Permissions: {}, Path: {}", 
                         username, 
-                        roleNames, 
+                        roleNames,
+                        permissionNames.size(),
                         request.getRequestURI()
                     );
                 }
