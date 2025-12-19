@@ -84,8 +84,9 @@ public class SessionAuthenticationFilter extends OncePerRequestFilter {
                             .collect(Collectors.toList());
                     
                     // 3. Combine both roles and permissions into authorities
+                    // CRITICAL: Add "ROLE_" prefix for roles (required for @PreAuthorize hasRole() checks)
                     List<SimpleGrantedAuthority> authorities = new java.util.ArrayList<>();
-                    roleNames.forEach(role -> authorities.add(new SimpleGrantedAuthority(role)));
+                    roleNames.forEach(role -> authorities.add(new SimpleGrantedAuthority("ROLE_" + role)));
                     permissionNames.forEach(perm -> authorities.add(new SimpleGrantedAuthority(perm)));
                     
                     // Create authentication token
