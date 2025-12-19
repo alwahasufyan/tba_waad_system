@@ -12,10 +12,14 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * WARNING: This repository still queries legacy InsuranceCompany entity
- * because Member, Claim, and Policy entities have FK relationships to insurance_companies table.
- * TODO: Migrate to Organization repository after FK migration is complete.
+ * LEGACY REPOSITORY - READ ONLY
+ * 
+ * @deprecated Use {@link com.waad.tba.common.repository.OrganizationRepository} instead.
+ *             This repository is kept for backward compatibility ONLY.
+ *             DO NOT use save(), saveAll(), delete(), or any write operations.
+ *             All writes must go through OrganizationRepository with type=INSURANCE.
  */
+@Deprecated
 @Repository
 public interface InsuranceCompanyRepository extends JpaRepository<InsuranceCompany, Long> {
     

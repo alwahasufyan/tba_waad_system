@@ -13,7 +13,17 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 /**
- * Employer service - facade over Organization entity with type=EMPLOYER.
+ * Employer Service - Uses Organization Entity (CANONICAL)
+ * 
+ * This service is a facade over {@link Organization} with type=EMPLOYER.
+ * All CRUD operations work with Organization table only.
+ * 
+ * ✅ READS: OrganizationRepository.findByType(EMPLOYER)
+ * ✅ WRITES: OrganizationRepository.save() with type=EMPLOYER
+ * ❌ NEVER uses legacy EmployerRepository for writes
+ * 
+ * @see Organization
+ * @see OrganizationType#EMPLOYER
  */
 @Service
 @RequiredArgsConstructor

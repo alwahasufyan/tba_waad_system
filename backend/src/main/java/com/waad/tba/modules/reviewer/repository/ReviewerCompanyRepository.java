@@ -12,10 +12,14 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * WARNING: This repository still uses legacy ReviewerCompany entity
- * because it has FK relationships.
- * TODO: Migrate to Organization after FK migration is complete.
+ * LEGACY REPOSITORY - READ ONLY
+ * 
+ * @deprecated Use {@link com.waad.tba.common.repository.OrganizationRepository} instead.
+ *             This repository is kept for backward compatibility ONLY.
+ *             DO NOT use save(), saveAll(), delete(), or any write operations.
+ *             All writes must go through OrganizationRepository with type=REVIEWER.
  */
+@Deprecated
 @Repository
 public interface ReviewerCompanyRepository extends JpaRepository<ReviewerCompany, Long> {
 

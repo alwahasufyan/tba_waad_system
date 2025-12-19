@@ -19,7 +19,17 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * Reviewer Company service - facade over Organization entity with type=REVIEWER.
+ * Reviewer Company Service - Uses Organization Entity (CANONICAL)
+ * 
+ * This service is a facade over {@link Organization} with type=REVIEWER.
+ * All CRUD operations work with Organization table only.
+ * 
+ * ✅ READS: OrganizationRepository.findByType(REVIEWER)
+ * ✅ WRITES: OrganizationRepository.save() with type=REVIEWER
+ * ❌ NEVER uses legacy ReviewerCompanyRepository for writes
+ * 
+ * @see Organization
+ * @see OrganizationType#REVIEWER
  */
 @Slf4j
 @Service

@@ -13,13 +13,15 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 /**
- * @deprecated
- * This entity is legacy.
- * Use Organization entity instead.
+ * Legacy employer entity - READ ONLY.
+ * 
+ * @deprecated Use {@link com.waad.tba.common.entity.Organization} with type=EMPLOYER instead.
+ *             This entity is kept for backward compatibility only. All new code must use Organization.
+ *             Writing to this entity is prohibited - use Organization with OrganizationType.EMPLOYER.
  */
+@Deprecated
 @Entity
 @Table(name = "employers")
-
 @Data
 @Builder
 @NoArgsConstructor

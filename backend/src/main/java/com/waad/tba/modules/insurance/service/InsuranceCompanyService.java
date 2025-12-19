@@ -22,7 +22,17 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Insurance Company service - facade over Organization entity with type=INSURANCE.
+ * Insurance Company Service - Uses Organization Entity (CANONICAL)
+ * 
+ * This service is a facade over {@link Organization} with type=INSURANCE.
+ * All CRUD operations work with Organization table only.
+ * 
+ * ✅ READS: OrganizationRepository.findByType(INSURANCE)
+ * ✅ WRITES: OrganizationRepository.save() with type=INSURANCE
+ * ❌ NEVER uses legacy InsuranceCompanyRepository for writes
+ * 
+ * @see Organization
+ * @see OrganizationType#INSURANCE
  */
 @Slf4j
 @Service

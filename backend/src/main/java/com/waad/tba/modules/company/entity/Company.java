@@ -13,13 +13,11 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import java.time.LocalDateTime;
 
 /**
- * Company Entity
- * Represents the TPA company (tenant) in the multi-company system.
- * Each company operates independently with its own employers, members, and data.
+ * Legacy TPA company entity - READ ONLY.
  * 
- * @deprecated
- * This entity is legacy.
- * Use Organization entity with type=TPA instead.
+ * @deprecated Use {@link com.waad.tba.common.entity.Organization} with type=TPA instead.
+ *             This entity is kept for backward compatibility only. All new code must use Organization.
+ *             Writing to this entity is prohibited - use Organization with OrganizationType.TPA.
  */
 @Deprecated
 @Entity

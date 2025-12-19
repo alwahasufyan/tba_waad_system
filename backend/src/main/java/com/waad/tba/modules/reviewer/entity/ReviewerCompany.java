@@ -12,9 +12,11 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import java.time.LocalDateTime;
 
 /**
- * @deprecated
- * This entity is legacy.
- * Use Organization entity instead.
+ * Legacy reviewer company entity - READ ONLY.
+ * 
+ * @deprecated Use {@link com.waad.tba.common.entity.Organization} with type=REVIEWER instead.
+ *             This entity is kept for backward compatibility only. All new code must use Organization.
+ *             Writing to this entity is prohibited - use Organization with OrganizationType.REVIEWER.
  */
 @Deprecated
 @Entity

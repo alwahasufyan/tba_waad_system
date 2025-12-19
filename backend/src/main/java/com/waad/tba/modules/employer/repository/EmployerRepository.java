@@ -7,10 +7,14 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * WARNING: This repository still uses legacy Employer entity
- * because Member, Claim, and Policy entities have FK relationships to it.
- * TODO: Migrate to Organization after FK migration is complete.
+ * LEGACY REPOSITORY - READ ONLY
+ * 
+ * @deprecated Use {@link com.waad.tba.common.repository.OrganizationRepository} instead.
+ *             This repository is kept for backward compatibility ONLY.
+ *             DO NOT use save(), saveAll(), delete(), or any write operations.
+ *             All writes must go through OrganizationRepository with type=EMPLOYER.
  */
+@Deprecated
 public interface EmployerRepository extends JpaRepository<Employer, Long> {
 
     List<Employer> findByActiveTrue();

@@ -69,36 +69,25 @@ public class SystemAdminService {
 
     /**
      * Ensure the primary tenant company (Waad) exists in the system.
-     * This is the main TPA company that owns all data.
-     * Creates only if not exists (based on code).
+     * 
+     * @deprecated This method writes to legacy Company entity.
+     *             The Waad TPA organization should be created via V003 Flyway migration.
+     *             Disabled to enforce Organization-only writes.
      */
+    @Deprecated
     private void ensurePrimaryTenantCompany() {
-        String companyCode = "waad";
+        log.info("ensurePrimaryTenantCompany() is DISABLED - TPA organization created via Flyway V003 migration");
         
-        Optional<Company> existing = companyRepository.findByCode(companyCode);
+        // NOTE: The Waad TPA organization is now created in:
+        // backend/src/main/resources/db/migration/V003__backfill_organizations.sql
+        // 
+        // If you need to manually create it, use:
+        // INSERT INTO organizations (name, name_en, code, type, active) 
+        // VALUES ('وعد لإدارة النفقات الطبية', 'Waad TPA', 'WAAD-TPA', 'TPA', true);
         
-        if (existing.isPresent()) {
-            Company company = existing.get();
-            log.info("Primary tenant company already exists: ID={}, Code={}, Name={}", 
-                company.getId(), company.getCode(), company.getName());
-            return;
-        }
-        
-        // Create the primary tenant company
-        Company waadCompany = Company.builder()
-                .name("شركة وعد لإدارة النفقات الطبية")
-                .code(companyCode)
-                .active(true)
-                .build();
-        
-        Company savedCompany = companyRepository.save(waadCompany);
-        
-        log.info("✅ Primary tenant company created successfully!");
-        log.info("   Company ID: {}", savedCompany.getId());
-        log.info("   Company Code: {}", savedCompany.getCode());
-        log.info("   Company Name: {}", savedCompany.getName());
-        log.info("   Active: {}", savedCompany.getActive());
-        log.info("   Created At: {}", savedCompany.getCreatedAt());
+        // Legacy code disabled:
+        // Company waadCompany = Company.builder()...
+        // companyRepository.save(waadCompany); ❌ PROHIBITED
     }
 
     @Transactional

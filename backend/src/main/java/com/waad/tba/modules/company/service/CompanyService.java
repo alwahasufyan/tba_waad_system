@@ -13,8 +13,17 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * Service for Company management
+ * Company Service - LEGACY (READ ONLY RECOMMENDED)
+ * 
+ * ⚠️ WARNING: This service writes to legacy Company entity.
+ * 
+ * @deprecated Use {@link com.waad.tba.common.entity.Organization} with type=TPA instead.
+ *             This service is kept for backward compatibility but should not be used for new TPA creation.
+ *             TPA organizations should be managed via OrganizationRepository with type=TPA.
+ * 
+ * Status: Kept active for existing API compatibility but marked deprecated.
  */
+@Deprecated
 @Service
 @RequiredArgsConstructor
 @Slf4j
