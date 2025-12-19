@@ -9,19 +9,29 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
+/**
+ * WARNING: This repository still uses legacy ReviewerCompany entity
+ * because it has FK relationships.
+ * TODO: Migrate to Organization after FK migration is complete.
+ */
 @Repository
 public interface ReviewerCompanyRepository extends JpaRepository<ReviewerCompany, Long> {
-    
-    @Query("SELECT r FROM ReviewerCompany r WHERE " +
-           "LOWER(r.name) LIKE LOWER(CONCAT('%', :query, '%')) OR " +
-           "LOWER(r.medicalDirector) LIKE LOWER(CONCAT('%', :query, '%'))")
-    List<ReviewerCompany> search(String query);
 
-    @Query("SELECT r FROM ReviewerCompany r WHERE " +
-           "LOWER(r.name) LIKE LOWER(CONCAT('%', :q, '%')) OR " +
-           "LOWER(r.email) LIKE LOWER(CONCAT('%', :q, '%')) OR " +
-           "LOWER(r.phone) LIKE LOWER(CONCAT('%', :q, '%')) OR " +
-           "LOWER(r.address) LIKE LOWER(CONCAT('%', :q, '%'))")
-    Page<ReviewerCompany> searchPaged(@Param("q") String q, Pageable pageable);
+    Optional<ReviewerCompany> findByEmail(String email);
+
+    Optional<ReviewerCompany> findByName(String name);
+
+    @Query("SELECT rc FROM ReviewerCompany rc WHERE " +
+           "LOWER(rc.name) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
+           "LOWER(rc.email) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
+           "LOWER(rc.medicalDirector) LIKE LOWER(CONCAT('%', :search, '%'))")
+    List<ReviewerCompany> search(@Param("search") String search);
+
+    @Query("SELECT rc FROM ReviewerCompany rc WHERE " +
+           "LOWER(rc.name) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
+           "LOWER(rc.email) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
+           "LOWER(rc.medicalDirector) LIKE LOWER(CONCAT('%', :search, '%'))")
+    Page<ReviewerCompany> searchPaged(@Param("search") String search, Pageable pageable);
 }

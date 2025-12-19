@@ -7,6 +7,7 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
+import com.waad.tba.common.entity.Organization;
 import com.waad.tba.modules.employer.entity.Employer;
 import com.waad.tba.modules.insurance.entity.InsuranceCompany;
 import com.waad.tba.modules.policy.entity.Policy;
@@ -49,19 +50,30 @@ public class Member {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // Relations
-    @NotNull(message = "Employer is required")
+    // NEW: Organization-based relationships (canonical)
+    @NotNull(message = "Employer organization is required")
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "employer_id", nullable = false)
+    @JoinColumn(name = "employer_org_id", nullable = false)
+    private Organization employerOrganization;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "insurance_org_id")
+    private Organization insuranceOrganization;
+
+    // LEGACY: Old relationships (kept for backwards compatibility, will be removed in future)
+    @Deprecated
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "employer_id", insertable = false, updatable = false)
     private Employer employer;
+
+    @Deprecated
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "insurance_company_id", insertable = false, updatable = false)
+    private InsuranceCompany insuranceCompany;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "policy_id")
     private Policy policy;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "insurance_company_id")
-    private InsuranceCompany insuranceCompany;
 
     // Personal Information
     @NotBlank(message = "Full name in Arabic is required")

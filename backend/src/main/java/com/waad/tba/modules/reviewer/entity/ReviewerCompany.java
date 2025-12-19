@@ -11,6 +11,12 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 
+/**
+ * @deprecated
+ * This entity is legacy.
+ * Use Organization entity instead.
+ */
+@Deprecated
 @Entity
 @Table(name = "reviewer_companies")
 @Data

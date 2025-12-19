@@ -1,5 +1,6 @@
 package com.waad.tba.modules.claim.entity;
 
+import com.waad.tba.common.entity.Organization;
 import com.waad.tba.modules.member.entity.Member;
 import com.waad.tba.modules.insurance.entity.InsuranceCompany;
 import com.waad.tba.modules.insurancepolicy.entity.InsurancePolicy;
@@ -33,8 +34,15 @@ public class Claim {
     @JoinColumn(name = "member_id", nullable = false)
     private Member member;
 
+    // NEW: Organization-based relationship (canonical)
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "insurance_company_id", nullable = false)
+    @JoinColumn(name = "insurance_org_id", nullable = false)
+    private Organization insuranceOrganization;
+
+    // LEGACY: Old relationship (kept for backwards compatibility)
+    @Deprecated
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "insurance_company_id", insertable = false, updatable = false)
     private InsuranceCompany insuranceCompany;
 
     @ManyToOne(fetch = FetchType.LAZY)

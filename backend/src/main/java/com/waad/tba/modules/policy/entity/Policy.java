@@ -1,5 +1,6 @@
 package com.waad.tba.modules.policy.entity;
 
+import com.waad.tba.common.entity.Organization;
 import com.waad.tba.modules.employer.entity.Employer;
 import com.waad.tba.modules.insurance.entity.InsuranceCompany;
 import jakarta.persistence.*;
@@ -48,14 +49,21 @@ public class Policy {
     @Column(nullable = false)
     private LocalDate endDate;
 
-    @NotNull(message = "Employer is required")
+    // NEW: Organization-based relationships (canonical)
+    @NotNull(message = "Employer organization is required")
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "employer_id", nullable = false)
+    @JoinColumn(name = "employer_org_id", nullable = false)
+    private Organization employerOrganization;
+
+    // LEGACY: Old relationships (kept for backwards compatibility)
+    @Deprecated
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "employer_id", insertable = false, updatable = false)
     private Employer employer;
 
-    @NotNull(message = "Insurance company is required")
+    @Deprecated
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "insurance_company_id", nullable = false)
+    @JoinColumn(name = "insurance_company_id", insertable = false, updatable = false)
     private InsuranceCompany insuranceCompany;
 
     @NotNull(message = "Benefit package is required")

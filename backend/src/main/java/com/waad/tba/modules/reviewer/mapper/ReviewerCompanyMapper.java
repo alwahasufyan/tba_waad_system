@@ -1,61 +1,60 @@
 package com.waad.tba.modules.reviewer.mapper;
 
+import com.waad.tba.common.entity.Organization;
 import com.waad.tba.modules.reviewer.dto.ReviewerCompanyCreateDto;
 import com.waad.tba.modules.reviewer.dto.ReviewerCompanyResponseDto;
 import com.waad.tba.modules.reviewer.dto.ReviewerCompanySelectorDto;
-import com.waad.tba.modules.reviewer.entity.ReviewerCompany;
 import org.springframework.stereotype.Component;
 
+/**
+ * Reviewer Company mapper - maps Organization (type=REVIEWER) to Reviewer DTOs.
+ */
 @Component
 public class ReviewerCompanyMapper {
 
-    public ReviewerCompanyResponseDto toResponseDto(ReviewerCompany entity) {
+    public ReviewerCompanyResponseDto toResponseDto(Organization entity) {
         if (entity == null) return null;
         
         return ReviewerCompanyResponseDto.builder()
                 .id(entity.getId())
                 .name(entity.getName())
-                .medicalDirector(entity.getMedicalDirector())
-                .phone(entity.getPhone())
-                .email(entity.getEmail())
-                .address(entity.getAddress())
-                .active(entity.getActive())
+                .medicalDirector(null) // Organization doesn't have medicalDirector field
+                .phone(null) // Organization doesn't have phone field
+                .email(null) // Organization doesn't have email field
+                .address(null) // Organization doesn't have address field
+                .active(entity.isActive())
                 .createdAt(entity.getCreatedAt())
                 .updatedAt(entity.getUpdatedAt())
                 .build();
     }
 
-    public ReviewerCompanySelectorDto toSelectorDto(ReviewerCompany entity) {
+    public ReviewerCompanySelectorDto toSelectorDto(Organization entity) {
         if (entity == null) return null;
         
         return ReviewerCompanySelectorDto.builder()
                 .id(entity.getId())
-                .code(entity.getId().toString())
+                .code(entity.getCode())
                 .nameAr(entity.getName())
-                .nameEn(entity.getName())
+                .nameEn(entity.getNameEn())
                 .build();
     }
 
-    public ReviewerCompany toEntity(ReviewerCompanyCreateDto dto) {
+    public Organization toEntity(ReviewerCompanyCreateDto dto) {
         if (dto == null) return null;
         
-        return ReviewerCompany.builder()
+        return Organization.builder()
                 .name(dto.getName())
-                .medicalDirector(dto.getMedicalDirector())
-                .phone(dto.getPhone())
-                .email(dto.getEmail())
-                .address(dto.getAddress())
-                .active(true)
+                .nameEn(dto.getName()) // Use name for both if nameEn not provided
+                .code("REV-" + System.currentTimeMillis()) // Generate code
                 .build();
     }
 
-    public void updateEntityFromDto(ReviewerCompany entity, ReviewerCompanyCreateDto dto) {
+    public void updateEntityFromDto(Organization entity, ReviewerCompanyCreateDto dto) {
         if (dto == null) return;
         
         entity.setName(dto.getName());
-        entity.setMedicalDirector(dto.getMedicalDirector());
-        entity.setPhone(dto.getPhone());
-        entity.setEmail(dto.getEmail());
-        entity.setAddress(dto.getAddress());
+        // Organization doesn't have medicalDirector, phone, email, address fields
+        // These fields are not updated as Organization is simplified
     }
 }
+

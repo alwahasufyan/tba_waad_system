@@ -2,66 +2,64 @@ package com.waad.tba.modules.insurance.mapper;
 
 import org.springframework.stereotype.Component;
 
+import com.waad.tba.common.entity.Organization;
 import com.waad.tba.modules.insurance.dto.InsuranceCompanyCreateDto;
 import com.waad.tba.modules.insurance.dto.InsuranceCompanyResponseDto;
 import com.waad.tba.modules.insurance.dto.InsuranceCompanySelectorDto;
 import com.waad.tba.modules.insurance.dto.InsuranceCompanyUpdateDto;
-import com.waad.tba.modules.insurance.entity.InsuranceCompany;
 
+/**
+ * Insurance Company mapper - maps Organization (type=INSURANCE) to Insurance DTOs.
+ */
 @Component
 public class InsuranceCompanyMapper {
 
-    public InsuranceCompanyResponseDto toResponseDto(InsuranceCompany entity) {
+    public InsuranceCompanyResponseDto toResponseDto(Organization entity) {
         if (entity == null) return null;
         
         return InsuranceCompanyResponseDto.builder()
                 .id(entity.getId())
                 .name(entity.getName())
                 .code(entity.getCode())
-                .address(entity.getAddress())
-                .phone(entity.getPhone())
-                .email(entity.getEmail())
-                .contactPerson(entity.getContactPerson())
-                .active(entity.getActive())
+                .address(null) // Organization doesn't have address field
+                .phone(null) // Organization doesn't have phone field
+                .email(null) // Organization doesn't have email field
+                .contactPerson(null) // Organization doesn't have contactPerson field
+                .active(entity.isActive())
                 .createdAt(entity.getCreatedAt())
                 .updatedAt(entity.getUpdatedAt())
                 .build();
     }
 
-    public InsuranceCompanySelectorDto toSelectorDto(InsuranceCompany entity) {
+    public InsuranceCompanySelectorDto toSelectorDto(Organization entity) {
         if (entity == null) return null;
         
         return InsuranceCompanySelectorDto.builder()
                 .id(entity.getId())
                 .code(entity.getCode())
                 .nameAr(entity.getName())
-                .nameEn(entity.getName())
+                .nameEn(entity.getNameEn())
                 .build();
     }
 
-    public InsuranceCompany toEntity(InsuranceCompanyCreateDto dto) {
+    public Organization toEntity(InsuranceCompanyCreateDto dto) {
         if (dto == null) return null;
         
-        return InsuranceCompany.builder()
+        return Organization.builder()
                 .name(dto.getName())
-                .code(dto.getCode())
-                .address(dto.getAddress())
-                .phone(dto.getPhone())
-                .email(dto.getEmail())
-                .contactPerson(dto.getContactPerson())
-                .active(Boolean.TRUE.equals(dto.getActive()))
+                .nameEn(dto.getName()) // Use name for both if nameEn not provided
+                .code(dto.getCode() != null ? dto.getCode() : "INS-" + System.currentTimeMillis())
                 .build();
     }
 
-    public void updateEntityFromDto(InsuranceCompanyUpdateDto dto, InsuranceCompany entity) {
+    public void updateEntityFromDto(InsuranceCompanyUpdateDto dto, Organization entity) {
         if (dto == null) return;
         
-        if (dto.getName() != null) entity.setName(dto.getName());
-        if (dto.getCode() != null) entity.setCode(dto.getCode());
-        if (dto.getAddress() != null) entity.setAddress(dto.getAddress());
-        if (dto.getPhone() != null) entity.setPhone(dto.getPhone());
-        if (dto.getEmail() != null) entity.setEmail(dto.getEmail());
-        if (dto.getContactPerson() != null) entity.setContactPerson(dto.getContactPerson());
-        if (dto.getActive() != null) entity.setActive(dto.getActive());
+        entity.setName(dto.getName());
+        if (dto.getCode() != null) {
+            entity.setCode(dto.getCode());
+        }
+        // Organization doesn't have address, phone, email, contactPerson fields
+        // These fields are not updated as Organization is simplified
     }
 }

@@ -5,6 +5,9 @@ import com.waad.tba.modules.employer.dto.EmployerResponseDto;
 import com.waad.tba.modules.employer.dto.EmployerSelectorDto;
 import org.springframework.stereotype.Component;
 
+/**
+ * Employer mapper - maps Organization (type=EMPLOYER) to Employer DTOs.
+ */
 @Component
 public class EmployerMapper {
 
@@ -25,3 +28,5 @@ public class EmployerMapper {
                 .build();
     }
 }
+
+

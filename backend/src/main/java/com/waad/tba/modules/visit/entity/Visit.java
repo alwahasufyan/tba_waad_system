@@ -8,6 +8,7 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
+import com.waad.tba.common.entity.Organization;
 import com.waad.tba.modules.member.entity.Member;
 
 import jakarta.persistence.Column;
@@ -41,6 +42,11 @@ public class Visit {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "member_id", nullable = false)
     private Member member;
+
+    // NEW: Denormalized employer organization reference (for queries/filtering)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "employer_org_id")
+    private Organization employerOrganization;
 
     @Column(name = "provider_id")
     private Long providerId;

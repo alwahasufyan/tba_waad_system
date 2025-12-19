@@ -103,80 +103,11 @@ public class SystemAdminService {
 
     @Transactional
     public ApiResponse<Void> seedSampleData() {
-        log.info("Seeding sample data...");
-        // Employer
-        Employer employer = Employer.builder()
-                .code("LOS-001")
-                .nameAr("شركة ليبيا للخدمات النفطية")
-                .nameEn("Libya Oil Services")
-                .email("contact@libyaoil.ly")
-                .phone("+218912345678")
-                .address("Tripoli Business Park")
-                .active(true)
-                .build();
-        employerRepository.save(employer);
-
-        // Member
-        Member member = Member.builder()
-                .fullNameArabic("فاطمة المهدي")
-                .fullNameEnglish("Fatima Al-Mahdi")
-                .civilId("198912345678")
-                .cardNumber("MBR-0001")
-                .phone("+218942345678")
-                .email("fatima.mahdi@example.ly")
-                .employer(employer)
-                .status(Member.MemberStatus.ACTIVE)
-                .gender(Member.Gender.FEMALE)
-                .birthDate(LocalDate.of(1989, 1, 1))
-                .joinDate(LocalDate.now())
-                .active(true)
-                .build();
-        memberRepository.save(member);
-
-        // Reviewer Company
-        ReviewerCompany reviewerCompany = ReviewerCompany.builder()
-                .name("Libya Medical Reviewers")
-                .medicalDirector("Dr. Sami Bashir")
-                .phone("+218922345678")
-                .email("info@lmr.ly")
-                .address("Benghazi Health District")
-                .build();
-        reviewerCompanyRepository.save(reviewerCompany);
-
-        // Insurance Company
-        InsuranceCompany insuranceCompany = InsuranceCompany.builder()
-                .name("Maghreb Insurance")
-                .email("support@maghrebins.ly")
-                .phone("+218912222222")
-                .address("Misrata Commercial Center")
-                .build();
-        insuranceCompanyRepository.save(insuranceCompany);
-
-        // Visit (created before claim and associated to member)
-        Visit visit = Visit.builder()
-                .visitDate(LocalDate.now())
-                .doctorName("Dr. Mariam Khaled")
-                .specialty("Dentistry")
-                .diagnosis("Impacted tooth extraction")
-                .member(member)
-                .build();
-        visitRepository.save(visit);
-
-        // Claim referencing Member
-        Claim claim = Claim.builder()
-                .member(member)
-                .insuranceCompany(insuranceCompany)
-                .providerName("مركز الأسنان الطبي")
-                .diagnosis("علاج الأسنان")
-                .visitDate(LocalDate.now())
-                .requestedAmount(new java.math.BigDecimal("2500.00"))
-                .status(com.waad.tba.modules.claim.entity.ClaimStatus.PENDING_REVIEW)
-                .active(true)
-                .build();
-        claimRepository.save(claim);
-
-        log.info("Sample data inserted.");
-        return ApiResponse.success("Sample test data inserted", null);
+        log.warn("seedSampleData() is temporarily disabled during Organization migration");
+        log.warn("Reason: Member and Claim entities still have FK relationships to legacy Employer/InsuranceCompany tables");
+        log.warn("TODO: Re-enable after Member.employer_id and Claim.insurance_company_id are migrated to reference organizations table");
+        
+        return ApiResponse.success("Seed data temporarily disabled during migration", null);
     }
 
     // RBAC initialization methods removed - now handled by RbacDataInitializer

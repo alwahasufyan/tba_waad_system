@@ -8,29 +8,32 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.waad.tba.common.entity.Organization;
+import com.waad.tba.common.enums.OrganizationType;
 import com.waad.tba.common.exception.ResourceNotFoundException;
+import com.waad.tba.common.repository.OrganizationRepository;
 import com.waad.tba.modules.insurance.dto.InsuranceCompanyCreateDto;
 import com.waad.tba.modules.insurance.dto.InsuranceCompanyResponseDto;
 import com.waad.tba.modules.insurance.dto.InsuranceCompanySelectorDto;
 import com.waad.tba.modules.insurance.dto.InsuranceCompanyUpdateDto;
-import com.waad.tba.modules.insurance.entity.InsuranceCompany;
 import com.waad.tba.modules.insurance.mapper.InsuranceCompanyMapper;
-import com.waad.tba.modules.insurance.repository.InsuranceCompanyRepository;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+/**
+ * Insurance Company service - facade over Organization entity with type=INSURANCE.
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class InsuranceCompanyService {
 
-    private final InsuranceCompanyRepository insuranceCompanyRepository;
+    private final OrganizationRepository organizationRepository;
     private final InsuranceCompanyMapper insuranceCompanyMapper;
 
     public List<InsuranceCompanySelectorDto> getSelectorOptions() {
-        return insuranceCompanyRepository.findAll().stream()
-                .filter(InsuranceCompany::getActive)
+        return organizationRepository.findByTypeAndActiveTrue(OrganizationType.INSURANCE).stream()
                 .map(insuranceCompanyMapper::toSelectorDto)
                 .collect(Collectors.toList());
     }
@@ -38,70 +41,75 @@ public class InsuranceCompanyService {
     @Transactional
     public InsuranceCompanyResponseDto create(InsuranceCompanyCreateDto dto) {
         log.info("Creating new insurance company: {}", dto.getName());
-        InsuranceCompany entity = insuranceCompanyMapper.toEntity(dto);
-        InsuranceCompany saved = insuranceCompanyRepository.save(entity);
+        Organization entity = insuranceCompanyMapper.toEntity(dto);
+        entity.setType(OrganizationType.INSURANCE);
+        entity.setActive(true);
+        Organization saved = organizationRepository.save(entity);
         return insuranceCompanyMapper.toResponseDto(saved);
     }
 
     @Transactional(readOnly = true)
     public List<InsuranceCompanyResponseDto> getAll() {
-        return insuranceCompanyRepository.findAll().stream()
+        return organizationRepository.findByTypeAndActiveTrue(OrganizationType.INSURANCE).stream()
                 .map(insuranceCompanyMapper::toResponseDto)
                 .collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
     public Page<InsuranceCompanyResponseDto> getAllPaginated(Pageable pageable) {
-        return insuranceCompanyRepository.findAll(pageable)
+        return organizationRepository.findByTypeAndActiveTrue(OrganizationType.INSURANCE, pageable)
                 .map(insuranceCompanyMapper::toResponseDto);
     }
 
     @Transactional(readOnly = true)
     public Page<InsuranceCompanyResponseDto> findAllPaginated(Pageable pageable, String search) {
         if (search == null || search.isBlank()) {
-            return insuranceCompanyRepository.findAll(pageable).map(insuranceCompanyMapper::toResponseDto);
+            return organizationRepository.findByTypeAndActiveTrue(OrganizationType.INSURANCE, pageable)
+                    .map(insuranceCompanyMapper::toResponseDto);
         } else {
-            return insuranceCompanyRepository.searchPaged(search, pageable).map(insuranceCompanyMapper::toResponseDto);
+            return organizationRepository.searchPagedByType(search, OrganizationType.INSURANCE, pageable)
+                    .map(insuranceCompanyMapper::toResponseDto);
         }
     }
 
     @Transactional(readOnly = true)
     public InsuranceCompanyResponseDto getById(Long id) {
-        InsuranceCompany entity = findEntityById(id);
+        Organization entity = findEntityById(id);
         return insuranceCompanyMapper.toResponseDto(entity);
     }
 
     @Transactional
     public InsuranceCompanyResponseDto update(Long id, InsuranceCompanyUpdateDto dto) {
         log.info("Updating insurance company with ID: {}", id);
-        InsuranceCompany entity = findEntityById(id);
+        Organization entity = findEntityById(id);
         insuranceCompanyMapper.updateEntityFromDto(dto, entity);
-        InsuranceCompany updated = insuranceCompanyRepository.save(entity);
+        Organization updated = organizationRepository.save(entity);
         return insuranceCompanyMapper.toResponseDto(updated);
     }
 
     @Transactional
     public void delete(Long id) {
         log.info("Soft deleting insurance company with ID: {}", id);
-        InsuranceCompany entity = findEntityById(id);
+        Organization entity = findEntityById(id);
         entity.setActive(false);
-        insuranceCompanyRepository.save(entity);
+        organizationRepository.save(entity);
     }
 
     @Transactional(readOnly = true)
     public List<InsuranceCompanyResponseDto> search(String searchTerm) {
-        return insuranceCompanyRepository.searchInsuranceCompanies(searchTerm).stream()
+        return organizationRepository.searchByType(searchTerm, OrganizationType.INSURANCE).stream()
                 .map(insuranceCompanyMapper::toResponseDto)
                 .collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
     public long count() {
-        return insuranceCompanyRepository.count();
+        return organizationRepository.findByType(OrganizationType.INSURANCE).size();
     }
 
-    private InsuranceCompany findEntityById(Long id) {
-        return insuranceCompanyRepository.findById(id)
+    private Organization findEntityById(Long id) {
+        return organizationRepository.findById(id)
+                .filter(org -> org.getType() == OrganizationType.INSURANCE)
                 .orElseThrow(() -> new ResourceNotFoundException("Insurance Company not found with ID: " + id));
     }
 }

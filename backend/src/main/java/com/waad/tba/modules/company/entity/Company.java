@@ -16,7 +16,12 @@ import java.time.LocalDateTime;
  * Company Entity
  * Represents the TPA company (tenant) in the multi-company system.
  * Each company operates independently with its own employers, members, and data.
+ * 
+ * @deprecated
+ * This entity is legacy.
+ * Use Organization entity with type=TPA instead.
  */
+@Deprecated
 @Entity
 @Table(name = "companies", uniqueConstraints = {
     @UniqueConstraint(columnNames = "code", name = "uk_company_code")

@@ -2,32 +2,35 @@ package com.waad.tba.modules.employer.service;
 
 import com.waad.tba.common.entity.Organization;
 import com.waad.tba.common.enums.OrganizationType;
+import com.waad.tba.common.repository.OrganizationRepository;
 import com.waad.tba.modules.employer.dto.EmployerCreateDto;
 import com.waad.tba.modules.employer.dto.EmployerResponseDto;
 import com.waad.tba.modules.employer.dto.EmployerSelectorDto;
 import com.waad.tba.modules.employer.mapper.EmployerMapper;
-import com.waad.tba.modules.employer.repository.EmployerRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+/**
+ * Employer service - facade over Organization entity with type=EMPLOYER.
+ */
 @Service
 @RequiredArgsConstructor
 public class EmployerService {
 
-    private final EmployerRepository repository;
+    private final OrganizationRepository organizationRepository;
     private final EmployerMapper mapper;
 
     public List<EmployerResponseDto> getAll() {
-        return repository.findByTypeAndActiveTrue(OrganizationType.EMPLOYER)
+        return organizationRepository.findByTypeAndActiveTrue(OrganizationType.EMPLOYER)
                 .stream()
                 .map(mapper::toResponse)
                 .toList();
     }
 
     public List<EmployerSelectorDto> getSelectors() {
-        return repository.findByTypeAndActiveTrue(OrganizationType.EMPLOYER)
+        return organizationRepository.findByTypeAndActiveTrue(OrganizationType.EMPLOYER)
                 .stream()
                 .map(mapper::toSelector)
                 .toList();
@@ -42,6 +45,8 @@ public class EmployerService {
                 .active(true)
                 .build();
 
-        return mapper.toResponse(repository.save(org));
+        return mapper.toResponse(organizationRepository.save(org));
     }
 }
+
+

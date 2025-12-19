@@ -11,6 +11,11 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * WARNING: This repository still queries legacy InsuranceCompany entity
+ * because Member, Claim, and Policy entities have FK relationships to insurance_companies table.
+ * TODO: Migrate to Organization repository after FK migration is complete.
+ */
 @Repository
 public interface InsuranceCompanyRepository extends JpaRepository<InsuranceCompany, Long> {
     
