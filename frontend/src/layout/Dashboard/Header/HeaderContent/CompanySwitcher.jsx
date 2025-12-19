@@ -3,20 +3,25 @@ import { Box, FormControl, Select, MenuItem, Typography, Chip, Avatar } from '@m
 import { BankOutlined, LockOutlined } from '@ant-design/icons';
 import { useEmployerContext, useRoles } from 'api/rbac';
 import axios from 'utils/axios';
+import { usePermissions } from 'api/rbac';
+
 
 // ==============================|| EMPLOYER SWITCHER ||============================== //
 
 export default function CompanySwitcher() {
   const roles = useRoles();
+const isSuperAdmin = roles.includes('SUPER_ADMIN');
   const { employerId, canSwitch, setEmployerId } = useEmployerContext();
   const [employers, setEmployers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const permissions = usePermissions();
+  const canViewEmployers = permissions.includes('MANAGE_EMPLOYERS');
 
   useEffect(() => {
     // Only fetch employers if switcher should be shown
-    if (!canSwitch) {
-      return;
-    }
+    if (!canSwitch && !isSuperAdmin) {
+  return;
+}
 
     // Fetch employers for eligible users
     const fetchEmployers = async () => {
@@ -40,9 +45,10 @@ export default function CompanySwitcher() {
   }, [canSwitch]);
 
   // Don't show for users who can't switch (EMPLOYER role is locked to their company)
-  if (!canSwitch) {
-    return null;
-  }
+  if (!canSwitch && !isSuperAdmin) {
+  return null;
+}
+
 
   const handleEmployerChange = (event) => {
     const selectedId = event.target.value;
