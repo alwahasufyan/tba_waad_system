@@ -33,7 +33,7 @@
 | 2 | Session Validation | `/api/auth/session/me` | GET | 200 OK | 200 OK | ✅ PASS |
 | 3 | Employers List | `/api/employers` | GET | 200 OK | 200 OK | ✅ PASS |
 | 4 | Insurance Companies | `/api/insurance-companies` | GET | 200 OK | 200 OK | ✅ PASS |
-| 5 | Reviewer Companies | `/api/reviewer-companies` | GET | 200 OK | ✅ PASS |
+| 5 | Reviewer Companies | `/api/reviewer-companies` | GET | 200 OK | 200 OK | ✅ PASS |
 
 **Success Rate:** 5/5 (100%)
 
@@ -99,32 +99,19 @@ GET /api/reviewer-companies
 
 ### Issue #1: 403 Forbidden on Organization Endpoints (CRITICAL)
 
-**Symptom:**  
+**Initial Symptom:**  
 ```
 GET /api/employers → HTTP 403 Forbidden
 Authenticated user: superadmin (role: SUPER_ADMIN)
 Expected: HTTP 200 (SUPER_ADMIN should have full access)
 ```
 
-**Root Cause:**  
+**Initial Discovery:**  
 Spring Security's `@PreAuthorize("hasRole('SUPER_ADMIN')")` requires authorities with `ROLE_` prefix, but `CustomUserDetailsService.getAuthorities()` only loaded **permissions**, not **roles**.
 
-**Analysis:**
+**First Fix (Partial Resolution):**
 ```java
-// BEFORE (BROKEN):
-private Collection<? extends GrantedAuthority> getAuthorities(User user) {
-    return user.getRoles().stream()
-            .flatMap(role -> role.getPermissions().stream())
-            .map(permission -> new SimpleGrantedAuthority(permission.getName()))
-            .collect(Collectors.toSet());
-}
-// Result: Authorities = ["VIEW_EMPLOYERS", "MANAGE_EMPLOYERS", ...]
-// Missing: "ROLE_SUPER_ADMIN" → hasRole() checks FAIL
-```
-
-**Fix Applied:**
-```java
-// AFTER (FIXED):
+// CustomUserDetailsService - Added ROLE_ prefix for roles
 private Collection<? extends GrantedAuthority> getAuthorities(User user) {
     Set<GrantedAuthority> authorities = new HashSet<>();
     
@@ -142,15 +129,52 @@ private Collection<? extends GrantedAuthority> getAuthorities(User user) {
     
     return authorities;
 }
-// Result: Authorities = ["ROLE_SUPER_ADMIN", "VIEW_EMPLOYERS", "MANAGE_EMPLOYERS", ...]
-// hasRole('SUPER_ADMIN') → ✅ SUCCESS
+```
+
+**Test Results After First Fix:**
+- ✅ Login: HTTP 200
+- ✅ `/api/employers`: HTTP 200
+- ❌ `/api/insurance-companies`: HTTP 403 (STILL FAILING)
+- ❌ `/api/reviewer-companies`: HTTP 403 (STILL FAILING)
+
+**Root Cause Analysis (Deep Dive):**  
+After examining Spring Security logs, discovered **dual authentication paths** with inconsistent authority creation:
+
+1. **CustomUserDetailsService** (used during initial login):
+   ```java
+   authorities.add(new SimpleGrantedAuthority("ROLE_" + role.getName()));  // ✅ Correct
+   ```
+
+2. **SessionAuthenticationFilter** (used for subsequent requests):
+   ```java
+   authorities.add(new SimpleGrantedAuthority(role));  // ❌ Missing ROLE_ prefix
+   ```
+
+**Why This Caused the 403 Pattern:**
+1. Login → CustomUserDetailsService creates "ROLE_SUPER_ADMIN" → Session created ✅
+2. First request (`/api/employers`) → Uses authentication from login → Works ✅
+3. Second request (`/api/insurance-companies`) → SessionAuthenticationFilter reloads authorities → Creates "SUPER_ADMIN" without prefix ❌
+4. `@PreAuthorize("hasRole('SUPER_ADMIN')")` requires "ROLE_SUPER_ADMIN" → Authorization denied → HTTP 403 ❌
+
+**Final Fix (SessionAuthenticationFilter):**
+```java
+// File: backend/src/main/java/com/waad/tba/security/SessionAuthenticationFilter.java
+// Line: 87
+
+// BEFORE (BROKEN):
+roleNames.forEach(role -> authorities.add(new SimpleGrantedAuthority(role)));
+
+// AFTER (FIXED):
+roleNames.forEach(role -> authorities.add(new SimpleGrantedAuthority("ROLE_" + role)));
+// CRITICAL: Add "ROLE_" prefix for roles (required for @PreAuthorize hasRole() checks)
 ```
 
 **Files Modified:**
-1. `backend/src/main/java/com/waad/tba/security/CustomUserDetailsService.java`
-2. `backend/src/main/java/com/waad/tba/modules/employer/controller/EmployerController.java`
-3. `backend/src/main/java/com/waad/tba/modules/insurance/controller/InsuranceCompanyController.java`
-4. `backend/src/main/java/com/waad/tba/modules/reviewer/controller/ReviewerCompanyController.java`
+1. `backend/src/main/java/com/waad/tba/security/CustomUserDetailsService.java` (Commit b6d0bb8)
+2. `backend/src/main/java/com/waad/tba/security/SessionAuthenticationFilter.java` (Commit 7bfa870) ← **ROOT CAUSE FIX**
+3. `backend/src/main/java/com/waad/tba/modules/employer/controller/EmployerController.java` (Commit b6d0bb8)
+4. `backend/src/main/java/com/waad/tba/modules/insurance/controller/InsuranceCompanyController.java` (Commit b6d0bb8)
+5. `backend/src/main/java/com/waad/tba/modules/reviewer/controller/ReviewerCompanyController.java` (Commit b6d0bb8)
 
 **Security Annotation Pattern:**
 ```java
@@ -169,16 +193,16 @@ public ResponseEntity<EmployerResponseDto> create(@RequestBody EmployerCreateDto
 
 **Verification:**
 ```bash
-# After fix:
-curl -b cookies.txt http://localhost:8080/api/employers
-→ HTTP 200 [] ✅
-
-curl -b cookies.txt http://localhost:8080/api/insurance-companies  
-→ HTTP 200 {"data":{"items":[],"total":0}} ✅
-
-curl -b cookies.txt http://localhost:8080/api/reviewer-companies
-→ HTTP 200 {"data":{"items":[],"total":0}} ✅
+# Final validation with persistent session cookie:
+Login: ✅ HTTP 200
+GET /api/employers: ✅ HTTP 200
+GET /api/insurance-companies: ✅ HTTP 200 (FIXED from 403)
+GET /api/reviewer-companies: ✅ HTTP 200 (FIXED from 403)
 ```
+
+**Git Commits:**
+- `b6d0bb8`: Initial security fix (CustomUserDetailsService + controller annotations)
+- `7bfa870`: SessionAuthenticationFilter ROLE_ prefix fix (**ROOT CAUSE RESOLUTION**)
 
 ---
 
