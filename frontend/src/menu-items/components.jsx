@@ -31,7 +31,7 @@ import {
  */
 export const filterMenuByRoles = (menuItems, userRoles = []) => {
   // ADMIN sees everything
-  if (userRoles.includes('ADMIN')) {
+  if (userRoles.includes('SUPER_ADMIN') || userRoles.includes('ADMIN')) {
     return menuItems;
   }
 
