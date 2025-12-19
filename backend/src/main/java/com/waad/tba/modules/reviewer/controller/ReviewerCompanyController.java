@@ -30,7 +30,7 @@ public class ReviewerCompanyController {
     private final ReviewerCompanyService service;
 
     @GetMapping("/selector")
-    @PreAuthorize("hasAuthority('VIEW_REVIEWER')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('VIEW_REVIEWER')")
     @Operation(summary = "Get reviewer company selector options", description = "Returns active reviewer companies for dropdown/selector")
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Reviewer company options retrieved successfully"),
@@ -42,7 +42,7 @@ public class ReviewerCompanyController {
     }
 
     @GetMapping("/all")
-    @PreAuthorize("hasAuthority('VIEW_REVIEWER')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('VIEW_REVIEWER')")
     @Operation(summary = "List all reviewer companies", description = "Returns all reviewer companies.")
     @ApiResponses({
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Reviewer companies retrieved successfully"),
@@ -58,7 +58,7 @@ public class ReviewerCompanyController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAuthority('VIEW_REVIEWER')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('VIEW_REVIEWER')")
     @Operation(summary = "Paginate reviewer companies", description = "Returns a page of reviewer companies with pagination and optional search.")
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Reviewer companies page retrieved successfully"),
@@ -84,7 +84,7 @@ public class ReviewerCompanyController {
     }
 
     @GetMapping("/count")
-    @PreAuthorize("hasAuthority('VIEW_REVIEWER')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('VIEW_REVIEWER')")
     @Operation(summary = "Count reviewer companies", description = "Returns total number of reviewer companies")
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Total count retrieved successfully"),
@@ -97,7 +97,7 @@ public class ReviewerCompanyController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAuthority('VIEW_REVIEWER')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('VIEW_REVIEWER')")
     @Operation(summary = "Get reviewer company by ID", description = "Returns a reviewer company by ID.")
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Reviewer company retrieved successfully"),
@@ -113,7 +113,7 @@ public class ReviewerCompanyController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAuthority('MANAGE_REVIEWER')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('MANAGE_REVIEWER')")
     @Operation(summary = "Create reviewer company", description = "Creates a new reviewer company.")
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "Reviewer company created successfully"),
@@ -130,7 +130,7 @@ public class ReviewerCompanyController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAuthority('MANAGE_REVIEWER')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('MANAGE_REVIEWER')")
     @Operation(summary = "Update reviewer company", description = "Updates an existing reviewer company.")
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Reviewer company updated successfully"),
@@ -149,7 +149,7 @@ public class ReviewerCompanyController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('MANAGE_REVIEWER')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('MANAGE_REVIEWER')")
     @Operation(summary = "Delete reviewer company", description = "Deletes a reviewer company by ID.")
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Reviewer company deleted successfully"),
@@ -165,7 +165,7 @@ public class ReviewerCompanyController {
     }
 
     @GetMapping("/search")
-    @PreAuthorize("hasAuthority('VIEW_REVIEWER')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('VIEW_REVIEWER')")
     @Operation(summary = "Search reviewer companies", description = "Search reviewer companies by query string.")
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Reviewer companies retrieved successfully"),

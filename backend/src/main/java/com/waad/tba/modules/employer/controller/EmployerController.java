@@ -19,7 +19,7 @@ public class EmployerController {
     private final EmployerService service;
 
     @GetMapping
-    @PreAuthorize("hasAuthority('VIEW_EMPLOYERS')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('VIEW_EMPLOYERS')")
     public List<EmployerResponseDto> getAll() {
         return service.getAll();
     }
@@ -30,7 +30,7 @@ public class EmployerController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAuthority('MANAGE_EMPLOYERS')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('MANAGE_EMPLOYERS')")
     public EmployerResponseDto create(@Valid @RequestBody EmployerCreateDto dto) {
         return service.create(dto);
     }

@@ -41,7 +41,7 @@ public class InsuranceCompanyController {
     private final InsuranceCompanyService insuranceCompanyService;
 
     @GetMapping("/selector")
-    @PreAuthorize("hasAuthority('VIEW_INSURANCE')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('VIEW_INSURANCE')")
     @Operation(summary = "Get insurance company selector options", description = "Returns active insurance companies for dropdown/selector")
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Insurance company options retrieved successfully"),
@@ -58,7 +58,7 @@ public class InsuranceCompanyController {
      */
     @Deprecated
     @GetMapping("/all")
-    @PreAuthorize("hasAuthority('VIEW_INSURANCE')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('VIEW_INSURANCE')")
     @Operation(summary = "List all insurance companies", description = "Returns all insurance companies.")
     @ApiResponses({
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Insurance companies retrieved successfully"),
@@ -74,7 +74,7 @@ public class InsuranceCompanyController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAuthority('VIEW_INSURANCE')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('VIEW_INSURANCE')")
     @Operation(summary = "Paginate insurance companies", description = "Returns a page of insurance companies with pagination and optional search.")
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Insurance companies page retrieved successfully"),
@@ -100,7 +100,7 @@ public class InsuranceCompanyController {
     }
 
     @GetMapping("/count")
-    @PreAuthorize("hasAuthority('VIEW_INSURANCE')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('VIEW_INSURANCE')")
     @Operation(summary = "Count insurance companies", description = "Returns total number of insurance companies")
     public ResponseEntity<ApiResponse<Long>> count() {
         long total = insuranceCompanyService.count();
@@ -108,7 +108,7 @@ public class InsuranceCompanyController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAuthority('VIEW_INSURANCE')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('VIEW_INSURANCE')")
     @Operation(summary = "Get insurance company by ID", description = "Returns an insurance company by ID.")
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Insurance company retrieved successfully"),
@@ -124,7 +124,7 @@ public class InsuranceCompanyController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAuthority('MANAGE_INSURANCE')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('MANAGE_INSURANCE')")
     @Operation(summary = "Create insurance company", description = "Creates a new insurance company.")
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "Insurance company created successfully"),
@@ -141,7 +141,7 @@ public class InsuranceCompanyController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAuthority('MANAGE_INSURANCE')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('MANAGE_INSURANCE')")
     @Operation(summary = "Update insurance company", description = "Updates an existing insurance company by ID.")
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Insurance company updated successfully"),
@@ -160,7 +160,7 @@ public class InsuranceCompanyController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('MANAGE_INSURANCE')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('MANAGE_INSURANCE')")
     @Operation(summary = "Delete insurance company", description = "Deletes an insurance company by ID.")
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Insurance company deleted successfully"),
