@@ -6,11 +6,11 @@ import axiosClient from 'utils/axios';
  * Backend: MemberController.java
  */
 
-const BASE_URL = '/members';
+const BASE_URL = '/api/members';
 
 /**
  * Helper function to unwrap ApiResponse
- * Backend returns: { success: true, data: {...}, message: "..." }
+ * Backend returns: { status: "success", data: {...}, message: "...", timestamp: "..." }
  */
 const unwrap = (response) => response.data?.data || response.data;
 

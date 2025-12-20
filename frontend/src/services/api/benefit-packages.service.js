@@ -5,11 +5,10 @@ import axiosClient from 'utils/axios';
  * Provides CRUD operations for Benefit Packages module
  */
 
-const BASE_URL = '/benefit-packages';
+const BASE_URL = '/api/benefit-packages';
 
 /**
  * Helper function to unwrap ApiResponse
- * Backend returns: { success: true, data: {...}, message: "..." }
  */
 const unwrap = (response) => response.data?.data || response.data;
 

@@ -4,13 +4,19 @@ import apiClient from './axiosClient';
 
 const BASE_URL = '/api/claims';
 
+/**
+ * Helper function to unwrap ApiResponse
+ */
+const unwrap = (response) => response.data?.data || response.data;
+
 export const claimsService = {
   /**
    * Get all claims
    * @returns {Promise<Array>} List of claims
    */
   getAll: async () => {
-    return await apiClient.get(BASE_URL);
+    const response = await apiClient.get(BASE_URL);
+    return unwrap(response);
   },
 
   /**
@@ -19,7 +25,8 @@ export const claimsService = {
    * @returns {Promise<Object>} Claim details
    */
   getById: async (id) => {
-    return await apiClient.get(`${BASE_URL}/${id}`);
+    const response = await apiClient.get(`${BASE_URL}/${id}`);
+    return unwrap(response);
   },
 
   /**
@@ -28,7 +35,8 @@ export const claimsService = {
    * @returns {Promise<Object>} Claim details
    */
   getByClaimNumber: async (claimNumber) => {
-    return await apiClient.get(`${BASE_URL}/number/${claimNumber}`);
+    const response = await apiClient.get(`${BASE_URL}/number/${claimNumber}`);
+    return unwrap(response);
   },
 
   /**
@@ -37,7 +45,8 @@ export const claimsService = {
    * @returns {Promise<Object>} Created claim
    */
   create: async (data) => {
-    return await apiClient.post(BASE_URL, data);
+    const response = await apiClient.post(BASE_URL, data);
+    return unwrap(response);
   },
 
   /**
@@ -47,7 +56,8 @@ export const claimsService = {
    * @returns {Promise<Object>} Updated claim
    */
   update: async (id, data) => {
-    return await apiClient.put(`${BASE_URL}/${id}`, data);
+    const response = await apiClient.put(`${BASE_URL}/${id}`, data);
+    return unwrap(response);
   },
 
   /**
@@ -56,7 +66,8 @@ export const claimsService = {
    * @returns {Promise<void>}
    */
   remove: async (id) => {
-    return await apiClient.delete(`${BASE_URL}/${id}`);
+    const response = await apiClient.delete(`${BASE_URL}/${id}`);
+    return unwrap(response);
   },
 
   /**
@@ -65,7 +76,8 @@ export const claimsService = {
    * @returns {Promise<Array>} List of claims
    */
   getByVisit: async (visitId) => {
-    return await apiClient.get(`${BASE_URL}/visit/${visitId}`);
+    const response = await apiClient.get(`${BASE_URL}/visit/${visitId}`);
+    return unwrap(response);
   },
 
   /**
@@ -74,7 +86,8 @@ export const claimsService = {
    * @returns {Promise<Array>} List of claims
    */
   getByStatus: async (status) => {
-    return await apiClient.get(`${BASE_URL}/status/${status}`);
+    const response = await apiClient.get(`${BASE_URL}/status/${status}`);
+    return unwrap(response);
   },
 
   /**
@@ -84,7 +97,8 @@ export const claimsService = {
    * @returns {Promise<Object>} Approved claim
    */
   approve: async (id, data) => {
-    return await apiClient.post(`${BASE_URL}/${id}/approve`, data);
+    const response = await apiClient.post(`${BASE_URL}/${id}/approve`, data);
+    return unwrap(response);
   },
 
   /**
@@ -94,7 +108,8 @@ export const claimsService = {
    * @returns {Promise<Object>} Rejected claim
    */
   reject: async (id, data) => {
-    return await apiClient.post(`${BASE_URL}/${id}/reject`, data);
+    const response = await apiClient.post(`${BASE_URL}/${id}/reject`, data);
+    return unwrap(response);
   },
 
   /**
@@ -103,7 +118,8 @@ export const claimsService = {
    * @returns {Promise<Array>} Filtered claims
    */
   search: async (searchTerm) => {
-    return await apiClient.get(`${BASE_URL}/search?q=${encodeURIComponent(searchTerm)}`);
+    const response = await apiClient.get(`${BASE_URL}/search?q=${encodeURIComponent(searchTerm)}`);
+    return unwrap(response);
   }
 };
 

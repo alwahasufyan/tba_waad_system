@@ -7,6 +7,11 @@ import apiClient from './axiosClient';
 const BASE_URL = '/api/providers';
 
 /**
+ * Helper function to unwrap ApiResponse
+ */
+const unwrap = (response) => response.data?.data || response.data;
+
+/**
  * Providers Service
  * Manages healthcare providers (hospitals, clinics, labs, pharmacies)
  * Used in Kanban UI to display provider network and status
@@ -18,7 +23,8 @@ export const providersService = {
    * @returns {Promise<Array>} List of providers
    */
   getAll: async (params = {}) => {
-    return await apiClient.get(BASE_URL, { params });
+    const response = await apiClient.get(BASE_URL, { params });
+    return unwrap(response);
   },
 
   /**
@@ -27,7 +33,8 @@ export const providersService = {
    * @returns {Promise<Object>} Provider details
    */
   getById: async (id) => {
-    return await apiClient.get(`${BASE_URL}/${id}`);
+    const response = await apiClient.get(`${BASE_URL}/${id}`);
+    return unwrap(response);
   },
 
   /**
@@ -36,7 +43,8 @@ export const providersService = {
    * @returns {Promise<Object>} Created provider
    */
   create: async (data) => {
-    return await apiClient.post(BASE_URL, data);
+    const response = await apiClient.post(BASE_URL, data);
+    return unwrap(response);
   },
 
   /**
@@ -46,7 +54,8 @@ export const providersService = {
    * @returns {Promise<Object>} Updated provider
    */
   update: async (id, data) => {
-    return await apiClient.put(`${BASE_URL}/${id}`, data);
+    const response = await apiClient.put(`${BASE_URL}/${id}`, data);
+    return unwrap(response);
   },
 
   /**
@@ -55,7 +64,8 @@ export const providersService = {
    * @returns {Promise<void>}
    */
   remove: async (id) => {
-    return await apiClient.delete(`${BASE_URL}/${id}`);
+    const response = await apiClient.delete(`${BASE_URL}/${id}`);
+    return unwrap(response);
   },
 
   /**
@@ -64,7 +74,8 @@ export const providersService = {
    * @returns {Promise<Array>} Matching providers
    */
   search: async (query) => {
-    return await apiClient.get(`${BASE_URL}/search`, { params: { query } });
+    const response = await apiClient.get(`${BASE_URL}/search`, { params: { query } });
+    return unwrap(response);
   },
 
   /**
@@ -73,7 +84,8 @@ export const providersService = {
    * @returns {Promise<Array>} Filtered providers
    */
   getByType: async (type) => {
-    return await apiClient.get(`${BASE_URL}/type/${type}`);
+    const response = await apiClient.get(`${BASE_URL}/type/${type}`);
+    return unwrap(response);
   },
 
   /**
@@ -82,7 +94,8 @@ export const providersService = {
    * @returns {Promise<Array>} Providers in region
    */
   getByRegion: async (region) => {
-    return await apiClient.get(`${BASE_URL}/region/${region}`);
+    const response = await apiClient.get(`${BASE_URL}/region/${region}`);
+    return unwrap(response);
   }
 };
 

@@ -6,11 +6,10 @@ import axiosClient from 'utils/axios';
  * Backend: MedicalPackageController.java
  */
 
-const BASE_URL = '/medical-packages';
+const BASE_URL = '/api/medical-packages';
 
 /**
  * Helper function to unwrap ApiResponse
- * Backend returns: { success: true, data: {...}, message: "..." }
  */
 const unwrap = (response) => response.data?.data || response.data;
 
