@@ -5,6 +5,7 @@ import com.waad.tba.modules.member.repository.MemberRepository;
 import com.waad.tba.modules.preauth.dto.ApprovePreAuthDto;
 import com.waad.tba.modules.preauth.dto.PreAuthorizationDto;
 import com.waad.tba.modules.preauth.dto.RejectPreAuthDto;
+import com.waad.tba.modules.preauth.entity.PreAuthStatus;
 import com.waad.tba.modules.preauth.entity.PreAuthorization;
 import com.waad.tba.modules.preauth.repository.PreAuthorizationRepository;
 import com.waad.tba.modules.rbac.entity.User;
@@ -71,7 +72,7 @@ public class PreAuthorizationService {
     @Transactional(readOnly = true)
     public List<PreAuthorizationDto> getPreAuthorizationsByStatus(String status) {
         log.info("Fetching pre-authorizations with status: {}", status);
-        return preAuthRepository.findByStatus(PreAuthorization.PreAuthStatus.valueOf(status)).stream()
+        return preAuthRepository.findByStatus(PreAuthStatus.valueOf(status)).stream()
                 .map(this::toDto)
                 .collect(Collectors.toList());
     }
@@ -103,7 +104,7 @@ public class PreAuthorizationService {
                 .serviceFromDate(dto.getServiceFromDate())
                 .serviceToDate(dto.getServiceToDate())
                 .numberOfDays(dto.getNumberOfDays())
-                .status(PreAuthorization.PreAuthStatus.PENDING)
+                .status(PreAuthStatus.REQUESTED)
                 .requestNotes(dto.getRequestNotes())
                 .attachments(dto.getAttachments())
                 .active(true)
@@ -121,7 +122,7 @@ public class PreAuthorizationService {
         PreAuthorization existing = preAuthRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Pre-authorization not found with ID: " + id));
 
-        if (existing.getStatus() != PreAuthorization.PreAuthStatus.PENDING) {
+        if (existing.getStatus() != PreAuthStatus.REQUESTED) {
             throw new RuntimeException("Cannot update pre-authorization that is already reviewed");
         }
 
@@ -159,15 +160,15 @@ public class PreAuthorizationService {
         PreAuthorization preAuth = preAuthRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Pre-authorization not found with ID: " + id));
 
-        if (preAuth.getStatus() != PreAuthorization.PreAuthStatus.PENDING && 
-            preAuth.getStatus() != PreAuthorization.PreAuthStatus.UNDER_REVIEW) {
+        if (preAuth.getStatus() != PreAuthStatus.REQUESTED && 
+            preAuth.getStatus() != PreAuthStatus.UNDER_REVIEW) {
             throw new RuntimeException("Pre-authorization cannot be approved in current status");
         }
 
         User reviewer = userRepository.findById(reviewerId)
                 .orElseThrow(() -> new RuntimeException("Reviewer not found with ID: " + reviewerId));
 
-        preAuth.setStatus(PreAuthorization.PreAuthStatus.APPROVED);
+        preAuth.setStatus(PreAuthStatus.APPROVED);
         preAuth.setApprovedAmount(dto.getApprovedAmount());
         preAuth.setReviewer(reviewer);
         preAuth.setReviewedAt(LocalDateTime.now());
@@ -188,15 +189,15 @@ public class PreAuthorizationService {
         PreAuthorization preAuth = preAuthRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Pre-authorization not found with ID: " + id));
 
-        if (preAuth.getStatus() != PreAuthorization.PreAuthStatus.PENDING && 
-            preAuth.getStatus() != PreAuthorization.PreAuthStatus.UNDER_REVIEW) {
+        if (preAuth.getStatus() != PreAuthStatus.REQUESTED && 
+            preAuth.getStatus() != PreAuthStatus.UNDER_REVIEW) {
             throw new RuntimeException("Pre-authorization cannot be rejected in current status");
         }
 
         User reviewer = userRepository.findById(reviewerId)
                 .orElseThrow(() -> new RuntimeException("Reviewer not found with ID: " + reviewerId));
 
-        preAuth.setStatus(PreAuthorization.PreAuthStatus.REJECTED);
+        preAuth.setStatus(PreAuthStatus.REJECTED);
         preAuth.setRejectionReason(dto.getRejectionReason());
         preAuth.setReviewer(reviewer);
         preAuth.setReviewedAt(LocalDateTime.now());
@@ -217,7 +218,7 @@ public class PreAuthorizationService {
         User reviewer = userRepository.findById(reviewerId)
                 .orElseThrow(() -> new RuntimeException("Reviewer not found with ID: " + reviewerId));
 
-        preAuth.setStatus(PreAuthorization.PreAuthStatus.UNDER_REVIEW);
+        preAuth.setStatus(PreAuthStatus.UNDER_REVIEW);
         preAuth.setReviewer(reviewer);
 
         PreAuthorization updated = preAuthRepository.save(preAuth);

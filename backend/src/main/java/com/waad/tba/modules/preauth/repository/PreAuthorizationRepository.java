@@ -1,5 +1,6 @@
 package com.waad.tba.modules.preauth.repository;
 
+import com.waad.tba.modules.preauth.entity.PreAuthStatus;
 import com.waad.tba.modules.preauth.entity.PreAuthorization;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -19,17 +20,17 @@ public interface PreAuthorizationRepository extends JpaRepository<PreAuthorizati
     
     List<PreAuthorization> findByProviderId(Long providerId);
     
-    List<PreAuthorization> findByStatus(PreAuthorization.PreAuthStatus status);
+    List<PreAuthorization> findByStatus(PreAuthStatus status);
     
     List<PreAuthorization> findByReviewerId(Long reviewerId);
     
     @Query("SELECT p FROM PreAuthorization p WHERE p.member.id = :memberId AND p.status = :status")
     List<PreAuthorization> findByMemberIdAndStatus(@Param("memberId") Long memberId, 
-                                                    @Param("status") PreAuthorization.PreAuthStatus status);
+                                                    @Param("status") PreAuthStatus status);
     
     @Query("SELECT p FROM PreAuthorization p WHERE p.providerId = :providerId AND p.status = :status")
     List<PreAuthorization> findByProviderIdAndStatus(@Param("providerId") Long providerId, 
-                                                      @Param("status") PreAuthorization.PreAuthStatus status);
+                                                      @Param("status") PreAuthStatus status);
     
     @Query("SELECT p FROM PreAuthorization p WHERE p.status = 'APPROVED' AND p.approvalExpiryDate < :date")
     List<PreAuthorization> findExpiredApprovals(@Param("date") LocalDate date);

@@ -101,7 +101,7 @@ public class PreAuthorization {
     @Enumerated(EnumType.STRING)
     @Builder.Default
     @Column(nullable = false, length = 20)
-    private PreAuthStatus status = PreAuthStatus.PENDING;
+    private PreAuthStatus status = PreAuthStatus.REQUESTED;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "reviewer_id")
@@ -136,15 +136,8 @@ public class PreAuthorization {
     @LastModifiedDate
     private LocalDateTime updatedAt;
 
-    public enum PreAuthStatus {
-        PENDING,
-        UNDER_REVIEW,
-        APPROVED,
-        PARTIALLY_APPROVED,
-        REJECTED,
-        EXPIRED,
-        MORE_INFO_REQUIRED
-    }
+    // Note: PreAuthStatus enum moved to separate file: PreAuthStatus.java
+    // Supporting lifecycle: REQUESTED → UNDER_REVIEW → APPROVED/REJECTED → EXPIRED
 
     public enum ServiceType {
         INPATIENT,

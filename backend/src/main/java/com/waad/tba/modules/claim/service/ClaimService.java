@@ -22,6 +22,7 @@ import com.waad.tba.modules.claim.dto.ClaimUpdateDto;
 import com.waad.tba.modules.claim.dto.ClaimViewDto;
 import com.waad.tba.modules.claim.entity.Claim;
 import com.waad.tba.modules.claim.entity.ClaimStatus;
+import com.waad.tba.modules.claim.entity.ClaimType;
 import com.waad.tba.modules.claim.mapper.ClaimMapper;
 import com.waad.tba.modules.claim.repository.ClaimRepository;
 import com.waad.tba.modules.member.entity.Member;
@@ -29,6 +30,7 @@ import com.waad.tba.modules.member.repository.MemberRepository;
 import com.waad.tba.modules.policy.entity.Policy;
 import com.waad.tba.modules.policy.service.CoverageValidationService;
 import com.waad.tba.modules.policy.service.PolicyValidationService;
+import com.waad.tba.modules.provider.service.ProviderNetworkService;
 import com.waad.tba.modules.rbac.entity.User;
 import com.waad.tba.security.AuthorizationService;
 
@@ -87,6 +89,12 @@ public class ClaimService {
     private final PolicyValidationService policyValidationService;
     private final CoverageValidationService coverageValidationService;
     private final ClaimStateMachine claimStateMachine;
+    
+    // Phase 7: Operational completeness services
+    private final ProviderNetworkService providerNetworkService;
+    private final AttachmentRulesService attachmentRulesService;
+    private final CostCalculationService costCalculationService;
+    private final ClaimAuditService claimAuditService;
 
     /**
      * Search claims with data-level filtering.
@@ -132,6 +140,11 @@ public class ClaimService {
      * 2. Policy must cover service date
      * 3. Services must be covered in benefit package
      * 4. Coverage limits must not be exceeded
+     * 
+     * PHASE 7 ADDITIONS:
+     * 5. Provider network validation (IN_NETWORK/OUT_OF_NETWORK warning)
+     * 6. Cost calculation preview (deductible, co-pay)
+     * 7. Audit trail creation
      */
     public ClaimViewDto createClaim(ClaimCreateDto dto) {
         log.info("📝 Creating claim for member {}", dto.getMemberId());
@@ -157,11 +170,27 @@ public class ClaimService {
                 member, policy, dto.getRequestedAmount(), serviceDate);
         }
         
+        // Phase 7: Provider network validation (non-blocking, just warning)
+        if (dto.getProviderName() != null) {
+            var networkResult = providerNetworkService.validateProviderForClaim(dto.getProviderName());
+            if (networkResult.warning() != null) {
+                log.warn("⚠️ Provider network warning for claim: {}", networkResult.warning());
+                // Warning is non-blocking - claim can still be created
+            }
+        }
+        
         // Create claim in DRAFT status
         Claim claim = claimMapper.toEntity(dto);
         claim.setStatus(ClaimStatus.DRAFT); // Always start as DRAFT
         
         Claim savedClaim = claimRepository.save(claim);
+        
+        // Phase 7: Record creation in audit trail
+        User currentUser = authorizationService.getCurrentUser();
+        if (currentUser != null) {
+            claimAuditService.recordCreation(savedClaim, currentUser);
+        }
+        
         log.info("✅ Claim {} created in DRAFT status", savedClaim.getId());
         
         return claimMapper.toViewDto(savedClaim);
@@ -175,6 +204,11 @@ public class ClaimService {
      * 2. Status changes go through ClaimStateMachine
      * 3. REJECTED requires reviewer comment
      * 4. APPROVED requires approved amount
+     * 
+     * PHASE 7 ADDITIONS:
+     * 5. Attachment validation before SUBMITTED
+     * 6. Cost calculation before APPROVED
+     * 7. Audit trail for all changes
      */
     public ClaimViewDto updateClaim(Long id, ClaimUpdateDto dto) {
         log.info("📝 Updating claim {}", id);
@@ -183,11 +217,34 @@ public class ClaimService {
                 .orElseThrow(() -> new ResourceNotFoundException("Claim", "id", id));
         
         User currentUser = authorizationService.getCurrentUser();
+        ClaimStatus previousStatus = claim.getStatus();
         
         // Phase 6: Check if status change is requested
         if (dto.getStatus() != null && dto.getStatus() != claim.getStatus()) {
+            
+            // Phase 7: Validate attachments before transitioning to SUBMITTED
+            if (dto.getStatus() == ClaimStatus.SUBMITTED) {
+                var attachmentResult = attachmentRulesService.validateForSubmission(claim, ClaimType.GENERAL);
+                if (!attachmentResult.valid()) {
+                    throw new BusinessRuleException(
+                        "Cannot submit claim: " + attachmentResult.getErrorMessage()
+                    );
+                }
+            }
+            
+            // Phase 7: Calculate costs before APPROVED
+            if (dto.getStatus() == ClaimStatus.APPROVED) {
+                var costBreakdown = costCalculationService.calculateCosts(claim);
+                log.info("💰 Cost calculation for approval: {}", costBreakdown.getSummary());
+                // Costs are calculated but actual approved amount is set by reviewer
+            }
+            
             // Use state machine for status transitions
             claimStateMachine.transition(claim, dto.getStatus(), currentUser);
+            
+            // Phase 7: Record status change in audit trail
+            claimAuditService.recordStatusChange(claim, previousStatus, currentUser, dto.getReviewerComment());
+            
         } else {
             // Regular update - check if edits are allowed
             if (!claimStateMachine.canEdit(claim)) {
@@ -211,6 +268,11 @@ public class ClaimService {
     /**
      * Transition claim status using state machine.
      * Dedicated endpoint for status changes.
+     * 
+     * PHASE 7 ADDITIONS:
+     * - Attachment validation before SUBMITTED
+     * - Cost calculation before APPROVED
+     * - Audit trail recording
      */
     public ClaimViewDto transitionStatus(Long id, ClaimStatus targetStatus, String comment) {
         log.info("🔄 Transitioning claim {} to {}", id, targetStatus);
@@ -219,6 +281,23 @@ public class ClaimService {
                 .orElseThrow(() -> new ResourceNotFoundException("Claim", "id", id));
         
         User currentUser = authorizationService.getCurrentUser();
+        ClaimStatus previousStatus = claim.getStatus();
+        
+        // Phase 7: Validate attachments before SUBMITTED
+        if (targetStatus == ClaimStatus.SUBMITTED) {
+            var attachmentResult = attachmentRulesService.validateForSubmission(claim, ClaimType.GENERAL);
+            if (!attachmentResult.valid()) {
+                throw new BusinessRuleException(
+                    "Cannot submit claim: " + attachmentResult.getErrorMessage()
+                );
+            }
+        }
+        
+        // Phase 7: Calculate and log costs before approval
+        if (targetStatus == ClaimStatus.APPROVED) {
+            var costBreakdown = costCalculationService.calculateCosts(claim);
+            log.info("💰 Cost breakdown for claim {}: {}", id, costBreakdown.getSummary());
+        }
         
         // Set comment before transition (needed for REJECTED validation)
         if (comment != null && !comment.isBlank()) {
@@ -229,6 +308,18 @@ public class ClaimService {
         claimStateMachine.transition(claim, targetStatus, currentUser);
         
         Claim updatedClaim = claimRepository.save(claim);
+        
+        // Phase 7: Record in audit trail based on transition type
+        if (targetStatus == ClaimStatus.APPROVED) {
+            claimAuditService.recordApproval(updatedClaim, previousStatus, null, currentUser, comment);
+        } else if (targetStatus == ClaimStatus.REJECTED) {
+            claimAuditService.recordRejection(updatedClaim, previousStatus, currentUser, comment);
+        } else if (targetStatus == ClaimStatus.SETTLED) {
+            claimAuditService.recordSettlement(updatedClaim, currentUser);
+        } else {
+            claimAuditService.recordStatusChange(updatedClaim, previousStatus, currentUser, comment);
+        }
+        
         log.info("✅ Claim {} transitioned to {}", id, targetStatus);
         
         return claimMapper.toViewDto(updatedClaim);
@@ -337,6 +428,59 @@ public class ClaimService {
         return claims.stream()
                 .map(claimMapper::toViewDto)
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * Get cost breakdown preview for a claim (Phase 7).
+     * Returns deductible, co-pay, and insurance coverage amounts.
+     */
+    @Transactional(readOnly = true)
+    public CostCalculationService.CostBreakdown getCostBreakdown(Long id) {
+        Claim claim = claimRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Claim", "id", id));
+        return costCalculationService.calculateCosts(claim);
+    }
+
+    /**
+     * Get audit history for a claim (Phase 7).
+     * Returns all state changes and actions performed on the claim.
+     */
+    @Transactional(readOnly = true)
+    public List<com.waad.tba.modules.claim.entity.ClaimAuditLog> getAuditHistory(Long id) {
+        // Verify claim exists
+        if (!claimRepository.existsById(id)) {
+            throw new ResourceNotFoundException("Claim", "id", id);
+        }
+        return claimAuditService.getAuditHistory(id);
+    }
+
+    /**
+     * Get attachment requirements for a claim type (Phase 7).
+     */
+    @Transactional(readOnly = true)
+    public AttachmentRulesService.AttachmentRequirements getAttachmentRequirements(ClaimType claimType) {
+        return attachmentRulesService.getRequirements(claimType);
+    }
+
+    /**
+     * Validate attachments for a claim (Phase 7).
+     * Can be called before submission to check if all required documents are present.
+     */
+    @Transactional(readOnly = true)
+    public AttachmentRulesService.AttachmentValidationResult validateAttachments(Long id, ClaimType claimType) {
+        Claim claim = claimRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Claim", "id", id));
+        return attachmentRulesService.validateForSubmission(claim, claimType);
+    }
+
+    /**
+     * Get provider network status for a claim (Phase 7).
+     */
+    @Transactional(readOnly = true)
+    public ProviderNetworkService.ProviderValidationResult getProviderNetworkStatus(Long id) {
+        Claim claim = claimRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Claim", "id", id));
+        return providerNetworkService.validateProviderForClaim(claim.getProviderName());
     }
 
     public void deleteClaim(Long id) {

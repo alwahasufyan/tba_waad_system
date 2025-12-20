@@ -91,4 +91,19 @@ public interface ClaimRepository extends JpaRepository<Claim, Long> {
      */
     @Query("SELECT COUNT(c) FROM Claim c WHERE c.active = true AND c.member.employer.id = :employerId")
     long countByMemberEmployerId(@Param("employerId") Long employerId);
+
+    /**
+     * Find claims by member ID and status list.
+     * Used for deductible and out-of-pocket calculations.
+     * 
+     * @param memberId The member ID
+     * @param statuses List of claim statuses to include
+     * @return List of matching claims
+     */
+    @Query("SELECT c FROM Claim c " +
+           "WHERE c.member.id = :memberId " +
+           "AND c.status IN :statuses " +
+           "AND c.active = true")
+    List<Claim> findByMemberIdAndStatusIn(@Param("memberId") Long memberId, 
+                                          @Param("statuses") List<com.waad.tba.modules.claim.entity.ClaimStatus> statuses);
 }
