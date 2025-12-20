@@ -28,8 +28,32 @@ const isSuperAdmin = roles.includes('SUPER_ADMIN');
         const response = await axios.get('/employers', {
           params: { page: 0, size: 100 }
         });
-        const employersList = response.data.data?.items || response.data.items || response.data || [];
-        setEmployers(employersList);
+        
+        // Safe unwrapping function to handle inconsistent API shapes
+        const getSafeEmployersList = (res) => {
+          const body = res?.data;
+          if (!body) return [];
+
+          // 1. response.data.data is Array
+          if (Array.isArray(body.data)) return body.data;
+
+          // 2. response.data.data.items is Array
+          if (Array.isArray(body.data?.items)) return body.data.items;
+
+          // 3. response.data.data.content is Array
+          if (Array.isArray(body.data?.content)) return body.data.content;
+
+          // 4. response.data.items is Array (fallback)
+          if (Array.isArray(body.items)) return body.items;
+
+          // 5. response.data is Array (fallback)
+          if (Array.isArray(body)) return body;
+
+          return [];
+        };
+
+        const safeEmployers = getSafeEmployersList(response);
+        setEmployers(safeEmployers);
       } catch (error) {
         console.error('Error fetching employers:', error);
         setEmployers([]);
@@ -106,13 +130,7 @@ const isSuperAdmin = roles.includes('SUPER_ADMIN');
             );
           }}
         >
-          {employers.length === 0 ? (
-            <MenuItem disabled>
-              <Typography variant="body2" color="text.secondary">
-                No employers available
-              </Typography>
-            </MenuItem>
-          ) : (
+          {Array.isArray(employers) && employers.length > 0 ? (
             employers.map((employer) => (
               <MenuItem key={employer.id} value={employer.id}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, width: '100%' }}>
@@ -133,6 +151,12 @@ const isSuperAdmin = roles.includes('SUPER_ADMIN');
                 </Box>
               </MenuItem>
             ))
+          ) : (
+            <MenuItem disabled>
+              <Typography variant="body2" color="text.secondary">
+                No employers available
+              </Typography>
+            </MenuItem>
           )}
         </Select>
       </FormControl>
