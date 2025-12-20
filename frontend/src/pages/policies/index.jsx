@@ -43,7 +43,7 @@ const policiesService = {
   update: async () => null,
   remove: async () => null
 };
-import { EMPLOYERS, INSURANCE_COMPANY } from 'constants/companies';
+import { employersService, insuranceCompaniesService } from 'services/api';
 import { useSnackbar } from 'notistack';
 
 // third-party
@@ -65,6 +65,8 @@ export default function PoliciesList() {
   const { enqueueSnackbar } = useSnackbar();
 
   const [policies, setPolicies] = useState([]);
+  const [employers, setEmployers] = useState([]);
+  const [insuranceCompanies, setInsuranceCompanies] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -90,7 +92,15 @@ export default function PoliciesList() {
       }),
       columnHelper.accessor('insuranceCompanyName', {
         header: 'Insurance Company',
-        cell: (info) => <Typography variant="body2">{info.getValue() || INSURANCE_COMPANY.name}</Typography>
+        cell: (info) => {
+          const value = info.getValue();
+          if (value) return <Typography variant="body2">{value}</Typography>;
+          
+          // Fallback: Try to find from loaded insurance companies
+          const policy = info.row.original;
+          const insuranceCompany = insuranceCompanies.find(ic => ic.id === policy.insuranceCompanyId);
+          return <Typography variant="body2">{insuranceCompany?.name || '-'}</Typography>;
+        }
       }),
       columnHelper.accessor('startDate', {
         header: 'Start Date',
@@ -144,7 +154,7 @@ export default function PoliciesList() {
         )
       })
     ],
-    []
+    [insuranceCompanies]
   );
 
   // Load policies from API
@@ -169,7 +179,24 @@ export default function PoliciesList() {
     }
   };
 
+  // Load employers and insurance companies for filters
+  const loadReferenceData = async () => {
+    try {
+      // Load employers (using /api/employers/selectors endpoint)
+      const employersResponse = await employersService.getEmployers();
+      setEmployers(employersResponse || []);
+
+      // Load insurance companies (using /api/insurance-companies endpoint)
+      const insuranceResponse = await insuranceCompaniesService.getAll();
+      setInsuranceCompanies(insuranceResponse?.data || insuranceResponse || []);
+    } catch (err) {
+      console.error('Failed to load reference data:', err);
+      // Don't block the page if reference data fails
+    }
+  };
+
   useEffect(() => {
+    loadReferenceData();
     loadPolicies();
   }, []);
 
@@ -300,9 +327,9 @@ export default function PoliciesList() {
               <InputLabel>Employer</InputLabel>
               <Select value={employerFilter} onChange={handleEmployerFilterChange} label="Employer">
                 <MenuItem value="all">All Employers</MenuItem>
-                {EMPLOYERS.map((employer) => (
+                {employers.map((employer) => (
                   <MenuItem key={employer.id} value={employer.id.toString()}>
-                    {employer.name}
+                    {employer.nameAr || employer.nameEn || employer.name}
                   </MenuItem>
                 ))}
               </Select>

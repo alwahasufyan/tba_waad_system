@@ -1,8 +1,18 @@
 /**
- * Official Organizational Structure for TBA-WAAD System
+ * ⚠️ LEGACY FILE - READ ONLY ⚠️
  * 
- * DO NOT modify these entities or create temporary/demo companies.
- * These are the ONLY authorized entities in the system.
+ * This file contains hardcoded company data and is DEPRECATED.
+ * All new code MUST use Organization API instead.
+ * 
+ * DO NOT import or use this file in new code.
+ * Existing imports are being migrated to API-based data.
+ * 
+ * @deprecated Use API endpoints instead:
+ *   - GET /api/insurance-companies/selector
+ *   - GET /api/employers/selectors  
+ *   - GET /api/organizations (canonical endpoint)
+ * 
+ * Last updated: Phase 2 - Frontend Cleanup
  */
 
 // Primary Insurance Company
