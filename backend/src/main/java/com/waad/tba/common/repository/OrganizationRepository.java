@@ -41,4 +41,6 @@ public interface OrganizationRepository extends JpaRepository<Organization, Long
                                          Pageable pageable);
     
     Page<Organization> findByTypeAndActiveTrue(OrganizationType type, Pageable pageable);
+    
+    long countByType(OrganizationType type);
 }

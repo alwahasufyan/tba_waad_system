@@ -3,7 +3,6 @@ import { Box, FormControl, Select, MenuItem, Typography, Chip, Avatar } from '@m
 import { BankOutlined, LockOutlined } from '@ant-design/icons';
 import { useEmployerContext, useRoles } from 'api/rbac';
 import axios from 'utils/axios';
-import { usePermissions } from 'api/rbac';
 
 
 // ==============================|| EMPLOYER SWITCHER ||============================== //
@@ -14,8 +13,7 @@ const isSuperAdmin = roles.includes('SUPER_ADMIN');
   const { employerId, canSwitch, setEmployerId } = useEmployerContext();
   const [employers, setEmployers] = useState([]);
   const [loading, setLoading] = useState(true);
-  const permissions = usePermissions();
-  const canViewEmployers = permissions.includes('MANAGE_EMPLOYERS');
+  
 
   useEffect(() => {
     // Only fetch employers if switcher should be shown

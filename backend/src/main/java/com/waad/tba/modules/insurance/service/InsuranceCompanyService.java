@@ -114,7 +114,7 @@ public class InsuranceCompanyService {
 
     @Transactional(readOnly = true)
     public long count() {
-        return organizationRepository.findByType(OrganizationType.INSURANCE).size();
+        return organizationRepository.countByType(OrganizationType.INSURANCE);
     }
 
     private Organization findEntityById(Long id) {
