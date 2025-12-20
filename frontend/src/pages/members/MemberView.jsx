@@ -213,7 +213,7 @@ const MemberView = () => {
         </SectionCard>
 
         {/* Family Members */}
-        {member.familyMembers && member.familyMembers.length > 0 && (
+        {Array.isArray(member.familyMembers) && member.familyMembers.length > 0 && (
           <SectionCard title={`Family Members (${member.familyMembersCount || member.familyMembers.length})`} icon={<FamilyRestroomIcon color="primary" />}>
             <TableContainer component={Paper} variant="outlined">
               <Table size="small">

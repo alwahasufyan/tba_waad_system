@@ -210,7 +210,7 @@ const BenefitPackagesList = () => {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {data.items.map((pkg) => (
+                  {Array.isArray(data?.items) && data.items.map((pkg) => (
                     <TableRow key={pkg.id} hover>
                       <TableCell>
                         <Typography variant="body2" fontWeight="medium">

@@ -190,7 +190,7 @@ const BenefitPackageView = () => {
           </Grid>
 
           <Grid item xs={12}>
-            {pkg.medicalPackages && pkg.medicalPackages.length > 0 ? (
+            {Array.isArray(pkg.medicalPackages) && pkg.medicalPackages.length > 0 ? (
               <TableContainer component={Paper} variant="outlined">
                 <Table>
                   <TableHead>

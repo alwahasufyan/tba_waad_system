@@ -156,6 +156,22 @@ const useRBACSidebar = () => {
         permissions: ['MANAGE_PROVIDERS', 'VIEW_PROVIDERS']
       },
       {
+        id: 'benefit-packages',
+        label: 'nav.benefit-packages',
+        icon: LocalOffer,
+        path: '/benefit-packages',
+        roles: ['SUPER_ADMIN', 'INSURANCE_ADMIN'],
+        permissions: ['MANAGE_BENEFIT_PACKAGES']
+      },
+      {
+        id: 'pre-approvals',
+        label: 'nav.pre-approvals',
+        icon: Assignment,
+        path: '/pre-approvals',
+        roles: ['SUPER_ADMIN', 'INSURANCE_ADMIN', 'PROVIDER'],
+        permissions: ['VIEW_PRE_APPROVALS', 'MANAGE_PRE_APPROVALS']
+      },
+      {
         id: 'policies',
         label: 'nav.policies',
         icon: Description,
@@ -211,6 +227,9 @@ const useRBACSidebar = () => {
 
     // Filter items based on role, permissions, and feature toggles
     const filteredItems = allItems.filter((item) => {
+      // SUPER_ADMIN bypasses ALL checks - sees everything
+      if (roles.includes('SUPER_ADMIN')) return true;
+      
       // Check role access
       const hasRoleAccess = item.roles.some((role) => roles.includes(role));
       if (!hasRoleAccess) return false;

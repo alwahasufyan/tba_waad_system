@@ -141,7 +141,7 @@ const EmployersList = () => {
       />
 
       <MainCard content={false}>
-        {employers.length === 0 ? (
+        {(!Array.isArray(employers) || employers.length === 0) ? (
           <Box sx={{ p: 3 }}>
             <ModernEmptyState
               icon={BusinessIcon}
@@ -182,7 +182,7 @@ const EmployersList = () => {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {employers.map((employer) => (
+                {Array.isArray(employers) && employers.map((employer) => (
                   <TableRow hover key={employer.id} sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
                     <TableCell>
                       <Chip label={employer.code || '-'} size="small" variant="outlined" color="primary" />

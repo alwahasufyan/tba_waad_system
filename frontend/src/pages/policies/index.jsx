@@ -327,7 +327,7 @@ export default function PoliciesList() {
               <InputLabel>Employer</InputLabel>
               <Select value={employerFilter} onChange={handleEmployerFilterChange} label="Employer">
                 <MenuItem value="all">All Employers</MenuItem>
-                {employers.map((employer) => (
+                {Array.isArray(employers) && employers.map((employer) => (
                   <MenuItem key={employer.id} value={employer.id.toString()}>
                     {employer.nameAr || employer.nameEn || employer.name}
                   </MenuItem>

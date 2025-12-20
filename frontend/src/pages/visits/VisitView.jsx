@@ -157,7 +157,7 @@ const VisitView = () => {
               />
             }
           >
-            {visit.services && visit.services.length > 0 ? (
+            {Array.isArray(visit.services) && visit.services.length > 0 ? (
               <TableContainer component={Paper} variant="outlined">
                 <Table size="small">
                   <TableHead>

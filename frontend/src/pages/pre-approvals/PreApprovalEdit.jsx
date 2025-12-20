@@ -275,7 +275,7 @@ const PreApprovalEdit = () => {
             <FormControl fullWidth disabled>
               <InputLabel>شركة التأمين</InputLabel>
               <Select name="insuranceCompanyId" value={formData.insuranceCompanyId} label="شركة التأمين">
-                {companies.map((company) => (
+                {Array.isArray(companies) && companies.map((company) => (
                   <MenuItem key={company.id} value={company.id}>
                     {company.name} ({company.code})
                   </MenuItem>
@@ -301,7 +301,7 @@ const PreApprovalEdit = () => {
                     <em>جاري التحميل...</em>
                   </MenuItem>
                 )}
-                {policies.map((policy) => (
+                {Array.isArray(policies) && policies.map((policy) => (
                   <MenuItem key={policy.id} value={policy.id}>
                     {policy.name} ({policy.code})
                   </MenuItem>
@@ -328,7 +328,7 @@ const PreApprovalEdit = () => {
                     <em>جاري التحميل...</em>
                   </MenuItem>
                 )}
-                {packages.map((pkg) => (
+                {Array.isArray(packages) && packages.map((pkg) => (
                   <MenuItem key={pkg.id} value={pkg.id}>
                     {pkg.name} ({pkg.code})
                   </MenuItem>

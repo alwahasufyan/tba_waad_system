@@ -452,7 +452,7 @@ const MemberCreate = () => {
                   <InputLabel>Employer</InputLabel>
                   <Select value={form.employerId} onChange={handleChange('employerId')} label="Employer">
                     <MenuItem value="">Select Employer</MenuItem>
-                    {employers.map((emp) => (
+                    {Array.isArray(employers) && employers.map((emp) => (
                       <MenuItem key={emp.id} value={emp.id}>
                         {emp.code} - {emp.nameAr}
                       </MenuItem>
@@ -515,7 +515,7 @@ const MemberCreate = () => {
                     label="Insurance Company"
                   >
                     <MenuItem value="">None</MenuItem>
-                    {insuranceCompanies.map((ins) => (
+                    {Array.isArray(insuranceCompanies) && insuranceCompanies.map((ins) => (
                       <MenuItem key={ins.id} value={ins.id}>
                         {ins.nameAr}
                       </MenuItem>
@@ -529,7 +529,7 @@ const MemberCreate = () => {
                   <InputLabel>Benefit Package</InputLabel>
                   <Select value={form.benefitPackageId} onChange={handleChange('benefitPackageId')} label="Benefit Package">
                     <MenuItem value="">None</MenuItem>
-                    {benefitPackages.map((pkg) => (
+                    {Array.isArray(benefitPackages) && benefitPackages.map((pkg) => (
                       <MenuItem key={pkg.id} value={pkg.id}>
                         {pkg.nameAr}
                       </MenuItem>
@@ -603,7 +603,7 @@ const MemberCreate = () => {
           <MainCard title="Family Members">
             <Stack spacing={2}>
               {/* Family Members List */}
-              {form.familyMembers.length > 0 && (
+              {Array.isArray(form.familyMembers) && form.familyMembers.length > 0 && (
                 <TableContainer component={Paper} variant="outlined">
                   <Table size="small">
                     <TableHead>

@@ -181,7 +181,7 @@ const ClaimView = () => {
         </Grid>
 
         {/* Service Lines */}
-        {claim.lines && claim.lines.length > 0 && (
+        {Array.isArray(claim.lines) && claim.lines.length > 0 && (
           <Grid item xs={12}>
             <Card>
               <CardContent>
@@ -227,7 +227,7 @@ const ClaimView = () => {
         )}
 
         {/* Attachments */}
-        {claim.attachments && claim.attachments.length > 0 && (
+        {Array.isArray(claim.attachments) && claim.attachments.length > 0 && (
           <Grid item xs={12}>
             <Card>
               <CardContent>

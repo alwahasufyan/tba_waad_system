@@ -11,8 +11,25 @@ const BASE_URL = '/api/employers';
  * Helper function to unwrap ApiResponse
  * Backend returns: { status: "success", data: {...}, message: "...", timestamp: "..." }
  * We need response.data.data (axios wraps in .data, then ApiResponse has .data)
+ * DEFENSIVE: Always return array for list operations, single item for detail operations
  */
 const unwrap = (response) => response.data?.data || response.data;
+
+/**
+ * Helper to safely extract array from API response
+ * Handles both ApiResponse<List<T>> and ApiResponse<PaginationResponse<T>>
+ */
+const unwrapArray = (response) => {
+  const data = response?.data?.data || response?.data;
+  // If data is an array, return it
+  if (Array.isArray(data)) return data;
+  // If data has items (pagination), return items
+  if (data?.items && Array.isArray(data.items)) return data.items;
+  // If data has content (Spring Page), return content
+  if (data?.content && Array.isArray(data.content)) return data.content;
+  // Fallback to empty array
+  return [];
+};
 
 /**
  * Get all employers (no pagination)
@@ -20,7 +37,7 @@ const unwrap = (response) => response.data?.data || response.data;
  */
 export const getEmployers = async () => {
   const response = await axiosClient.get(BASE_URL);
-  return unwrap(response);
+  return unwrapArray(response);
 };
 
 /**

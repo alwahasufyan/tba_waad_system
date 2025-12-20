@@ -196,7 +196,7 @@ const InsurancePoliciesList = () => {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {data?.content && data.content.length > 0 ? (
+                  {Array.isArray(data?.content) && data.content.length > 0 ? (
                     data.content.map((policy) => (
                       <TableRow key={policy.id} hover>
                         <TableCell>{policy.id}</TableCell>

@@ -114,14 +114,14 @@ const InsuranceCompaniesList = () => {
                   جاري التحميل...
                 </TableCell>
               </TableRow>
-            ) : data.items.length === 0 ? (
+            ) : (!data?.items || data.items.length === 0) ? (
               <TableRow>
                 <TableCell colSpan={7} align="center">
                   لا توجد بيانات
                 </TableCell>
               </TableRow>
             ) : (
-              data.items.map((company, index) => (
+              Array.isArray(data.items) && data.items.map((company, index) => (
                 <TableRow key={company.id} hover>
                   <TableCell>{(params.page - 1) * params.size + index + 1}</TableCell>
                   <TableCell>{company.name}</TableCell>

@@ -229,7 +229,7 @@ const MedicalServicesList = () => {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {items.map((service) => (
+                  {Array.isArray(items) && items.map((service) => (
                     <TableRow key={service.id} hover>
                       <TableCell>
                         <Typography variant="body2" fontWeight="medium">

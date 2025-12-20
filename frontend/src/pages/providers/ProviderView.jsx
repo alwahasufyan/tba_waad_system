@@ -271,7 +271,7 @@ const ProviderView = () => {
               <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
                 <CircularProgress />
               </Box>
-            ) : contracts.length === 0 ? (
+            ) : !Array.isArray(contracts) || contracts.length === 0 ? (
               <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', py: 3 }}>
                 لا توجد عقود لهذا المزود
               </Typography>
@@ -289,7 +289,7 @@ const ProviderView = () => {
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {contracts.map((contract) => (
+                    {Array.isArray(contracts) && contracts.map((contract) => (
                       <TableRow key={contract.id}>
                         <TableCell>{contract.contractNumber}</TableCell>
                         <TableCell>{contract.startDate ? new Date(contract.startDate).toLocaleDateString('ar-SA') : '-'}</TableCell>

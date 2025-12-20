@@ -149,7 +149,7 @@ const VisitsList = () => {
 
         {loading && <TableSkeleton columns={6} rows={5} />}
 
-        {!loading && data.items.length === 0 && (
+        {!loading && (!data?.items || data.items.length === 0) && (
           <ModernEmptyState
             icon={<LocalHospitalIcon sx={{ fontSize: 80 }} />}
             title="لا توجد زيارات"
@@ -164,7 +164,7 @@ const VisitsList = () => {
           />
         )}
 
-        {!loading && data.items.length > 0 && (
+        {!loading && data?.items && data.items.length > 0 && (
           <>
             <TableContainer component={Paper}>
               <Table>
@@ -187,7 +187,7 @@ const VisitsList = () => {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {data.items.map((visit) => (
+                  {Array.isArray(data?.items) && data.items.map((visit) => (
                     <TableRow key={visit.id} hover>
                       <TableCell>
                         <Typography variant="body2" fontWeight="medium">

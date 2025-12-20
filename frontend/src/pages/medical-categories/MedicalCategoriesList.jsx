@@ -231,7 +231,7 @@ const MedicalCategoriesList = () => {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {items.map((category) => (
+                  {Array.isArray(items) && items.map((category) => (
                     <TableRow key={category.id} hover>
                       <TableCell>
                         <Typography variant="body2" fontWeight="medium">
