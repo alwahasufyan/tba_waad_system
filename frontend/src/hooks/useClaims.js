@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { claimsService } from 'services/api';
 
 export const useClaimsList = (initialParams = { page: 0, size: 10 }) => {
-  const [data, setData] = useState(null);
+  const [data, setData] = useState({ content: [], totalElements: 0, page: 0, size: 10 });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [params, setParams] = useState(initialParams);
@@ -12,9 +12,17 @@ export const useClaimsList = (initialParams = { page: 0, size: 10 }) => {
     setError(null);
     try {
       const result = await claimsService.getAll(params);
-      setData(result);
+      // Defensive: ensure result has expected shape
+      setData({
+        content: Array.isArray(result?.content) ? result.content : Array.isArray(result) ? result : [],
+        totalElements: result?.totalElements ?? result?.total ?? 0,
+        page: result?.page ?? params.page,
+        size: result?.size ?? params.size
+      });
     } catch (err) {
       setError(err.message || 'فشل تحميل المطالبات');
+      // Set safe default on error
+      setData({ content: [], totalElements: 0, page: params.page, size: params.size });
     } finally {
       setLoading(false);
     }

@@ -32,13 +32,19 @@ export const useVisitsList = (initialParams = {}) => {
       setError(null);
       const response = await visitsService.getAll(params);
 
+      // Defensive: handle multiple response shapes
       const paginationData = response?.data?.items ? response.data : response;
+      const items = Array.isArray(paginationData?.items) 
+        ? paginationData.items 
+        : Array.isArray(paginationData) 
+          ? paginationData 
+          : [];
 
       setData({
-        items: paginationData.items || paginationData || [],
-        total: paginationData.total || 0,
-        page: paginationData.page || params.page,
-        size: paginationData.size || params.size
+        items,
+        total: paginationData?.total ?? paginationData?.totalElements ?? 0,
+        page: paginationData?.page ?? params.page,
+        size: paginationData?.size ?? params.size
       });
     } catch (err) {
       console.error('[useVisits] Failed to load visits list:', err);

@@ -36,13 +36,19 @@ export const useMedicalServicesList = (initialParams = {}) => {
       setError(null);
       const response = await getMedicalServices(params);
 
+      // Defensive: handle multiple response shapes
       const paginationData = response?.items ? response : response;
+      const items = Array.isArray(paginationData?.items) 
+        ? paginationData.items 
+        : Array.isArray(paginationData) 
+          ? paginationData 
+          : [];
 
       setData({
-        items: paginationData.items || [],
-        total: paginationData.total || 0,
-        page: paginationData.page || params.page,
-        size: paginationData.size || params.size
+        items,
+        total: paginationData?.total ?? paginationData?.totalElements ?? 0,
+        page: paginationData?.page ?? params.page,
+        size: paginationData?.size ?? params.size
       });
     } catch (err) {
       console.error('[useMedicalServices] Failed to load services list:', err);

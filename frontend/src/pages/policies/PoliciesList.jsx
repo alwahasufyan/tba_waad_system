@@ -110,14 +110,14 @@ const PoliciesList = () => {
                 </TableCell>
               </TableRow>
             )}
-            {!loading && data.items.length === 0 && (
+            {!loading && (!Array.isArray(data?.items) || data.items.length === 0) && (
               <TableRow>
                 <TableCell colSpan={7} align="center">
                   <Typography>لا توجد بيانات</Typography>
                 </TableCell>
               </TableRow>
             )}
-            {!loading &&
+            {!loading && Array.isArray(data?.items) &&
               data.items.map((policy) => (
                 <TableRow key={policy.id} hover>
                   <TableCell>{policy.name}</TableCell>
@@ -145,7 +145,7 @@ const PoliciesList = () => {
         </Table>
         <TablePagination
           component="div"
-          count={data.total}
+          count={data?.total || 0}
           page={(params.page || 1) - 1}
           onPageChange={handlePageChange}
           rowsPerPage={params.size || 10}

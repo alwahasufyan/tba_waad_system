@@ -22,10 +22,18 @@ export const usePreApprovalsList = (initialParams = { page: 1, size: 10 }) => {
       setLoading(true);
       setError(null);
       const result = await getPreApprovals(params);
-      setData(result);
+      // Defensive: ensure result has expected shape
+      setData({
+        items: Array.isArray(result?.items) ? result.items : Array.isArray(result) ? result : [],
+        total: result?.total ?? result?.totalElements ?? 0,
+        page: result?.page ?? params.page,
+        size: result?.size ?? params.size
+      });
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to fetch pre-approvals');
       console.error('Error fetching pre-approvals:', err);
+      // Set safe default on error
+      setData({ items: [], total: 0, page: params.page, size: params.size });
     } finally {
       setLoading(false);
     }
