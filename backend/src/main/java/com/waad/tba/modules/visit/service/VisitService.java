@@ -1,5 +1,6 @@
 package com.waad.tba.modules.visit.service;
 
+import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -13,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.waad.tba.common.exception.ResourceNotFoundException;
 import com.waad.tba.modules.member.entity.Member;
 import com.waad.tba.modules.member.repository.MemberRepository;
+import com.waad.tba.modules.policy.service.PolicyValidationService;
 import com.waad.tba.modules.rbac.entity.User;
 import com.waad.tba.modules.systemadmin.service.AuditLogService;
 import com.waad.tba.modules.visit.dto.VisitCreateDto;
@@ -25,6 +27,37 @@ import com.waad.tba.security.AuthorizationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+/**
+ * Visit Service with Policy Validation (Phase 6).
+ * 
+ * ═══════════════════════════════════════════════════════════════════════════════
+ * BUSINESS RULES ENFORCED
+ * ═══════════════════════════════════════════════════════════════════════════════
+ * 
+ * 1. VISIT CREATION requires:
+ *    - Member has active policy on visit date
+ *    - Member status is ACTIVE
+ *    - Policy covers the visit date (within start/end date range)
+ * 
+ * ═══════════════════════════════════════════════════════════════════════════════
+ * SMOKE TEST SCENARIO
+ * ═══════════════════════════════════════════════════════════════════════════════
+ * 
+ * Scenario: Visit with Active Policy
+ *   Given: Member "Ali" has policy P001 valid from 2024-01-01 to 2024-12-31
+ *   When: Creating visit for Ali on 2024-06-15
+ *   Then: Visit created successfully
+ * 
+ * Scenario: Visit Without Policy
+ *   Given: Member "Sara" has no policy
+ *   When: Creating visit for Sara
+ *   Then: BusinessRuleException("Member has no active policy")
+ * 
+ * Scenario: Visit Outside Policy Dates
+ *   Given: Member "Omar" has policy valid until 2024-12-31
+ *   When: Creating visit for Omar on 2025-01-15
+ *   Then: PolicyNotActiveException("Policy is not active on 2025-01-15")
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -35,6 +68,10 @@ public class VisitService {
     private final VisitMapper mapper;
     private final AuthorizationService authorizationService;
     private final AuditLogService auditLogService;
+    
+    // Phase 6: Policy validation service
+    private final PolicyValidationService policyValidationService;
+
 
     @Transactional(readOnly = true)
     public List<VisitResponseDto> findAll() {
@@ -135,15 +172,19 @@ public class VisitService {
 
     @Transactional
     public VisitResponseDto create(VisitCreateDto dto) {
-        log.info("Creating new visit for member id: {}", dto.getMemberId());
+        log.info("📝 Creating new visit for member id: {}", dto.getMemberId());
 
         Member member = memberRepository.findById(dto.getMemberId())
                 .orElseThrow(() -> new ResourceNotFoundException("Member", "id", dto.getMemberId()));
 
+        // Phase 6: Validate member has active policy for visit date
+        LocalDate visitDate = dto.getVisitDate() != null ? dto.getVisitDate() : LocalDate.now();
+        policyValidationService.validateMemberPolicy(member, visitDate);
+
         Visit entity = mapper.toEntity(dto, member);
         Visit saved = repository.save(entity);
         
-        log.info("Visit created successfully with id: {}", saved.getId());
+        log.info("✅ Visit created successfully with id: {}", saved.getId());
         return mapper.toResponseDto(saved);
     }
 

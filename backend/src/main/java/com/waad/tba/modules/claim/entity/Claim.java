@@ -89,7 +89,7 @@ public class Claim {
     @Enumerated(EnumType.STRING)
     @Column(name = "status", length = 30, nullable = false)
     @Builder.Default
-    private ClaimStatus status = ClaimStatus.PENDING_REVIEW;
+    private ClaimStatus status = ClaimStatus.DRAFT;
 
     @Column(name = "reviewer_comment", columnDefinition = "TEXT")
     private String reviewerComment;
@@ -143,17 +143,14 @@ public class Claim {
             throw new IllegalStateException("Approved amount cannot be negative");
         }
 
-        if (status == ClaimStatus.APPROVED) {
+        if (status == ClaimStatus.APPROVED || status == ClaimStatus.SETTLED) {
             if (approvedAmount == null || approvedAmount.compareTo(BigDecimal.ZERO) <= 0) {
-                throw new IllegalStateException("Approved status requires approved amount greater than zero");
+                throw new IllegalStateException("Approved/Settled status requires approved amount greater than zero");
             }
         }
 
-        if (status == ClaimStatus.PARTIALLY_APPROVED) {
-            if (approvedAmount == null || approvedAmount.compareTo(requestedAmount) >= 0) {
-                throw new IllegalStateException("Partially approved status requires approved amount less than requested amount");
-            }
-        }
+        // Note: Partial approval is now just APPROVED with approvedAmount < requestedAmount
+        // The difference is tracked via differenceAmount field
 
         if (status == ClaimStatus.REJECTED) {
             if (reviewerComment == null || reviewerComment.trim().isEmpty()) {
@@ -161,8 +158,8 @@ public class Claim {
             }
         }
 
-        // Auto-set reviewedAt when status is not PENDING_REVIEW
-        if (status != null && status != ClaimStatus.PENDING_REVIEW && reviewedAt == null) {
+        // Auto-set reviewedAt when status changes from draft states
+        if (status != null && status.requiresReviewerAction() && reviewedAt == null) {
             reviewedAt = LocalDateTime.now();
         }
     }
