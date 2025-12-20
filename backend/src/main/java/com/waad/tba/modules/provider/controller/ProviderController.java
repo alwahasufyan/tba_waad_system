@@ -25,14 +25,14 @@ public class ProviderController {
     private final ProviderService providerService;
 
     @GetMapping("/selector")
-    @PreAuthorize("hasAnyAuthority('SUPER_ADMIN', 'VIEW_PROVIDERS')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('VIEW_PROVIDERS')")
     public ResponseEntity<ApiResponse<List<ProviderSelectorDto>>> getSelectorOptions() {
         List<ProviderSelectorDto> options = providerService.getSelectorOptions();
         return ResponseEntity.ok(ApiResponse.success(options));
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyAuthority('SUPER_ADMIN', 'MANAGE_PROVIDERS')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('MANAGE_PROVIDERS')")
     public ResponseEntity<ApiResponse<ProviderViewDto>> createProvider(@Valid @RequestBody ProviderCreateDto dto) {
         ProviderViewDto provider = providerService.createProvider(dto);
         return ResponseEntity.status(HttpStatus.CREATED)
@@ -40,7 +40,7 @@ public class ProviderController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyAuthority('SUPER_ADMIN', 'MANAGE_PROVIDERS')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('MANAGE_PROVIDERS')")
     public ResponseEntity<ApiResponse<ProviderViewDto>> updateProvider(
             @PathVariable Long id,
             @Valid @RequestBody ProviderUpdateDto dto) {
@@ -49,14 +49,14 @@ public class ProviderController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyAuthority('SUPER_ADMIN', 'VIEW_PROVIDERS')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('VIEW_PROVIDERS')")
     public ResponseEntity<ApiResponse<ProviderViewDto>> getProvider(@PathVariable Long id) {
         ProviderViewDto provider = providerService.getProvider(id);
         return ResponseEntity.ok(ApiResponse.success("Provider retrieved successfully", provider));
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyAuthority('SUPER_ADMIN', 'VIEW_PROVIDERS')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('VIEW_PROVIDERS')")
     public ResponseEntity<ApiResponse<PaginationResponse<ProviderViewDto>>> listProviders(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size,
@@ -74,28 +74,28 @@ public class ProviderController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyAuthority('SUPER_ADMIN', 'MANAGE_PROVIDERS')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('MANAGE_PROVIDERS')")
     public ResponseEntity<ApiResponse<Void>> deleteProvider(@PathVariable Long id) {
         providerService.deleteProvider(id);
         return ResponseEntity.ok(ApiResponse.success("Provider deleted successfully", null));
     }
 
     @GetMapping("/active")
-    @PreAuthorize("hasAnyAuthority('SUPER_ADMIN', 'VIEW_PROVIDERS')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('VIEW_PROVIDERS')")
     public ResponseEntity<ApiResponse<List<ProviderViewDto>>> getAllActiveProviders() {
         List<ProviderViewDto> providers = providerService.getAllActiveProviders();
         return ResponseEntity.ok(ApiResponse.success("Active providers retrieved successfully", providers));
     }
 
     @GetMapping("/count")
-    @PreAuthorize("hasAnyAuthority('SUPER_ADMIN', 'VIEW_PROVIDERS')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('VIEW_PROVIDERS')")
     public ResponseEntity<ApiResponse<Long>> countProviders() {
         long count = providerService.countProviders();
         return ResponseEntity.ok(ApiResponse.success("Provider count retrieved successfully", count));
     }
 
     @GetMapping("/search")
-    @PreAuthorize("hasAnyAuthority('SUPER_ADMIN', 'VIEW_PROVIDERS')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('VIEW_PROVIDERS')")
     public ResponseEntity<ApiResponse<List<ProviderViewDto>>> search(@RequestParam String query) {
         List<ProviderViewDto> results = providerService.search(query);
         return ResponseEntity.ok(ApiResponse.success(results));

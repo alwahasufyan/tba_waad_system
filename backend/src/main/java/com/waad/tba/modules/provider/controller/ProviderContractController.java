@@ -23,7 +23,7 @@ public class ProviderContractController {
     private final ProviderContractService contractService;
 
     @PostMapping
-    @PreAuthorize("hasAnyAuthority('SUPER_ADMIN', 'MANAGE_PROVIDERS')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('MANAGE_PROVIDERS')")
     public ResponseEntity<ApiResponse<ProviderContractViewDto>> createContract(@RequestBody ProviderContractCreateDto dto) {
         ProviderContractViewDto contract = contractService.createContract(dto);
         return ResponseEntity.status(HttpStatus.CREATED)
@@ -31,7 +31,7 @@ public class ProviderContractController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyAuthority('SUPER_ADMIN', 'MANAGE_PROVIDERS')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('MANAGE_PROVIDERS')")
     public ResponseEntity<ApiResponse<ProviderContractViewDto>> updateContract(
             @PathVariable Long id,
             @RequestBody ProviderContractUpdateDto dto) {
@@ -40,14 +40,14 @@ public class ProviderContractController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyAuthority('SUPER_ADMIN', 'VIEW_PROVIDERS')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('VIEW_PROVIDERS')")
     public ResponseEntity<ApiResponse<ProviderContractViewDto>> getContract(@PathVariable Long id) {
         ProviderContractViewDto contract = contractService.getContract(id);
         return ResponseEntity.ok(ApiResponse.success("Contract retrieved successfully", contract));
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyAuthority('SUPER_ADMIN', 'VIEW_PROVIDERS')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('VIEW_PROVIDERS')")
     public ResponseEntity<PaginationResponse<ProviderContractViewDto>> listContracts(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
@@ -65,21 +65,21 @@ public class ProviderContractController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyAuthority('SUPER_ADMIN', 'MANAGE_PROVIDERS')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('MANAGE_PROVIDERS')")
     public ResponseEntity<ApiResponse<Void>> deleteContract(@PathVariable Long id) {
         contractService.deleteContract(id);
         return ResponseEntity.ok(ApiResponse.success("Contract deleted successfully", null));
     }
 
     @GetMapping("/provider/{providerId}")
-    @PreAuthorize("hasAnyAuthority('SUPER_ADMIN', 'VIEW_PROVIDERS')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('VIEW_PROVIDERS')")
     public ResponseEntity<ApiResponse<List<ProviderContractViewDto>>> getContractsByProvider(@PathVariable Long providerId) {
         List<ProviderContractViewDto> contracts = contractService.getContractsByProvider(providerId);
         return ResponseEntity.ok(ApiResponse.success("Provider contracts retrieved successfully", contracts));
     }
 
     @GetMapping("/count")
-    @PreAuthorize("hasAnyAuthority('SUPER_ADMIN', 'VIEW_PROVIDERS')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('VIEW_PROVIDERS')")
     public ResponseEntity<ApiResponse<Long>> countContracts() {
         long count = contractService.countContracts();
         return ResponseEntity.ok(ApiResponse.success("Contract count retrieved successfully", count));

@@ -37,6 +37,13 @@ public class AuditLogController {
         return ApiResponse.success("Audit logs retrieved", logs);
     }
 
+    @GetMapping("/{id}")
+    @Operation(summary = "Get audit log by ID")
+    public ApiResponse<AuditLog> getAuditLogById(@PathVariable Long id) {
+        AuditLog log = auditLogService.getAuditLogById(id);
+        return ApiResponse.success("Audit log retrieved", log);
+    }
+
     @GetMapping("/user/{userId}")
     @Operation(summary = "Get audit logs by user")
     public ApiResponse<Page<AuditLog>> getAuditLogsByUser(@PathVariable Long userId, Pageable pageable) {

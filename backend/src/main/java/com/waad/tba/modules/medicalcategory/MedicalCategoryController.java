@@ -31,7 +31,7 @@ public class MedicalCategoryController {
     private final MedicalCategoryService service;
 
     @GetMapping("/selector")
-    @PreAuthorize("hasAnyAuthority('SUPER_ADMIN', 'VIEW_MEDICAL_CATEGORIES', 'MANAGE_MEDICAL_CATEGORIES')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAnyAuthority('VIEW_MEDICAL_CATEGORIES', 'MANAGE_MEDICAL_CATEGORIES')")
     @Operation(summary = "Get medical category selector options", description = "Returns active medical categories for dropdown/selector")
     public ResponseEntity<ApiResponse<List<MedicalCategorySelectorDto>>> getSelectorOptions() {
         List<MedicalCategorySelectorDto> options = service.getSelectorOptions();
@@ -43,7 +43,7 @@ public class MedicalCategoryController {
      * GET /api/medical-categories
      */
     @GetMapping
-    @PreAuthorize("hasAnyAuthority('SUPER_ADMIN', 'VIEW_MEDICAL_CATEGORIES', 'MANAGE_MEDICAL_CATEGORIES')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAnyAuthority('VIEW_MEDICAL_CATEGORIES', 'MANAGE_MEDICAL_CATEGORIES')")
     @Operation(summary = "List medical categories with pagination", description = "Returns paginated list of medical categories with optional search")
     public ResponseEntity<ApiResponse<PaginationResponse<MedicalCategoryViewDto>>> list(
             @Parameter(description = "Page number (1-based)") @RequestParam(defaultValue = "1") int page,
@@ -72,7 +72,7 @@ public class MedicalCategoryController {
      * GET /api/medical-categories/{id}
      */
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyAuthority('SUPER_ADMIN', 'VIEW_MEDICAL_CATEGORIES', 'MANAGE_MEDICAL_CATEGORIES')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAnyAuthority('VIEW_MEDICAL_CATEGORIES', 'MANAGE_MEDICAL_CATEGORIES')")
     @Operation(summary = "Get medical category by ID")
     public ResponseEntity<ApiResponse<MedicalCategoryViewDto>> getCategoryById(@PathVariable Long id) {
         MedicalCategoryViewDto category = service.findById(id);
@@ -84,7 +84,7 @@ public class MedicalCategoryController {
      * GET /api/medical-categories/code/{code}
      */
     @GetMapping("/code/{code}")
-    @PreAuthorize("hasAnyAuthority('SUPER_ADMIN', 'VIEW_MEDICAL_CATEGORIES', 'MANAGE_MEDICAL_CATEGORIES')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAnyAuthority('VIEW_MEDICAL_CATEGORIES', 'MANAGE_MEDICAL_CATEGORIES')")
     @Operation(summary = "Get medical category by code")
     public ResponseEntity<ApiResponse<MedicalCategoryViewDto>> getCategoryByCode(@PathVariable String code) {
         MedicalCategoryViewDto category = service.findByCode(code);
@@ -96,7 +96,7 @@ public class MedicalCategoryController {
      * POST /api/medical-categories
      */
     @PostMapping
-    @PreAuthorize("hasAnyAuthority('SUPER_ADMIN', 'MANAGE_MEDICAL_CATEGORIES')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('MANAGE_MEDICAL_CATEGORIES')")
     @Operation(summary = "Create medical category")
     public ResponseEntity<ApiResponse<MedicalCategoryViewDto>> createCategory(@Valid @RequestBody MedicalCategoryCreateDto dto) {
         MedicalCategoryViewDto created = service.create(dto);
@@ -109,7 +109,7 @@ public class MedicalCategoryController {
      * PUT /api/medical-categories/{id}
      */
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyAuthority('SUPER_ADMIN', 'MANAGE_MEDICAL_CATEGORIES')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('MANAGE_MEDICAL_CATEGORIES')")
     @Operation(summary = "Update medical category")
     public ResponseEntity<ApiResponse<MedicalCategoryViewDto>> updateCategory(
             @PathVariable Long id,
@@ -123,7 +123,7 @@ public class MedicalCategoryController {
      * DELETE /api/medical-categories/{id}
      */
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyAuthority('SUPER_ADMIN', 'MANAGE_MEDICAL_CATEGORIES')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('MANAGE_MEDICAL_CATEGORIES')")
     @Operation(summary = "Delete medical category")
     public ResponseEntity<ApiResponse<Void>> deleteCategory(@PathVariable Long id) {
         service.delete(id);
@@ -131,7 +131,7 @@ public class MedicalCategoryController {
     }
 
     @GetMapping("/count")
-    @PreAuthorize("hasAnyAuthority('SUPER_ADMIN', 'VIEW_MEDICAL_CATEGORIES', 'MANAGE_MEDICAL_CATEGORIES')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAnyAuthority('VIEW_MEDICAL_CATEGORIES', 'MANAGE_MEDICAL_CATEGORIES')")
     @Operation(summary = "Count medical categories")
     public ResponseEntity<ApiResponse<Long>> count() {
         long total = service.count();
@@ -139,7 +139,7 @@ public class MedicalCategoryController {
     }
 
     @GetMapping("/search")
-    @PreAuthorize("hasAnyAuthority('SUPER_ADMIN', 'VIEW_MEDICAL_CATEGORIES', 'MANAGE_MEDICAL_CATEGORIES')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAnyAuthority('VIEW_MEDICAL_CATEGORIES', 'MANAGE_MEDICAL_CATEGORIES')")
     @Operation(summary = "Search medical categories")
     public ResponseEntity<ApiResponse<List<MedicalCategoryViewDto>>> search(@RequestParam String query) {
         List<MedicalCategoryViewDto> results = service.search(query);

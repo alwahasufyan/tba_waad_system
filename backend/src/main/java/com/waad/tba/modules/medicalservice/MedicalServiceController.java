@@ -27,7 +27,7 @@ public class MedicalServiceController {
     private final MedicalServiceService service;
 
     @GetMapping("/selector")
-    @PreAuthorize("hasAnyAuthority('SUPER_ADMIN', 'VIEW_MEDICAL_SERVICES', 'MANAGE_MEDICAL_SERVICES')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAnyAuthority('VIEW_MEDICAL_SERVICES', 'MANAGE_MEDICAL_SERVICES')")
     @Operation(summary = "Get medical service selector options", description = "Returns active medical services for dropdown/selector")
     public ResponseEntity<ApiResponse<List<MedicalServiceSelectorDto>>> getSelectorOptions() {
         List<MedicalServiceSelectorDto> options = service.getSelectorOptions();
@@ -35,7 +35,7 @@ public class MedicalServiceController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyAuthority('SUPER_ADMIN', 'VIEW_MEDICAL_SERVICES', 'MANAGE_MEDICAL_SERVICES')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAnyAuthority('VIEW_MEDICAL_SERVICES', 'MANAGE_MEDICAL_SERVICES')")
     @Operation(summary = "List medical services with pagination", description = "Returns paginated list of medical services with optional search")
     public ResponseEntity<ApiResponse<PaginationResponse<MedicalServiceViewDto>>> list(
             @Parameter(description = "Page number (1-based)") @RequestParam(defaultValue = "1") int page,
@@ -60,7 +60,7 @@ public class MedicalServiceController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyAuthority('SUPER_ADMIN', 'VIEW_MEDICAL_SERVICES', 'MANAGE_MEDICAL_SERVICES')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAnyAuthority('VIEW_MEDICAL_SERVICES', 'MANAGE_MEDICAL_SERVICES')")
     @Operation(summary = "Get medical service by ID")
     public ResponseEntity<ApiResponse<MedicalServiceViewDto>> getById(@PathVariable Long id) {
         MedicalServiceViewDto service = this.service.findById(id);
@@ -68,7 +68,7 @@ public class MedicalServiceController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyAuthority('SUPER_ADMIN', 'MANAGE_MEDICAL_SERVICES')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('MANAGE_MEDICAL_SERVICES')")
     @Operation(summary = "Create medical service")
     public ResponseEntity<ApiResponse<MedicalServiceViewDto>> create(@Valid @RequestBody MedicalServiceCreateDto dto) {
         MedicalServiceViewDto created = service.create(dto);
@@ -76,7 +76,7 @@ public class MedicalServiceController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyAuthority('SUPER_ADMIN', 'MANAGE_MEDICAL_SERVICES')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('MANAGE_MEDICAL_SERVICES')")
     @Operation(summary = "Update medical service")
     public ResponseEntity<ApiResponse<MedicalServiceViewDto>> update(
             @PathVariable Long id, 
@@ -86,7 +86,7 @@ public class MedicalServiceController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyAuthority('SUPER_ADMIN', 'MANAGE_MEDICAL_SERVICES')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('MANAGE_MEDICAL_SERVICES')")
     @Operation(summary = "Delete medical service")
     public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {
         service.delete(id);
@@ -94,7 +94,7 @@ public class MedicalServiceController {
     }
 
     @GetMapping("/count")
-    @PreAuthorize("hasAnyAuthority('SUPER_ADMIN', 'VIEW_MEDICAL_SERVICES', 'MANAGE_MEDICAL_SERVICES')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAnyAuthority('VIEW_MEDICAL_SERVICES', 'MANAGE_MEDICAL_SERVICES')")
     @Operation(summary = "Count medical services")
     public ResponseEntity<ApiResponse<Long>> count() {
         long total = service.count();
@@ -102,7 +102,7 @@ public class MedicalServiceController {
     }
 
     @GetMapping("/search")
-    @PreAuthorize("hasAnyAuthority('SUPER_ADMIN', 'VIEW_MEDICAL_SERVICES', 'MANAGE_MEDICAL_SERVICES')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAnyAuthority('VIEW_MEDICAL_SERVICES', 'MANAGE_MEDICAL_SERVICES')")
     @Operation(summary = "Search medical services")
     public ResponseEntity<ApiResponse<List<MedicalServiceViewDto>>> search(@RequestParam String query) {
         List<MedicalServiceViewDto> results = service.search(query);

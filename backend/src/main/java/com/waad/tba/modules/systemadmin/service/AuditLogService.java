@@ -35,6 +35,16 @@ public class AuditLogService {
     }
 
     /**
+     * Get audit log by ID
+     */
+    @Transactional(readOnly = true)
+    public AuditLog getAuditLogById(Long id) {
+        log.info("Fetching audit log by ID: {}", id);
+        return auditLogRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Audit log not found with ID: " + id));
+    }
+
+    /**
      * Get audit logs by user ID
      */
     @Transactional(readOnly = true)

@@ -31,7 +31,7 @@ public class CompanyController {
      * Create a new company
      */
     @PostMapping
-    @PreAuthorize("hasAuthority('CREATE_COMPANY')")
+    @PreAuthorize("hasAuthority('MANAGE_COMPANIES')")
     @Operation(summary = "Create new company", description = "Create a new company (tenant) in the system")
     public ResponseEntity<ApiResponse<CompanyDto>> createCompany(
             @Valid @RequestBody CompanyDto companyDto) {
@@ -49,7 +49,7 @@ public class CompanyController {
      * Update an existing company
      */
     @PutMapping("/{id}")
-    @PreAuthorize("hasAuthority('UPDATE_COMPANY')")
+    @PreAuthorize("hasAuthority('MANAGE_COMPANIES')")
     @Operation(summary = "Update company", description = "Update an existing company")
     public ResponseEntity<ApiResponse<CompanyDto>> updateCompany(
             @PathVariable Long id,
@@ -66,7 +66,7 @@ public class CompanyController {
      * Get company by ID
      */
     @GetMapping("/{id}")
-    @PreAuthorize("hasAuthority('VIEW_COMPANY')")
+    @PreAuthorize("hasAuthority('VIEW_COMPANIES')")
     @Operation(summary = "Get company by ID", description = "Retrieve a company by its ID")
     public ResponseEntity<ApiResponse<CompanyDto>> getCompany(@PathVariable Long id) {
         
@@ -81,7 +81,7 @@ public class CompanyController {
      * Get company by code
      */
     @GetMapping("/code/{code}")
-    @PreAuthorize("hasAuthority('VIEW_COMPANY')")
+    @PreAuthorize("hasAuthority('VIEW_COMPANIES')")
     @Operation(summary = "Get company by code", description = "Retrieve a company by its code")
     public ResponseEntity<ApiResponse<CompanyDto>> getCompanyByCode(@PathVariable String code) {
         
@@ -96,7 +96,7 @@ public class CompanyController {
      * Get all companies
      */
     @GetMapping
-    @PreAuthorize("hasAuthority('VIEW_COMPANY')")
+    @PreAuthorize("hasAuthority('VIEW_COMPANIES')")
     @Operation(summary = "Get all companies", description = "Retrieve all companies in the system")
     public ResponseEntity<ApiResponse<List<CompanyDto>>> getAllCompanies() {
         
@@ -111,7 +111,7 @@ public class CompanyController {
      * Activate a company
      */
     @PatchMapping("/{id}/activate")
-    @PreAuthorize("hasAuthority('UPDATE_COMPANY')")
+    @PreAuthorize("hasAuthority('MANAGE_COMPANIES')")
     @Operation(summary = "Activate company", description = "Activate a deactivated company")
     public ResponseEntity<ApiResponse<CompanyDto>> activateCompany(@PathVariable Long id) {
         
@@ -126,7 +126,7 @@ public class CompanyController {
      * Deactivate a company
      */
     @PatchMapping("/{id}/deactivate")
-    @PreAuthorize("hasAuthority('UPDATE_COMPANY')")
+    @PreAuthorize("hasAuthority('MANAGE_COMPANIES')")
     @Operation(summary = "Deactivate company", description = "Deactivate an active company")
     public ResponseEntity<ApiResponse<CompanyDto>> deactivateCompany(@PathVariable Long id) {
         
@@ -141,7 +141,7 @@ public class CompanyController {
      * Delete a company
      */
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('DELETE_COMPANY')")
+    @PreAuthorize("hasAuthority('MANAGE_COMPANIES')")
     @Operation(summary = "Delete company", description = "Delete a company from the system")
     public ResponseEntity<ApiResponse<Void>> deleteCompany(@PathVariable Long id) {
         
