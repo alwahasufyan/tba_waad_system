@@ -4,13 +4,21 @@ import apiClient from './axiosClient';
 
 const BASE_URL = '/api/reviewer-companies';
 
+/**
+ * Helper function to unwrap ApiResponse
+ * Backend returns: { status: "success", data: {...}, message: "...", timestamp: "..." }
+ */
+const unwrap = (response) => response.data?.data || response.data;
+
 export const reviewersService = {
   /**
-   * Get all reviewer companies
-   * @returns {Promise<Array>} List of reviewer companies
+   * Get paginated reviewer companies
+   * @param {Object} params - Query parameters {page, size, search, sortBy, sortDir}
+   * @returns {Promise<Object>} Pagination response {items, total, page, size}
    */
-  getAll: async () => {
-    return await apiClient.get(BASE_URL);
+  getAll: async (params = {}) => {
+    const response = await apiClient.get(BASE_URL, { params });
+    return unwrap(response);
   },
 
   /**
@@ -19,7 +27,8 @@ export const reviewersService = {
    * @returns {Promise<Object>} Reviewer company details
    */
   getById: async (id) => {
-    return await apiClient.get(`${BASE_URL}/${id}`);
+    const response = await apiClient.get(`${BASE_URL}/${id}`);
+    return unwrap(response);
   },
 
   /**
@@ -28,7 +37,8 @@ export const reviewersService = {
    * @returns {Promise<Object>} Created reviewer company
    */
   create: async (data) => {
-    return await apiClient.post(BASE_URL, data);
+    const response = await apiClient.post(BASE_URL, data);
+    return unwrap(response);
   },
 
   /**
@@ -38,7 +48,8 @@ export const reviewersService = {
    * @returns {Promise<Object>} Updated reviewer company
    */
   update: async (id, data) => {
-    return await apiClient.put(`${BASE_URL}/${id}`, data);
+    const response = await apiClient.put(`${BASE_URL}/${id}`, data);
+    return unwrap(response);
   },
 
   /**
@@ -47,7 +58,8 @@ export const reviewersService = {
    * @returns {Promise<void>}
    */
   remove: async (id) => {
-    return await apiClient.delete(`${BASE_URL}/${id}`);
+    const response = await apiClient.delete(`${BASE_URL}/${id}`);
+    return unwrap(response);
   },
 
   /**
@@ -56,7 +68,8 @@ export const reviewersService = {
    * @returns {Promise<Array>} Filtered reviewer companies
    */
   search: async (searchTerm) => {
-    return await apiClient.get(`${BASE_URL}/search?q=${encodeURIComponent(searchTerm)}`);
+    const response = await apiClient.get(`${BASE_URL}/search?q=${encodeURIComponent(searchTerm)}`);
+    return unwrap(response);
   }
 };
 

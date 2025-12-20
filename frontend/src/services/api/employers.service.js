@@ -9,7 +9,8 @@ const BASE_URL = '/api/employers';
 
 /**
  * Helper function to unwrap ApiResponse
- * Backend returns: { success: true, data: {...}, message: "..." }
+ * Backend returns: { status: "success", data: {...}, message: "...", timestamp: "..." }
+ * We need response.data.data (axios wraps in .data, then ApiResponse has .data)
  */
 const unwrap = (response) => response.data?.data || response.data;
 
