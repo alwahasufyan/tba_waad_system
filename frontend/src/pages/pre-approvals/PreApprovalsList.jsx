@@ -13,24 +13,45 @@ import {
   TablePagination,
   TextField,
   IconButton,
-  Chip,
   Typography,
-  Stack
+  Stack,
+  Tooltip
 } from '@mui/material';
-import { Add as AddIcon, Visibility, Edit, Delete } from '@mui/icons-material';
+import { 
+  Add as AddIcon, 
+  Visibility, 
+  Edit, 
+  Delete,
+  AssignmentTurnedIn as PreApprovalIcon
+} from '@mui/icons-material';
 import MainCard from 'components/MainCard';
 import { usePreApprovalsList, useDeletePreApproval } from 'hooks/usePreApprovals';
 
-const STATUS_COLORS = {
-  PENDING: 'warning',
-  APPROVED: 'success',
-  REJECTED: 'error'
+// Insurance UX Components - Phase B2 Step 3
+import { CardStatusBadge, PriorityBadge } from 'components/insurance';
+
+// Pre-Approval Status Mapping for CardStatusBadge
+const PREAPPROVAL_STATUS_MAP = {
+  PENDING: 'PENDING',
+  REQUESTED: 'PENDING',
+  UNDER_REVIEW: 'PENDING',
+  PENDING_DOCUMENTS: 'SUSPENDED',
+  APPROVED: 'ACTIVE',
+  REJECTED: 'BLOCKED',
+  EXPIRED: 'EXPIRED',
+  CANCELLED: 'INACTIVE'
 };
 
+// Arabic labels for statuses
 const STATUS_LABELS = {
   PENDING: 'قيد المراجعة',
-  APPROVED: 'موافق عليه',
-  REJECTED: 'مرفوض'
+  REQUESTED: 'تم الإرسال',
+  UNDER_REVIEW: 'قيد المراجعة الطبية',
+  PENDING_DOCUMENTS: 'مطلوب مستندات',
+  APPROVED: 'تمت الموافقة',
+  REJECTED: 'مرفوض',
+  EXPIRED: 'منتهية الصلاحية',
+  CANCELLED: 'ملغى'
 };
 
 const PreApprovalsList = () => {
@@ -104,15 +125,16 @@ const PreApprovalsList = () => {
       <TableContainer component={Paper}>
         <Table>
           <TableHead>
-            <TableRow>
-              <TableCell>#</TableCell>
-              <TableCell>اسم العضو</TableCell>
-              <TableCell>شركة التأمين</TableCell>
-              <TableCell>مقدم الخدمة</TableCell>
-              <TableCell align="right">المبلغ المطلوب</TableCell>
-              <TableCell align="right">المبلغ الموافق عليه</TableCell>
-              <TableCell align="center">الحالة</TableCell>
-              <TableCell align="center">الإجراءات</TableCell>
+            <TableRow sx={{ bgcolor: 'grey.50' }}>
+              <TableCell sx={{ fontWeight: 600 }}>#</TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>اسم العضو</TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>شركة التأمين</TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>مقدم الخدمة</TableCell>
+              <TableCell align="center" sx={{ fontWeight: 600 }}>الأولوية</TableCell>
+              <TableCell align="right" sx={{ fontWeight: 600 }}>المبلغ المطلوب</TableCell>
+              <TableCell align="right" sx={{ fontWeight: 600 }}>المبلغ الموافق عليه</TableCell>
+              <TableCell align="center" sx={{ fontWeight: 600 }}>الحالة</TableCell>
+              <TableCell align="center" sx={{ fontWeight: 600 }}>الإجراءات</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -132,32 +154,78 @@ const PreApprovalsList = () => {
             )}
             {!loading && Array.isArray(data?.items) &&
               data.items.map((preApproval) => (
-                <TableRow key={preApproval.id} hover>
-                  <TableCell>{preApproval.id}</TableCell>
-                  <TableCell>{preApproval.memberFullNameArabic}</TableCell>
-                  <TableCell>{preApproval.insuranceCompanyName}</TableCell>
-                  <TableCell>{preApproval.providerName}</TableCell>
-                  <TableCell align="right">{preApproval.requestedAmount?.toLocaleString('ar-SA')}</TableCell>
-                  <TableCell align="right">
-                    {preApproval.approvedAmount ? preApproval.approvedAmount.toLocaleString('ar-SA') : '-'}
+                <TableRow key={preApproval?.id ?? Math.random()} hover>
+                  <TableCell>
+                    <Stack direction="row" spacing={0.5} alignItems="center">
+                      <PreApprovalIcon fontSize="small" color="action" />
+                      <Typography variant="subtitle2">{preApproval?.id ?? '-'}</Typography>
+                    </Stack>
+                  </TableCell>
+                  <TableCell>
+                    <Typography variant="body2">
+                      {preApproval?.memberFullNameArabic ?? preApproval?.memberFullNameEnglish ?? '-'}
+                    </Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Typography variant="body2">{preApproval?.insuranceCompanyName ?? '-'}</Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Typography variant="body2">{preApproval?.providerName ?? '-'}</Typography>
                   </TableCell>
                   <TableCell align="center">
-                    <Chip
-                      label={STATUS_LABELS[preApproval.status] || preApproval.status}
-                      color={STATUS_COLORS[preApproval.status] || 'default'}
+                    {/* Insurance UX - PriorityBadge */}
+                    <PriorityBadge
+                      priority={preApproval?.priority ?? 'ROUTINE'}
                       size="small"
+                      variant="chip"
+                      language="ar"
+                    />
+                  </TableCell>
+                  <TableCell align="right">
+                    <Typography variant="body2" fontWeight={500}>
+                      {typeof preApproval?.requestedAmount === 'number'
+                        ? preApproval.requestedAmount.toLocaleString('ar-SA')
+                        : '-'}
+                    </Typography>
+                  </TableCell>
+                  <TableCell align="right">
+                    <Typography 
+                      variant="body2" 
+                      fontWeight={500}
+                      color={preApproval?.approvedAmount > 0 ? 'success.main' : 'text.secondary'}
+                    >
+                      {typeof preApproval?.approvedAmount === 'number' && preApproval.approvedAmount > 0
+                        ? preApproval.approvedAmount.toLocaleString('ar-SA')
+                        : '-'}
+                    </Typography>
+                  </TableCell>
+                  <TableCell align="center">
+                    {/* Insurance UX - CardStatusBadge */}
+                    <CardStatusBadge
+                      status={PREAPPROVAL_STATUS_MAP[preApproval?.status] ?? 'PENDING'}
+                      customLabel={STATUS_LABELS[preApproval?.status] ?? preApproval?.status}
+                      size="small"
+                      variant="chip"
                     />
                   </TableCell>
                   <TableCell align="center">
-                    <IconButton size="small" color="primary" onClick={() => handleView(preApproval.id)} title="عرض">
-                      <Visibility fontSize="small" />
-                    </IconButton>
-                    <IconButton size="small" color="info" onClick={() => handleEdit(preApproval.id)} title="تعديل">
-                      <Edit fontSize="small" />
-                    </IconButton>
-                    <IconButton size="small" color="error" onClick={() => handleDelete(preApproval.id)} disabled={deleting} title="حذف">
-                      <Delete fontSize="small" />
-                    </IconButton>
+                    <Stack direction="row" spacing={0.5} justifyContent="center">
+                      <Tooltip title="عرض">
+                        <IconButton size="small" color="primary" onClick={() => handleView(preApproval?.id)}>
+                          <Visibility fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                      <Tooltip title="تعديل">
+                        <IconButton size="small" color="info" onClick={() => handleEdit(preApproval?.id)}>
+                          <Edit fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                      <Tooltip title="حذف">
+                        <IconButton size="small" color="error" onClick={() => handleDelete(preApproval?.id)} disabled={deleting}>
+                          <Delete fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                    </Stack>
                   </TableCell>
                 </TableRow>
               ))}

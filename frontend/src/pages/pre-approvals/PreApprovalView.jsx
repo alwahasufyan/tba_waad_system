@@ -1,20 +1,77 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { Box, Button, Chip, CircularProgress, Divider, Grid, Paper, Stack, Typography, Alert } from '@mui/material';
-import { Edit as EditIcon, ArrowBack } from '@mui/icons-material';
+import { 
+  Box, 
+  Button, 
+  Card, 
+  CardContent,
+  CircularProgress, 
+  Divider, 
+  Grid, 
+  Paper, 
+  Stack, 
+  Typography, 
+  Alert 
+} from '@mui/material';
+import { 
+  Edit as EditIcon, 
+  ArrowBack,
+  AssignmentTurnedIn as PreApprovalIcon,
+  MedicalServices as MedicalIcon,
+  AttachFile as AttachmentIcon,
+  Receipt as ClaimIcon
+} from '@mui/icons-material';
 import MainCard from 'components/MainCard';
 import { usePreApprovalDetails } from 'hooks/usePreApprovals';
 
-const STATUS_COLORS = {
-  PENDING: 'warning',
-  APPROVED: 'success',
-  REJECTED: 'error'
+// Insurance UX Components - Phase B2 Step 3
+import { 
+  StatusTimeline, 
+  CardStatusBadge, 
+  PriorityBadge,
+  ValidityCountdown,
+  AmountComparisonBar,
+  getWorkflowSteps
+} from 'components/insurance';
+
+// Pre-Approval Status Mapping for CardStatusBadge
+const PREAPPROVAL_STATUS_MAP = {
+  PENDING: 'PENDING',
+  REQUESTED: 'PENDING',
+  UNDER_REVIEW: 'PENDING',
+  PENDING_DOCUMENTS: 'SUSPENDED',
+  APPROVED: 'ACTIVE',
+  REJECTED: 'BLOCKED',
+  EXPIRED: 'EXPIRED',
+  CANCELLED: 'INACTIVE'
 };
 
+// Arabic labels for statuses
 const STATUS_LABELS = {
   PENDING: 'قيد المراجعة',
-  APPROVED: 'موافق عليه',
-  REJECTED: 'مرفوض'
+  REQUESTED: 'تم الإرسال',
+  UNDER_REVIEW: 'قيد المراجعة الطبية',
+  PENDING_DOCUMENTS: 'مطلوب مستندات',
+  APPROVED: 'تمت الموافقة',
+  REJECTED: 'مرفوض',
+  EXPIRED: 'منتهية الصلاحية',
+  CANCELLED: 'ملغى'
 };
+
+// Helper Info Row Component
+const InfoRow = ({ label, value, valueColor }) => (
+  <Grid container spacing={2} sx={{ mb: 1.5 }}>
+    <Grid item xs={12} sm={4}>
+      <Typography variant="subtitle2" color="text.secondary">
+        {label}
+      </Typography>
+    </Grid>
+    <Grid item xs={12} sm={8}>
+      <Typography variant="body1" color={valueColor || 'text.primary'}>
+        {value ?? '-'}
+      </Typography>
+    </Grid>
+  </Grid>
+);
 
 const PreApprovalView = () => {
   const { id } = useParams();
@@ -27,6 +84,12 @@ const PreApprovalView = () => {
 
   const handleBack = () => {
     navigate('/pre-approvals');
+  };
+
+  // Placeholder for Convert to Claim (UI only - no logic)
+  const handleConvertToClaim = () => {
+    // TODO: Implement in future phase
+    console.log('Convert to Claim - Not implemented yet');
   };
 
   if (loading) {
@@ -55,11 +118,39 @@ const PreApprovalView = () => {
     );
   }
 
+  // Get workflow steps for timeline
+  const timelineSteps = getWorkflowSteps('preapproval', preApproval?.status, 'ar');
+
   return (
     <MainCard
-      title="تفاصيل طلب الموافقة المسبقة"
+      title={
+        <Stack direction="row" spacing={2} alignItems="center">
+          <PreApprovalIcon color="primary" />
+          <Box>
+            <Typography variant="h5">طلب موافقة مسبقة #{preApproval?.id ?? '-'}</Typography>
+            <Typography variant="caption" color="text.secondary">
+              {preApproval?.member?.fullNameArabic ?? preApproval?.memberFullNameArabic ?? '-'}
+            </Typography>
+          </Box>
+        </Stack>
+      }
       secondary={
-        <Stack direction="row" spacing={2}>
+        <Stack direction="row" spacing={2} alignItems="center">
+          {/* Insurance UX - CardStatusBadge */}
+          <CardStatusBadge
+            status={PREAPPROVAL_STATUS_MAP[preApproval?.status] ?? 'PENDING'}
+            customLabel={STATUS_LABELS[preApproval?.status] ?? preApproval?.status}
+            size="medium"
+            variant="detailed"
+          />
+          {/* Insurance UX - PriorityBadge */}
+          <PriorityBadge
+            priority={preApproval?.priority ?? 'ROUTINE'}
+            size="medium"
+            variant="chip"
+            showResponseTime={false}
+            language="ar"
+          />
           <Button variant="outlined" startIcon={<ArrowBack />} onClick={handleBack}>
             رجوع
           </Button>
@@ -69,224 +160,240 @@ const PreApprovalView = () => {
         </Stack>
       }
     >
-      <Grid container spacing={3}>
-        {/* Section 1: Basic Information */}
-        <Grid item xs={12}>
-          <Paper sx={{ p: 3 }}>
-            <Typography variant="h5" gutterBottom>
-              المعلومات الأساسية
+      <Stack spacing={3}>
+        {/* ===================== WORKFLOW TIMELINE ===================== */}
+        <Card variant="outlined">
+          <CardContent>
+            <Typography variant="h6" gutterBottom sx={{ mb: 2 }}>
+              مسار الطلب
             </Typography>
-            <Divider sx={{ mb: 2 }} />
+            {/* Insurance UX - StatusTimeline */}
+            <StatusTimeline
+              steps={timelineSteps}
+              currentStep={preApproval?.status === 'PENDING' ? 'MEDICAL_REVIEW' : preApproval?.status}
+              variant="horizontal"
+              size="medium"
+              showDates={true}
+              language="ar"
+            />
+          </CardContent>
+        </Card>
 
-            <Grid container spacing={2}>
-              <Grid item xs={12} md={6}>
-                <Typography variant="subtitle2" color="text.secondary">
-                  رقم الطلب
-                </Typography>
-                <Typography variant="body1">{preApproval.id}</Typography>
-              </Grid>
+        {/* ===================== VALIDITY COUNTDOWN (APPROVED ONLY) ===================== */}
+        {preApproval?.status === 'APPROVED' && (
+          <Card variant="outlined" sx={{ bgcolor: 'success.lighter', borderColor: 'success.light' }}>
+            <CardContent>
+              <Typography variant="h6" gutterBottom>
+                صلاحية الموافقة
+              </Typography>
+              <Divider sx={{ mb: 2 }} />
+              {/* Insurance UX - ValidityCountdown */}
+              <ValidityCountdown
+                approvalDate={preApproval?.reviewedAt ?? preApproval?.updatedAt ?? preApproval?.createdAt}
+                validityDays={preApproval?.validityDays ?? 30}
+                status={preApproval?.status}
+                showAction={true}
+                showProgress={true}
+                onConvertToClaim={handleConvertToClaim}
+                size="medium"
+                language="ar"
+              />
+            </CardContent>
+          </Card>
+        )}
 
-              <Grid item xs={12} md={6}>
-                <Typography variant="subtitle2" color="text.secondary">
-                  حالة الطلب
+        <Grid container spacing={3}>
+          {/* ===================== BASIC INFORMATION ===================== */}
+          <Grid item xs={12} md={6}>
+            <Card variant="outlined" sx={{ height: '100%' }}>
+              <CardContent>
+                <Typography variant="h6" gutterBottom>
+                  المعلومات الأساسية
                 </Typography>
-                <Chip label={STATUS_LABELS[preApproval.status]} color={STATUS_COLORS[preApproval.status]} size="small" />
-              </Grid>
+                <Divider sx={{ mb: 2 }} />
+                <InfoRow label="رقم الطلب" value={preApproval?.id} />
+                <InfoRow 
+                  label="اسم العضو" 
+                  value={preApproval?.member?.fullNameArabic ?? preApproval?.memberFullNameArabic} 
+                />
+                <InfoRow 
+                  label="الرقم المدني" 
+                  value={preApproval?.member?.civilId ?? preApproval?.memberCivilId} 
+                />
+                <InfoRow 
+                  label="شركة التأمين" 
+                  value={
+                    preApproval?.insuranceCompany?.name ?? preApproval?.insuranceCompanyName
+                      ? `${preApproval?.insuranceCompany?.name ?? preApproval?.insuranceCompanyName}${preApproval?.insuranceCompany?.code ? ` (${preApproval.insuranceCompany.code})` : ''}`
+                      : '-'
+                  } 
+                />
+                <InfoRow 
+                  label="السياسة التأمينية" 
+                  value={
+                    preApproval?.insurancePolicy?.name
+                      ? `${preApproval.insurancePolicy.name}${preApproval.insurancePolicy.code ? ` (${preApproval.insurancePolicy.code})` : ''}`
+                      : '-'
+                  } 
+                />
+                <InfoRow 
+                  label="الباقة الطبية" 
+                  value={
+                    preApproval?.benefitPackage?.name
+                      ? `${preApproval.benefitPackage.name}${preApproval.benefitPackage.code ? ` (${preApproval.benefitPackage.code})` : ''}`
+                      : '-'
+                  } 
+                />
+              </CardContent>
+            </Card>
+          </Grid>
 
-              <Grid item xs={12} md={6}>
-                <Typography variant="subtitle2" color="text.secondary">
-                  اسم العضو
-                </Typography>
-                <Typography variant="body1">{preApproval.member?.fullNameArabic || '-'}</Typography>
-              </Grid>
+          {/* ===================== MEDICAL INFORMATION ===================== */}
+          <Grid item xs={12} md={6}>
+            <Card variant="outlined" sx={{ height: '100%' }}>
+              <CardContent>
+                <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
+                  <MedicalIcon color="primary" fontSize="small" />
+                  <Typography variant="h6">المعلومات الطبية</Typography>
+                </Stack>
+                <Divider sx={{ mb: 2 }} />
+                <InfoRow label="مقدم الخدمة" value={preApproval?.providerName} />
+                <InfoRow label="الطبيب" value={preApproval?.doctorName} />
+                <InfoRow label="التشخيص (ICD10)" value={preApproval?.diagnosis} />
+                <InfoRow label="الإجراء الطبي (CPT)" value={preApproval?.procedure} />
+                <InfoRow 
+                  label="عدد المرفقات" 
+                  value={
+                    <Stack direction="row" spacing={1} alignItems="center">
+                      <AttachmentIcon fontSize="small" color="action" />
+                      <Typography>{preApproval?.attachmentsCount ?? 0} مرفق</Typography>
+                    </Stack>
+                  } 
+                />
+              </CardContent>
+            </Card>
+          </Grid>
 
-              <Grid item xs={12} md={6}>
-                <Typography variant="subtitle2" color="text.secondary">
-                  الرقم المدني
+          {/* ===================== FINANCIAL INFORMATION ===================== */}
+          <Grid item xs={12}>
+            <Card variant="outlined">
+              <CardContent>
+                <Typography variant="h6" gutterBottom>
+                  المعلومات المالية والموافقة
                 </Typography>
-                <Typography variant="body1">{preApproval.member?.civilId || '-'}</Typography>
-              </Grid>
+                <Divider sx={{ mb: 3 }} />
+                
+                {/* Insurance UX - AmountComparisonBar */}
+                <AmountComparisonBar
+                  requestedAmount={typeof preApproval?.requestedAmount === 'number' ? preApproval.requestedAmount : 0}
+                  approvedAmount={typeof preApproval?.approvedAmount === 'number' ? preApproval.approvedAmount : 0}
+                  currency="د.ك"
+                  copayPercentage={typeof preApproval?.copayPercentage === 'number' ? preApproval.copayPercentage : 0}
+                  deductible={typeof preApproval?.deductible === 'number' ? preApproval.deductible : 0}
+                  showBreakdown={preApproval?.status === 'APPROVED' || preApproval?.status === 'PARTIALLY_APPROVED'}
+                  size="medium"
+                  language="ar"
+                />
 
-              <Grid item xs={12} md={6}>
-                <Typography variant="subtitle2" color="text.secondary">
-                  شركة التأمين
-                </Typography>
-                <Typography variant="body1">
-                  {preApproval.insuranceCompany?.name || '-'}{' '}
-                  {preApproval.insuranceCompany?.code ? `(${preApproval.insuranceCompany.code})` : ''}
-                </Typography>
-              </Grid>
-
-              <Grid item xs={12} md={6}>
-                <Typography variant="subtitle2" color="text.secondary">
-                  السياسة التأمينية
-                </Typography>
-                <Typography variant="body1">
-                  {preApproval.insurancePolicy?.name || '-'}{' '}
-                  {preApproval.insurancePolicy?.code ? `(${preApproval.insurancePolicy.code})` : ''}
-                </Typography>
-              </Grid>
-
-              <Grid item xs={12} md={6}>
-                <Typography variant="subtitle2" color="text.secondary">
-                  الباقة الطبية
-                </Typography>
-                <Typography variant="body1">
-                  {preApproval.benefitPackage?.name || '-'} {preApproval.benefitPackage?.code ? `(${preApproval.benefitPackage.code})` : ''}
-                </Typography>
-              </Grid>
-
-              <Grid item xs={12} md={6}>
-                <Typography variant="subtitle2" color="text.secondary">
-                  تاريخ الإنشاء
-                </Typography>
-                <Typography variant="body1">
-                  {preApproval.createdAt ? new Date(preApproval.createdAt).toLocaleString('ar-KW') : '-'}
-                </Typography>
-              </Grid>
-
-              <Grid item xs={12} md={6}>
-                <Typography variant="subtitle2" color="text.secondary">
-                  تاريخ آخر تحديث
-                </Typography>
-                <Typography variant="body1">
-                  {preApproval.updatedAt ? new Date(preApproval.updatedAt).toLocaleString('ar-KW') : '-'}
-                </Typography>
-              </Grid>
-            </Grid>
-          </Paper>
-        </Grid>
-
-        {/* Section 2: Medical Information */}
-        <Grid item xs={12}>
-          <Paper sx={{ p: 3 }}>
-            <Typography variant="h5" gutterBottom>
-              المعلومات الطبية
-            </Typography>
-            <Divider sx={{ mb: 2 }} />
-
-            <Grid container spacing={2}>
-              <Grid item xs={12} md={6}>
-                <Typography variant="subtitle2" color="text.secondary">
-                  اسم مقدم الخدمة
-                </Typography>
-                <Typography variant="body1">{preApproval.providerName || '-'}</Typography>
-              </Grid>
-
-              <Grid item xs={12} md={6}>
-                <Typography variant="subtitle2" color="text.secondary">
-                  اسم الطبيب
-                </Typography>
-                <Typography variant="body1">{preApproval.doctorName || '-'}</Typography>
-              </Grid>
-
-              <Grid item xs={12} md={6}>
-                <Typography variant="subtitle2" color="text.secondary">
-                  التشخيص (ICD10)
-                </Typography>
-                <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap' }}>
-                  {preApproval.diagnosis || '-'}
-                </Typography>
-              </Grid>
-
-              <Grid item xs={12} md={6}>
-                <Typography variant="subtitle2" color="text.secondary">
-                  الإجراء الطبي (CPT)
-                </Typography>
-                <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap' }}>
-                  {preApproval.procedure || '-'}
-                </Typography>
-              </Grid>
-
-              <Grid item xs={12} md={6}>
-                <Typography variant="subtitle2" color="text.secondary">
-                  عدد المرفقات
-                </Typography>
-                <Typography variant="body1">{preApproval.attachmentsCount || 0}</Typography>
-              </Grid>
-            </Grid>
-          </Paper>
-        </Grid>
-
-        {/* Section 3: Financial & Approval Information */}
-        <Grid item xs={12}>
-          <Paper sx={{ p: 3 }}>
-            <Typography variant="h5" gutterBottom>
-              المعلومات المالية والموافقة
-            </Typography>
-            <Divider sx={{ mb: 2 }} />
-
-            <Grid container spacing={2}>
-              <Grid item xs={12} md={6}>
-                <Typography variant="subtitle2" color="text.secondary">
-                  المبلغ المطلوب
-                </Typography>
-                <Typography variant="body1" sx={{ fontWeight: 'bold' }}>
-                  {preApproval.requestedAmount ? `${Number(preApproval.requestedAmount).toLocaleString('ar-KW')} د.ك` : '-'}
-                </Typography>
-              </Grid>
-
-              <Grid item xs={12} md={6}>
-                <Typography variant="subtitle2" color="text.secondary">
-                  المبلغ الموافق عليه
-                </Typography>
-                <Typography
-                  variant="body1"
-                  sx={{ fontWeight: 'bold', color: preApproval.status === 'APPROVED' ? 'success.main' : 'inherit' }}
-                >
-                  {preApproval.approvedAmount ? `${Number(preApproval.approvedAmount).toLocaleString('ar-KW')} د.ك` : '-'}
-                </Typography>
-              </Grid>
-
-              {preApproval.reviewedAt && (
-                <Grid item xs={12} md={6}>
-                  <Typography variant="subtitle2" color="text.secondary">
-                    تاريخ المراجعة
-                  </Typography>
-                  <Typography variant="body1">{new Date(preApproval.reviewedAt).toLocaleString('ar-KW')}</Typography>
-                </Grid>
-              )}
-
-              {preApproval.reviewerComment && (
-                <Grid item xs={12}>
-                  <Typography variant="subtitle2" color="text.secondary">
-                    تعليق المراجع
-                  </Typography>
-                  <Paper
-                    sx={{
-                      p: 2,
-                      mt: 1,
-                      backgroundColor: preApproval.status === 'REJECTED' ? 'error.lighter' : 'success.lighter'
+                {/* Reviewer Comment */}
+                {preApproval?.reviewerComment && (
+                  <Box 
+                    sx={{ 
+                      mt: 3, 
+                      p: 2, 
+                      borderRadius: 1,
+                      bgcolor: preApproval?.status === 'REJECTED' ? 'error.lighter' : 'success.lighter'
                     }}
                   >
-                    <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap' }}>
+                    <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                      تعليق المراجع
+                    </Typography>
+                    <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
                       {preApproval.reviewerComment}
                     </Typography>
-                  </Paper>
-                </Grid>
-              )}
+                  </Box>
+                )}
 
-              {preApproval.createdBy && (
-                <Grid item xs={12} md={6}>
-                  <Typography variant="subtitle2" color="text.secondary">
-                    أنشئ بواسطة
-                  </Typography>
-                  <Typography variant="body1">{preApproval.createdBy}</Typography>
-                </Grid>
-              )}
+                {/* Review Date */}
+                {preApproval?.reviewedAt && (
+                  <Box sx={{ mt: 2 }}>
+                    <InfoRow 
+                      label="تاريخ المراجعة" 
+                      value={new Date(preApproval.reviewedAt).toLocaleString('ar-KW')} 
+                    />
+                  </Box>
+                )}
+              </CardContent>
+            </Card>
+          </Grid>
 
-              {preApproval.updatedBy && (
-                <Grid item xs={12} md={6}>
-                  <Typography variant="subtitle2" color="text.secondary">
-                    آخر تحديث بواسطة
-                  </Typography>
-                  <Typography variant="body1">{preApproval.updatedBy}</Typography>
-                </Grid>
-              )}
+          {/* ===================== ACTION HINT (APPROVED ONLY) ===================== */}
+          {preApproval?.status === 'APPROVED' && (
+            <Grid item xs={12}>
+              <Card variant="outlined" sx={{ bgcolor: 'info.lighter', borderColor: 'info.light' }}>
+                <CardContent>
+                  <Stack direction="row" spacing={2} alignItems="center" justifyContent="space-between">
+                    <Box>
+                      <Typography variant="h6" gutterBottom>
+                        تحويل إلى مطالبة
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        يمكنك تحويل هذه الموافقة المسبقة إلى مطالبة بعد تقديم الخدمة للعضو
+                      </Typography>
+                    </Box>
+                    {/* Placeholder button - disabled until implementation */}
+                    <Button 
+                      variant="contained" 
+                      color="info" 
+                      startIcon={<ClaimIcon />}
+                      disabled
+                      sx={{ opacity: 0.7 }}
+                    >
+                      تحويل إلى مطالبة
+                    </Button>
+                  </Stack>
+                </CardContent>
+              </Card>
             </Grid>
-          </Paper>
+          )}
+
+          {/* ===================== AUDIT INFORMATION ===================== */}
+          <Grid item xs={12}>
+            <Card variant="outlined">
+              <CardContent>
+                <Typography variant="h6" gutterBottom>
+                  معلومات التدقيق
+                </Typography>
+                <Divider sx={{ mb: 2 }} />
+                <Grid container spacing={2}>
+                  <Grid item xs={12} md={6}>
+                    <InfoRow 
+                      label="تاريخ الإنشاء" 
+                      value={preApproval?.createdAt ? new Date(preApproval.createdAt).toLocaleString('ar-KW') : '-'} 
+                    />
+                  </Grid>
+                  <Grid item xs={12} md={6}>
+                    <InfoRow 
+                      label="تاريخ آخر تحديث" 
+                      value={preApproval?.updatedAt ? new Date(preApproval.updatedAt).toLocaleString('ar-KW') : '-'} 
+                    />
+                  </Grid>
+                  {preApproval?.createdBy && (
+                    <Grid item xs={12} md={6}>
+                      <InfoRow label="أنشئ بواسطة" value={preApproval.createdBy} />
+                    </Grid>
+                  )}
+                  {preApproval?.updatedBy && (
+                    <Grid item xs={12} md={6}>
+                      <InfoRow label="آخر تحديث بواسطة" value={preApproval.updatedBy} />
+                    </Grid>
+                  )}
+                </Grid>
+              </CardContent>
+            </Card>
+          </Grid>
         </Grid>
-      </Grid>
+      </Stack>
     </MainCard>
   );
 };
