@@ -1,22 +1,161 @@
-import { useNavigate, useParams } from 'react-router-dom';
-import { Box, Button, Grid, Paper, Stack, Typography, Chip, Divider, Alert, Skeleton } from '@mui/material';
-import { ArrowBack as ArrowBackIcon, Edit as EditIcon, MedicalServices as MedicalServicesIcon, CheckCircle, Cancel } from '@mui/icons-material';
+/**
+ * Medical Service View Page - GOLDEN REFERENCE MODULE
+ * Phase D2 - Reference Module Pattern
+ * 
+ * ⚠️ This is the REFERENCE implementation for all CRUD view pages.
+ * Pattern: ModernPageHeader → MainCard → Detail Sections (Paper boxes)
+ * 
+ * Rules Applied:
+ * 1. icon={Component} - NEVER JSX
+ * 2. Arabic only - No English labels  
+ * 3. Defensive optional chaining
+ * 4. Proper error states (403 صلاحيات, 500 خطأ تقني)
+ */
 
+import { useCallback } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+
+// MUI Components
+import { 
+  Box, 
+  Button, 
+  Grid, 
+  Paper, 
+  Stack, 
+  Typography, 
+  Chip, 
+  Divider, 
+  Skeleton 
+} from '@mui/material';
+
+// MUI Icons - Always as Component, NEVER as JSX
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import EditIcon from '@mui/icons-material/Edit';
+import MedicalServicesIcon from '@mui/icons-material/MedicalServices';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import CancelIcon from '@mui/icons-material/Cancel';
+import LockIcon from '@mui/icons-material/Lock';
+import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
+
+// Project Components
 import MainCard from 'components/MainCard';
 import ModernPageHeader from 'components/tba/ModernPageHeader';
+import ModernEmptyState from 'components/tba/ModernEmptyState';
+
+// Hooks & Services
 import { useMedicalServiceDetails } from 'hooks/useMedicalServices';
 
+// ============================================================================
+// HELPER FUNCTIONS
+// ============================================================================
+
 /**
- * Medical Service View Page
- * Displays detailed read-only view of a medical service
+ * Parse error response and return appropriate Arabic message
  */
+const getErrorInfo = (error) => {
+  const status = error?.response?.status || error?.status;
+  
+  if (status === 403) {
+    return {
+      type: 'permission',
+      title: 'غير مصرح',
+      message: 'ليس لديك صلاحية للوصول إلى هذه الخدمة',
+      icon: LockIcon
+    };
+  }
+  
+  if (status === 404) {
+    return {
+      type: 'notfound',
+      title: 'غير موجود',
+      message: 'الخدمة المطلوبة غير موجودة',
+      icon: ErrorOutlineIcon
+    };
+  }
+  
+  if (status >= 500) {
+    return {
+      type: 'server',
+      title: 'خطأ تقني',
+      message: 'حدث خطأ في الخادم. يرجى المحاولة لاحقاً',
+      icon: ErrorOutlineIcon
+    };
+  }
+  
+  return {
+    type: 'generic',
+    title: 'خطأ',
+    message: error?.message || 'فشل تحميل بيانات الخدمة',
+    icon: ErrorOutlineIcon
+  };
+};
+
+/**
+ * Format price with LYD currency
+ */
+const formatPrice = (value) => {
+  if (value === null || value === undefined) return '-';
+  return `${Number(value).toFixed(2)} د.ل`;
+};
+
+/**
+ * Format date in Arabic locale
+ */
+const formatDate = (date) => {
+  if (!date) return '-';
+  try {
+    return new Date(date).toLocaleString('ar-LY');
+  } catch {
+    return '-';
+  }
+};
+
+// ============================================================================
+// SUB-COMPONENTS
+// ============================================================================
+
+/**
+ * DetailField - Reusable field display component
+ */
+const DetailField = ({ label, children }) => (
+  <Paper variant="outlined" sx={{ p: 2 }}>
+    <Typography variant="caption" color="text.secondary" gutterBottom display="block">
+      {label}
+    </Typography>
+    {children}
+  </Paper>
+);
+
+// ============================================================================
+// MAIN COMPONENT
+// ============================================================================
+
 const MedicalServiceView = () => {
   const { id } = useParams();
   const navigate = useNavigate();
 
+  // ========================================
+  // DATA FETCHING
+  // ========================================
+  
   const { data: service, loading, error } = useMedicalServiceDetails(id);
 
-  // Loading skeleton
+  // ========================================
+  // HANDLERS
+  // ========================================
+  
+  const handleBack = useCallback(() => {
+    navigate('/medical-services');
+  }, [navigate]);
+
+  const handleEdit = useCallback(() => {
+    navigate(`/medical-services/edit/${id}`);
+  }, [navigate, id]);
+
+  // ========================================
+  // RENDER - LOADING STATE
+  // ========================================
+  
   if (loading) {
     return (
       <Box>
@@ -41,8 +180,14 @@ const MedicalServiceView = () => {
     );
   }
 
-  // Error state
+  // ========================================
+  // RENDER - ERROR STATE
+  // ========================================
+  
   if (error || !service) {
+    const errorInfo = getErrorInfo(error);
+    const ErrorIcon = errorInfo.icon;
+    
     return (
       <Box>
         <ModernPageHeader
@@ -56,41 +201,69 @@ const MedicalServiceView = () => {
           ]}
         />
         <MainCard>
-          <Alert severity="error">{error?.message || 'فشل تحميل بيانات الخدمة'}</Alert>
-          <Button variant="outlined" startIcon={<ArrowBackIcon />} onClick={() => navigate('/medical-services')} sx={{ mt: 2 }}>
-            رجوع للقائمة
-          </Button>
+          <ModernEmptyState
+            icon={ErrorIcon}
+            title={errorInfo.title}
+            description={errorInfo.message}
+            action={
+              <Button 
+                variant="outlined" 
+                startIcon={<ArrowBackIcon />} 
+                onClick={handleBack}
+              >
+                رجوع للقائمة
+              </Button>
+            }
+          />
         </MainCard>
       </Box>
     );
   }
 
+  // ========================================
+  // RENDER - MAIN VIEW
+  // ========================================
+
+  // ========================================
+  // RENDER - MAIN VIEW
+  // ========================================
+
   return (
     <Box>
+      {/* ====== PAGE HEADER ====== */}
       <ModernPageHeader
         title="عرض الخدمة الطبية"
-        subtitle={service.nameAr}
+        subtitle={service?.nameAr || ''}
         icon={MedicalServicesIcon}
         breadcrumbs={[
           { label: 'الرئيسية', path: '/' },
           { label: 'الخدمات الطبية', path: '/medical-services' },
-          { label: service.code }
+          { label: service?.code || 'عرض' }
         ]}
         actions={
           <Stack direction="row" spacing={1}>
-            <Button variant="outlined" startIcon={<ArrowBackIcon />} onClick={() => navigate('/medical-services')}>
+            <Button 
+              variant="outlined" 
+              startIcon={<ArrowBackIcon />} 
+              onClick={handleBack}
+            >
               رجوع
             </Button>
-            <Button variant="contained" startIcon={<EditIcon />} onClick={() => navigate(`/medical-services/edit/${id}`)}>
+            <Button 
+              variant="contained" 
+              startIcon={<EditIcon />} 
+              onClick={handleEdit}
+            >
               تعديل
             </Button>
           </Stack>
         }
       />
 
+      {/* ====== MAIN CARD ====== */}
       <MainCard>
         <Grid container spacing={3}>
-          {/* Basic Information Section */}
+          {/* ====== BASIC INFORMATION SECTION ====== */}
           <Grid item xs={12}>
             <Typography variant="h6" gutterBottom>
               المعلومات الأساسية
@@ -100,67 +273,52 @@ const MedicalServiceView = () => {
 
           {/* Code */}
           <Grid item xs={12} md={6}>
-            <Paper variant="outlined" sx={{ p: 2 }}>
-              <Typography variant="caption" color="text.secondary" gutterBottom display="block">
-                الرمز
-              </Typography>
+            <DetailField label="الرمز">
               <Typography variant="body1" fontWeight="medium">
-                {service.code}
+                {service?.code || '-'}
               </Typography>
-            </Paper>
+            </DetailField>
           </Grid>
 
           {/* Category */}
           <Grid item xs={12} md={6}>
-            <Paper variant="outlined" sx={{ p: 2 }}>
-              <Typography variant="caption" color="text.secondary" gutterBottom display="block">
-                التصنيف الطبي
-              </Typography>
+            <DetailField label="التصنيف الطبي">
               <Typography variant="body1" fontWeight="medium">
-                {service.category?.nameAr || service.category?.nameEn || '-'}
+                {service?.category?.nameAr || service?.category?.nameEn || '-'}
               </Typography>
-            </Paper>
+            </DetailField>
           </Grid>
 
           {/* Name Arabic */}
           <Grid item xs={12} md={6}>
-            <Paper variant="outlined" sx={{ p: 2 }}>
-              <Typography variant="caption" color="text.secondary" gutterBottom display="block">
-                الاسم (عربي)
-              </Typography>
+            <DetailField label="الاسم (عربي)">
               <Typography variant="body1" fontWeight="medium">
-                {service.nameAr}
+                {service?.nameAr || '-'}
               </Typography>
-            </Paper>
+            </DetailField>
           </Grid>
 
           {/* Name English */}
           <Grid item xs={12} md={6}>
-            <Paper variant="outlined" sx={{ p: 2 }}>
-              <Typography variant="caption" color="text.secondary" gutterBottom display="block">
-                الاسم (إنجليزي)
-              </Typography>
+            <DetailField label="الاسم (إنجليزي)">
               <Typography variant="body1" fontWeight="medium">
-                {service.nameEn}
+                {service?.nameEn || '-'}
               </Typography>
-            </Paper>
+            </DetailField>
           </Grid>
 
           {/* Description */}
-          {service.description && (
+          {service?.description && (
             <Grid item xs={12}>
-              <Paper variant="outlined" sx={{ p: 2 }}>
-                <Typography variant="caption" color="text.secondary" gutterBottom display="block">
-                  الوصف
-                </Typography>
+              <DetailField label="الوصف">
                 <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap' }}>
                   {service.description}
                 </Typography>
-              </Paper>
+              </DetailField>
             </Grid>
           )}
 
-          {/* Pricing & Coverage Section */}
+          {/* ====== PRICING SECTION ====== */}
           <Grid item xs={12}>
             <Typography variant="h6" gutterBottom sx={{ mt: 2 }}>
               التسعير والتغطية
@@ -170,41 +328,32 @@ const MedicalServiceView = () => {
 
           {/* Price */}
           <Grid item xs={12} md={4}>
-            <Paper variant="outlined" sx={{ p: 2 }}>
-              <Typography variant="caption" color="text.secondary" gutterBottom display="block">
-                السعر (LYD)
-              </Typography>
+            <DetailField label="السعر (د.ل)">
               <Typography variant="body1" fontWeight="medium">
-                {service.priceLyd ? `${service.priceLyd.toFixed(2)} LYD` : '-'}
+                {formatPrice(service?.priceLyd)}
               </Typography>
-            </Paper>
+            </DetailField>
           </Grid>
 
           {/* Cost */}
           <Grid item xs={12} md={4}>
-            <Paper variant="outlined" sx={{ p: 2 }}>
-              <Typography variant="caption" color="text.secondary" gutterBottom display="block">
-                التكلفة (LYD)
-              </Typography>
+            <DetailField label="التكلفة (د.ل)">
               <Typography variant="body1" fontWeight="medium">
-                {service.costLyd ? `${service.costLyd.toFixed(2)} LYD` : '-'}
+                {formatPrice(service?.costLyd)}
               </Typography>
-            </Paper>
+            </DetailField>
           </Grid>
 
           {/* Coverage Limit */}
           <Grid item xs={12} md={4}>
-            <Paper variant="outlined" sx={{ p: 2 }}>
-              <Typography variant="caption" color="text.secondary" gutterBottom display="block">
-                حد التغطية (LYD)
-              </Typography>
+            <DetailField label="حد التغطية (د.ل)">
               <Typography variant="body1" fontWeight="medium">
-                {service.coverageLimit ? `${service.coverageLimit.toFixed(2)} LYD` : '-'}
+                {formatPrice(service?.coverageLimit)}
               </Typography>
-            </Paper>
+            </DetailField>
           </Grid>
 
-          {/* Service Details Section */}
+          {/* ====== DETAILS SECTION ====== */}
           <Grid item xs={12}>
             <Typography variant="h6" gutterBottom sx={{ mt: 2 }}>
               تفاصيل الخدمة
@@ -214,43 +363,33 @@ const MedicalServiceView = () => {
 
           {/* Duration */}
           <Grid item xs={12} md={6}>
-            <Paper variant="outlined" sx={{ p: 2 }}>
-              <Typography variant="caption" color="text.secondary" gutterBottom display="block">
-                المدة المتوقعة
-              </Typography>
+            <DetailField label="المدة المتوقعة">
               <Typography variant="body1" fontWeight="medium">
-                {service.duration ? `${service.duration} دقيقة` : '-'}
+                {service?.duration ? `${service.duration} دقيقة` : '-'}
               </Typography>
-            </Paper>
+            </DetailField>
           </Grid>
 
           {/* Requires Approval */}
           <Grid item xs={12} md={6}>
-            <Paper variant="outlined" sx={{ p: 2 }}>
-              <Typography variant="caption" color="text.secondary" gutterBottom display="block">
-                يتطلب موافقة مسبقة
-              </Typography>
+            <DetailField label="يتطلب موافقة مسبقة">
               <Stack direction="row" spacing={1} alignItems="center">
-                {service.requiresApproval ? (
+                {service?.requiresApproval ? (
                   <>
-                    <CheckCircle color="success" fontSize="small" />
-                    <Typography variant="body1" fontWeight="medium">
-                      نعم
-                    </Typography>
+                    <CheckCircleIcon color="success" fontSize="small" />
+                    <Typography variant="body1" fontWeight="medium">نعم</Typography>
                   </>
                 ) : (
                   <>
-                    <Cancel color="disabled" fontSize="small" />
-                    <Typography variant="body1" fontWeight="medium">
-                      لا
-                    </Typography>
+                    <CancelIcon color="disabled" fontSize="small" />
+                    <Typography variant="body1" fontWeight="medium">لا</Typography>
                   </>
                 )}
               </Stack>
-            </Paper>
+            </DetailField>
           </Grid>
 
-          {/* Status Section */}
+          {/* ====== STATUS SECTION ====== */}
           <Grid item xs={12}>
             <Typography variant="h6" gutterBottom sx={{ mt: 2 }}>
               الحالة
@@ -260,15 +399,17 @@ const MedicalServiceView = () => {
 
           {/* Active Status */}
           <Grid item xs={12} md={6}>
-            <Paper variant="outlined" sx={{ p: 2 }}>
-              <Typography variant="caption" color="text.secondary" gutterBottom display="block">
-                حالة الخدمة
-              </Typography>
-              <Chip label={service.active ? 'نشط' : 'غير نشط'} color={service.active ? 'success' : 'default'} size="medium" />
-            </Paper>
+            <DetailField label="حالة الخدمة">
+              <Chip 
+                label={service?.active ? 'نشط' : 'غير نشط'} 
+                color={service?.active ? 'success' : 'default'} 
+                size="medium" 
+                variant="light"
+              />
+            </DetailField>
           </Grid>
 
-          {/* Metadata Section */}
+          {/* ====== METADATA SECTION ====== */}
           <Grid item xs={12}>
             <Typography variant="h6" gutterBottom sx={{ mt: 2 }}>
               معلومات النظام
@@ -277,50 +418,42 @@ const MedicalServiceView = () => {
           </Grid>
 
           {/* Created At */}
-          {service.createdAt && (
-            <Grid item xs={12} md={6}>
-              <Paper variant="outlined" sx={{ p: 2 }}>
-                <Typography variant="caption" color="text.secondary" gutterBottom display="block">
-                  تاريخ الإنشاء
-                </Typography>
-                <Typography variant="body1">{new Date(service.createdAt).toLocaleString('ar-LY')}</Typography>
-              </Paper>
-            </Grid>
-          )}
+          <Grid item xs={12} md={6}>
+            <DetailField label="تاريخ الإنشاء">
+              <Typography variant="body1">
+                {formatDate(service?.createdAt)}
+              </Typography>
+            </DetailField>
+          </Grid>
 
           {/* Updated At */}
-          {service.updatedAt && (
-            <Grid item xs={12} md={6}>
-              <Paper variant="outlined" sx={{ p: 2 }}>
-                <Typography variant="caption" color="text.secondary" gutterBottom display="block">
-                  آخر تحديث
-                </Typography>
-                <Typography variant="body1">{new Date(service.updatedAt).toLocaleString('ar-LY')}</Typography>
-              </Paper>
-            </Grid>
-          )}
+          <Grid item xs={12} md={6}>
+            <DetailField label="آخر تحديث">
+              <Typography variant="body1">
+                {formatDate(service?.updatedAt)}
+              </Typography>
+            </DetailField>
+          </Grid>
 
           {/* Created By */}
-          {service.createdBy && (
+          {service?.createdBy && (
             <Grid item xs={12} md={6}>
-              <Paper variant="outlined" sx={{ p: 2 }}>
-                <Typography variant="caption" color="text.secondary" gutterBottom display="block">
-                  أنشئ بواسطة
+              <DetailField label="أنشئ بواسطة">
+                <Typography variant="body1">
+                  {service.createdBy}
                 </Typography>
-                <Typography variant="body1">{service.createdBy}</Typography>
-              </Paper>
+              </DetailField>
             </Grid>
           )}
 
           {/* Updated By */}
-          {service.updatedBy && (
+          {service?.updatedBy && (
             <Grid item xs={12} md={6}>
-              <Paper variant="outlined" sx={{ p: 2 }}>
-                <Typography variant="caption" color="text.secondary" gutterBottom display="block">
-                  آخر تحديث بواسطة
+              <DetailField label="آخر تحديث بواسطة">
+                <Typography variant="body1">
+                  {service.updatedBy}
                 </Typography>
-                <Typography variant="body1">{service.updatedBy}</Typography>
-              </Paper>
+              </DetailField>
             </Grid>
           )}
         </Grid>
