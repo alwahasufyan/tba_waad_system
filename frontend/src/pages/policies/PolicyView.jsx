@@ -24,9 +24,19 @@ import {
   DialogActions,
   TextField,
   FormControlLabel,
-  Switch
+  Switch,
+  Tooltip
 } from '@mui/material';
-import { ArrowBack, Edit as EditIcon, Add as AddIcon, Delete as DeleteIcon } from '@mui/icons-material';
+import { 
+  ArrowBack, 
+  Edit as EditIcon, 
+  Add as AddIcon, 
+  Delete as DeleteIcon,
+  Warning as WarningIcon,
+  Groups as GroupsIcon,
+  Policy as PolicyIcon,
+  CalendarMonth as CalendarIcon
+} from '@mui/icons-material';
 import MainCard from 'components/MainCard';
 import {
   usePolicyDetails,
@@ -35,6 +45,30 @@ import {
   useUpdateBenefitPackage,
   useDeleteBenefitPackage
 } from 'hooks/usePolicies';
+import dayjs from 'dayjs';
+
+// Insurance UX Components - Phase B2 Step 4
+import { PolicyLifecycleBar, CardStatusBadge } from 'components/insurance';
+
+// Policy Type Labels (Arabic)
+const POLICY_TYPE_LABELS = {
+  GROUP: 'جماعية',
+  INDIVIDUAL: 'فردية',
+  CORPORATE: 'شركات'
+};
+
+// Check if policy needs renewal (within 30 days)
+const isRenewalSoon = (endDate) => {
+  if (!endDate) return false;
+  const daysRemaining = dayjs(endDate).diff(dayjs(), 'day');
+  return daysRemaining > 0 && daysRemaining <= 30;
+};
+
+// Check if policy is expired
+const isPolicyExpired = (endDate) => {
+  if (!endDate) return false;
+  return dayjs().isAfter(dayjs(endDate));
+};
 
 const PolicyView = () => {
   const { id } = useParams();
@@ -191,7 +225,31 @@ const PolicyView = () => {
   return (
     <>
       <MainCard
-        title="تفاصيل السياسة التأمينية"
+        title={
+          <Stack direction="row" spacing={2} alignItems="center">
+            <PolicyIcon color="primary" />
+            <Typography variant="h5">تفاصيل وثيقة التأمين</Typography>
+            {/* Renewal Warning Badge */}
+            {isRenewalSoon(policy?.endDate) && (
+              <Tooltip title="موعد التجديد قريب - يرجى التواصل مع شركة التأمين">
+                <Chip
+                  icon={<WarningIcon />}
+                  label="تجديد قريب"
+                  color="warning"
+                  variant="filled"
+                />
+              </Tooltip>
+            )}
+            {/* Expired Badge */}
+            {isPolicyExpired(policy?.endDate) && (
+              <Chip
+                label="وثيقة منتهية"
+                color="error"
+                variant="filled"
+              />
+            )}
+          </Stack>
+        }
         secondary={
           <Stack direction="row" spacing={2}>
             <Button variant="outlined" startIcon={<ArrowBack />} onClick={handleBack}>
@@ -274,13 +332,43 @@ const PolicyView = () => {
           </Grid>
 
           {/* Date and Status */}
+          <Grid item xs={12} sx={{ mt: 2 }}>
+            <Typography variant="h5" gutterBottom>
+              <Stack direction="row" spacing={1} alignItems="center">
+                <CalendarIcon color="primary" />
+                <span>فترة التغطية والحالة</span>
+              </Stack>
+            </Typography>
+            <Divider />
+          </Grid>
+
+          {/* Insurance UX - PolicyLifecycleBar (Full Width) */}
+          <Grid item xs={12}>
+            <Paper sx={{ p: 3 }}>
+              {policy?.startDate ? (
+                <PolicyLifecycleBar
+                  startDate={policy.startDate}
+                  endDate={policy?.endDate}
+                  showRenewalReminder={true}
+                  renewalDays={30}
+                  policyType={policy?.policyType ?? 'GROUP'}
+                  memberCount={policy?.memberCount}
+                  size="medium"
+                  language="ar"
+                />
+              ) : (
+                <Typography color="text.secondary">لا توجد بيانات لفترة التغطية</Typography>
+              )}
+            </Paper>
+          </Grid>
+
           <Grid item xs={12} md={4}>
             <Paper sx={{ p: 2 }}>
               <Typography variant="body2" color="text.secondary">
                 تاريخ البدء
               </Typography>
               <Typography variant="body1" fontWeight="bold">
-                {new Date(policy.startDate).toLocaleDateString('ar-SA')}
+                {policy?.startDate ? new Date(policy.startDate).toLocaleDateString('ar-SA') : '-'}
               </Typography>
             </Paper>
           </Grid>
@@ -291,7 +379,7 @@ const PolicyView = () => {
                 تاريخ الانتهاء
               </Typography>
               <Typography variant="body1" fontWeight="bold">
-                {policy.endDate ? new Date(policy.endDate).toLocaleDateString('ar-SA') : '-'}
+                {policy?.endDate ? new Date(policy.endDate).toLocaleDateString('ar-SA') : '-'}
               </Typography>
             </Paper>
           </Grid>
@@ -301,7 +389,19 @@ const PolicyView = () => {
               <Typography variant="body2" color="text.secondary">
                 الحالة
               </Typography>
-              <Chip label={policy.active ? 'نشط' : 'غير نشط'} color={policy.active ? 'success' : 'default'} />
+              {/* Insurance UX - CardStatusBadge */}
+              <CardStatusBadge
+                status={
+                  isPolicyExpired(policy?.endDate) ? 'EXPIRED' :
+                  policy?.active ? 'ACTIVE' : 'INACTIVE'
+                }
+                customLabel={
+                  isPolicyExpired(policy?.endDate) ? 'منتهية' :
+                  policy?.active ? 'نشطة' : 'غير نشطة'
+                }
+                size="medium"
+                variant="chip"
+              />
             </Paper>
           </Grid>
 
