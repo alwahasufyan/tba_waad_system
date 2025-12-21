@@ -13,31 +13,67 @@ import {
   TableCell,
   TableContainer,
   TableHead,
-  TableRow
+  TableRow,
+  Stack,
+  Paper
 } from '@mui/material';
-import { ArrowBack, Edit } from '@mui/icons-material';
+import { 
+  ArrowBack, 
+  Edit,
+  Receipt as ReceiptIcon,
+  MedicalServices as MedicalIcon,
+  AttachFile as AttachmentIcon,
+  PictureAsPdf as PdfIcon,
+  Image as ImageIcon,
+  Description as DocIcon
+} from '@mui/icons-material';
 import MainCard from 'components/MainCard';
 import { useClaimDetails } from 'hooks/useClaims';
 
-const STATUS_COLORS = {
-  PENDING_REVIEW: 'warning',
-  PREAPPROVED: 'info',
-  APPROVED: 'success',
-  PARTIALLY_APPROVED: 'primary',
-  REJECTED: 'error',
-  RETURNED_FOR_INFO: 'secondary',
-  CANCELLED: 'default'
+// Insurance UX Components - Phase B2 Step 2
+import { 
+  StatusTimeline, 
+  AmountComparisonBar, 
+  CardStatusBadge, 
+  NetworkBadge,
+  CLAIM_WORKFLOW_STEPS,
+  getWorkflowSteps 
+} from 'components/insurance';
+
+// Claim Status Mapping for CardStatusBadge
+const CLAIM_STATUS_MAP = {
+  PENDING_REVIEW: 'PENDING',
+  PREAPPROVED: 'ACTIVE',
+  APPROVED: 'ACTIVE',
+  PARTIALLY_APPROVED: 'ACTIVE',
+  REJECTED: 'BLOCKED',
+  RETURNED_FOR_INFO: 'SUSPENDED',
+  CANCELLED: 'INACTIVE',
+  SETTLED: 'ACTIVE'
 };
 
-const InfoRow = ({ label, value }) => (
-  <Grid container spacing={2} sx={{ mb: 2 }}>
+// Helper to get file icon based on type
+const getFileIcon = (fileType) => {
+  if (!fileType) return <DocIcon fontSize="small" color="action" />;
+  const type = fileType.toLowerCase();
+  if (type.includes('pdf')) return <PdfIcon fontSize="small" color="error" />;
+  if (type.includes('image') || type.includes('jpg') || type.includes('png')) {
+    return <ImageIcon fontSize="small" color="primary" />;
+  }
+  return <DocIcon fontSize="small" color="action" />;
+};
+
+const InfoRow = ({ label, value, valueColor }) => (
+  <Grid container spacing={2} sx={{ mb: 1.5 }}>
     <Grid item xs={4}>
       <Typography variant="subtitle2" color="text.secondary">
         {label}
       </Typography>
     </Grid>
     <Grid item xs={8}>
-      <Typography variant="body1">{value || '-'}</Typography>
+      <Typography variant="body1" color={valueColor || 'text.primary'}>
+        {value ?? '-'}
+      </Typography>
     </Grid>
   </Grid>
 );
@@ -63,11 +99,31 @@ const ClaimView = () => {
     );
   }
 
+  // Get workflow steps for timeline
+  const timelineSteps = getWorkflowSteps('claim', claim?.status, 'ar');
+
   return (
     <MainCard
-      title="تفاصيل المطالبة"
+      title={
+        <Stack direction="row" spacing={2} alignItems="center">
+          <ReceiptIcon color="primary" />
+          <Box>
+            <Typography variant="h5">مطالبة #{claim?.id ?? '-'}</Typography>
+            <Typography variant="caption" color="text.secondary">
+              {claim?.memberFullNameArabic ?? claim?.memberFullNameEnglish ?? '-'}
+            </Typography>
+          </Box>
+        </Stack>
+      }
       secondary={
-        <Box sx={{ display: 'flex', gap: 1 }}>
+        <Stack direction="row" spacing={2} alignItems="center">
+          {/* Insurance UX - CardStatusBadge */}
+          <CardStatusBadge
+            status={CLAIM_STATUS_MAP[claim?.status] ?? 'PENDING'}
+            customLabel={claim?.statusLabel}
+            size="medium"
+            variant="detailed"
+          />
           <Button
             variant="contained"
             startIcon={<Edit />}
@@ -81,140 +137,171 @@ const ClaimView = () => {
           >
             عودة
           </Button>
-        </Box>
+        </Stack>
       }
     >
-      <Grid container spacing={3}>
-        {/* Basic Information */}
-        <Grid item xs={12}>
-          <Card>
-            <CardContent>
-              <Typography variant="h5" gutterBottom>
-                المعلومات الأساسية
-              </Typography>
-              <Divider sx={{ mb: 2 }} />
-              <InfoRow label="رقم المطالبة" value={claim.id} />
-              <InfoRow
-                label="حالة المطالبة"
-                value={
-                  <Chip
-                    label={claim.statusLabel}
-                    color={STATUS_COLORS[claim.status] || 'default'}
-                  />
-                }
-              />
-              <InfoRow label="اسم العضو" value={claim.memberFullNameArabic} />
-              <InfoRow label="الرقم المدني" value={claim.memberCivilId} />
-              <InfoRow label="شركة التأمين" value={claim.companyName} />
-              {claim.policyName && (
-                <InfoRow label="السياسة التأمينية" value={claim.policyName} />
-              )}
-              {claim.packageName && (
-                <InfoRow label="الباقة الطبية" value={claim.packageName} />
-              )}
-            </CardContent>
-          </Card>
-        </Grid>
+      <Stack spacing={3}>
+        {/* ===================== CLAIM TIMELINE ===================== */}
+        <Card variant="outlined">
+          <CardContent>
+            <Typography variant="h6" gutterBottom sx={{ mb: 2 }}>
+              مسار المطالبة
+            </Typography>
+            {/* Insurance UX - StatusTimeline */}
+            <StatusTimeline
+              steps={timelineSteps}
+              currentStep={claim?.status}
+              variant="horizontal"
+              size="medium"
+              showDates={true}
+              language="ar"
+            />
+          </CardContent>
+        </Card>
 
-        {/* Medical Information */}
-        <Grid item xs={12} md={6}>
-          <Card>
-            <CardContent>
-              <Typography variant="h5" gutterBottom>
-                المعلومات الطبية
-              </Typography>
-              <Divider sx={{ mb: 2 }} />
-              <InfoRow label="مقدم الخدمة" value={claim.providerName} />
-              <InfoRow label="الطبيب" value={claim.doctorName} />
-              <InfoRow label="التشخيص" value={claim.diagnosis} />
-              <InfoRow
-                label="تاريخ الزيارة"
-                value={
-                  claim.visitDate
-                    ? new Date(claim.visitDate).toLocaleDateString('ar-SA')
-                    : '-'
-                }
-              />
-            </CardContent>
-          </Card>
-        </Grid>
-
-        {/* Financial Information */}
-        <Grid item xs={12} md={6}>
-          <Card>
-            <CardContent>
-              <Typography variant="h5" gutterBottom>
-                المعلومات المالية
-              </Typography>
-              <Divider sx={{ mb: 2 }} />
-              <InfoRow
-                label="المبلغ المطلوب"
-                value={claim.requestedAmount?.toLocaleString('ar-SA', {
-                  minimumFractionDigits: 2
-                })}
-              />
-              <InfoRow
-                label="المبلغ الموافق عليه"
-                value={
-                  claim.approvedAmount
-                    ? claim.approvedAmount.toLocaleString('ar-SA', {
-                        minimumFractionDigits: 2
-                      })
-                    : '-'
-                }
-              />
-              <InfoRow
-                label="الفرق"
-                value={
-                  claim.differenceAmount
-                    ? claim.differenceAmount.toLocaleString('ar-SA', {
-                        minimumFractionDigits: 2
-                      })
-                    : '-'
-                }
-              />
-              {claim.reviewerComment && (
-                <InfoRow label="تعليق المراجع" value={claim.reviewerComment} />
-              )}
-            </CardContent>
-          </Card>
-        </Grid>
-
-        {/* Service Lines */}
-        {Array.isArray(claim.lines) && claim.lines.length > 0 && (
-          <Grid item xs={12}>
-            <Card>
+        <Grid container spacing={3}>
+          {/* ===================== BASIC INFORMATION ===================== */}
+          <Grid item xs={12} md={6}>
+            <Card variant="outlined" sx={{ height: '100%' }}>
               <CardContent>
-                <Typography variant="h5" gutterBottom>
-                  الخدمات
+                <Typography variant="h6" gutterBottom>
+                  المعلومات الأساسية
                 </Typography>
                 <Divider sx={{ mb: 2 }} />
-                <TableContainer>
-                  <Table>
+                <InfoRow label="رقم المطالبة" value={claim?.id} />
+                <InfoRow label="اسم العضو" value={claim?.memberFullNameArabic ?? claim?.memberFullNameEnglish} />
+                <InfoRow label="الرقم المدني" value={claim?.memberCivilId} />
+                <InfoRow label="شركة التأمين" value={claim?.companyName} />
+                {claim?.policyName && (
+                  <InfoRow label="السياسة التأمينية" value={claim.policyName} />
+                )}
+                {claim?.packageName && (
+                  <InfoRow label="الباقة الطبية" value={claim.packageName} />
+                )}
+              </CardContent>
+            </Card>
+          </Grid>
+
+          {/* ===================== MEDICAL INFORMATION ===================== */}
+          <Grid item xs={12} md={6}>
+            <Card variant="outlined" sx={{ height: '100%' }}>
+              <CardContent>
+                <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
+                  <MedicalIcon color="primary" fontSize="small" />
+                  <Typography variant="h6">المعلومات الطبية</Typography>
+                </Stack>
+                <Divider sx={{ mb: 2 }} />
+                
+                {/* Provider with NetworkBadge */}
+                <Grid container spacing={2} sx={{ mb: 1.5 }}>
+                  <Grid item xs={4}>
+                    <Typography variant="subtitle2" color="text.secondary">
+                      مقدم الخدمة
+                    </Typography>
+                  </Grid>
+                  <Grid item xs={8}>
+                    <Stack direction="row" spacing={1} alignItems="center">
+                      <Typography variant="body1">{claim?.providerName ?? '-'}</Typography>
+                      {/* Insurance UX - NetworkBadge */}
+                      <NetworkBadge
+                        networkTier={claim?.networkTier ?? 'IN_NETWORK'}
+                        size="small"
+                        variant="chip"
+                        language="ar"
+                      />
+                    </Stack>
+                  </Grid>
+                </Grid>
+                
+                <InfoRow label="الطبيب" value={claim?.doctorName} />
+                <InfoRow label="التشخيص" value={claim?.diagnosis} />
+                <InfoRow 
+                  label="تاريخ الزيارة" 
+                  value={claim?.visitDate ? new Date(claim.visitDate).toLocaleDateString('ar-SA') : '-'}
+                />
+              </CardContent>
+            </Card>
+          </Grid>
+
+          {/* ===================== FINANCIAL BREAKDOWN ===================== */}
+          <Grid item xs={12}>
+            <Card variant="outlined">
+              <CardContent>
+                <Typography variant="h6" gutterBottom>
+                  الملخص المالي
+                </Typography>
+                <Divider sx={{ mb: 3 }} />
+                
+                {/* Insurance UX - AmountComparisonBar */}
+                <AmountComparisonBar
+                  requestedAmount={typeof claim?.requestedAmount === 'number' ? claim.requestedAmount : 0}
+                  approvedAmount={typeof claim?.approvedAmount === 'number' ? claim.approvedAmount : 0}
+                  currency="LYD"
+                  copayPercentage={typeof claim?.copayPercentage === 'number' ? claim.copayPercentage : 0}
+                  deductible={typeof claim?.deductible === 'number' ? claim.deductible : 0}
+                  showBreakdown={true}
+                  size="medium"
+                  language="ar"
+                />
+                
+                {/* Reviewer Comment */}
+                {claim?.reviewerComment && (
+                  <Box sx={{ mt: 3, p: 2, bgcolor: 'grey.50', borderRadius: 1 }}>
+                    <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                      تعليق المراجع
+                    </Typography>
+                    <Typography variant="body2">{claim.reviewerComment}</Typography>
+                  </Box>
+                )}
+              </CardContent>
+            </Card>
+          </Grid>
+
+        {/* ===================== SERVICE LINES ===================== */}
+        {Array.isArray(claim?.lines) && claim.lines.length > 0 && (
+          <Grid item xs={12}>
+            <Card variant="outlined">
+              <CardContent>
+                <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
+                  <MedicalIcon color="primary" fontSize="small" />
+                  <Typography variant="h6">الخدمات الطبية ({claim.lines.length})</Typography>
+                </Stack>
+                <Divider sx={{ mb: 2 }} />
+                <TableContainer component={Paper} variant="outlined">
+                  <Table size="small">
                     <TableHead>
-                      <TableRow>
-                        <TableCell align="right">كود الخدمة</TableCell>
-                        <TableCell align="right">الوصف</TableCell>
-                        <TableCell align="right">الكمية</TableCell>
-                        <TableCell align="right">سعر الوحدة</TableCell>
-                        <TableCell align="right">المجموع</TableCell>
+                      <TableRow sx={{ bgcolor: 'grey.50' }}>
+                        <TableCell align="right" sx={{ fontWeight: 600 }}>كود الخدمة</TableCell>
+                        <TableCell align="right" sx={{ fontWeight: 600 }}>الوصف</TableCell>
+                        <TableCell align="center" sx={{ fontWeight: 600 }}>الكمية</TableCell>
+                        <TableCell align="right" sx={{ fontWeight: 600 }}>سعر الوحدة</TableCell>
+                        <TableCell align="right" sx={{ fontWeight: 600 }}>المجموع</TableCell>
                       </TableRow>
                     </TableHead>
                     <TableBody>
                       {claim.lines.map((line, index) => (
-                        <TableRow key={index}>
-                          <TableCell align="right">{line.serviceCode}</TableCell>
-                          <TableCell align="right">{line.description}</TableCell>
-                          <TableCell align="right">{line.quantity}</TableCell>
+                        <TableRow key={line?.id ?? index} hover>
                           <TableCell align="right">
-                            {line.unitPrice?.toLocaleString('ar-SA', {
-                              minimumFractionDigits: 2
-                            })}
+                            <Chip 
+                              label={line?.serviceCode ?? '-'} 
+                              size="small" 
+                              variant="outlined" 
+                              color="primary"
+                            />
+                          </TableCell>
+                          <TableCell align="right">{line?.description ?? '-'}</TableCell>
+                          <TableCell align="center">{line?.quantity ?? 1}</TableCell>
+                          <TableCell align="right">
+                            {typeof line?.unitPrice === 'number'
+                              ? line.unitPrice.toLocaleString('ar-SA', { minimumFractionDigits: 2 })
+                              : '-'}
                           </TableCell>
                           <TableCell align="right">
-                            {line.totalPrice?.toLocaleString('ar-SA', {
-                              minimumFractionDigits: 2
-                            })}
+                            <Typography fontWeight={500}>
+                              {typeof line?.totalPrice === 'number'
+                                ? line.totalPrice.toLocaleString('ar-SA', { minimumFractionDigits: 2 })
+                                : '-'}
+                            </Typography>
                           </TableCell>
                         </TableRow>
                       ))}
@@ -226,33 +313,37 @@ const ClaimView = () => {
           </Grid>
         )}
 
-        {/* Attachments */}
-        {Array.isArray(claim.attachments) && claim.attachments.length > 0 && (
+        {/* ===================== ATTACHMENTS ===================== */}
+        {Array.isArray(claim?.attachments) && claim.attachments.length > 0 && (
           <Grid item xs={12}>
-            <Card>
+            <Card variant="outlined">
               <CardContent>
-                <Typography variant="h5" gutterBottom>
-                  المرفقات
-                </Typography>
+                <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
+                  <AttachmentIcon color="primary" fontSize="small" />
+                  <Typography variant="h6">المرفقات ({claim.attachments.length})</Typography>
+                </Stack>
                 <Divider sx={{ mb: 2 }} />
-                <TableContainer>
-                  <Table>
+                <TableContainer component={Paper} variant="outlined">
+                  <Table size="small">
                     <TableHead>
-                      <TableRow>
-                        <TableCell align="right">اسم الملف</TableCell>
-                        <TableCell align="right">نوع الملف</TableCell>
-                        <TableCell align="right">تاريخ الرفع</TableCell>
+                      <TableRow sx={{ bgcolor: 'grey.50' }}>
+                        <TableCell align="right" sx={{ fontWeight: 600 }}>النوع</TableCell>
+                        <TableCell align="right" sx={{ fontWeight: 600 }}>اسم الملف</TableCell>
+                        <TableCell align="right" sx={{ fontWeight: 600 }}>تاريخ الرفع</TableCell>
                       </TableRow>
                     </TableHead>
                     <TableBody>
                       {claim.attachments.map((attachment, index) => (
-                        <TableRow key={index}>
-                          <TableCell align="right">{attachment.fileName}</TableCell>
-                          <TableCell align="right">{attachment.fileType}</TableCell>
+                        <TableRow key={attachment?.id ?? index} hover>
                           <TableCell align="right">
-                            {new Date(attachment.createdAt).toLocaleDateString(
-                              'ar-SA'
-                            )}
+                            {/* File type icon */}
+                            {getFileIcon(attachment?.fileType)}
+                          </TableCell>
+                          <TableCell align="right">{attachment?.fileName ?? '-'}</TableCell>
+                          <TableCell align="right">
+                            {attachment?.createdAt 
+                              ? new Date(attachment.createdAt).toLocaleDateString('ar-SA')
+                              : '-'}
                           </TableCell>
                         </TableRow>
                       ))}
@@ -263,7 +354,8 @@ const ClaimView = () => {
             </Card>
           </Grid>
         )}
-      </Grid>
+        </Grid>
+      </Stack>
     </MainCard>
   );
 };

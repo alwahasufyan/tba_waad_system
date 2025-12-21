@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import {
   Box,
   Button,
-  Chip,
   Stack,
   Table,
   TableBody,
@@ -31,14 +30,19 @@ import MainCard from 'components/MainCard';
 import TableSkeleton from 'components/tba/LoadingSkeleton';
 import { useClaimsList, useDeleteClaim } from 'hooks/useClaims';
 
-const STATUS_COLORS = {
-  PENDING_REVIEW: 'warning',
-  PREAPPROVED: 'info',
-  APPROVED: 'success',
-  PARTIALLY_APPROVED: 'primary',
-  REJECTED: 'error',
-  RETURNED_FOR_INFO: 'secondary',
-  CANCELLED: 'default'
+// Insurance UX Components - Phase B2 Step 2
+import { CardStatusBadge } from 'components/insurance';
+
+// Claim Status Mapping for CardStatusBadge
+const CLAIM_STATUS_MAP = {
+  PENDING_REVIEW: 'PENDING',
+  PREAPPROVED: 'ACTIVE',
+  APPROVED: 'ACTIVE',
+  PARTIALLY_APPROVED: 'ACTIVE',
+  REJECTED: 'BLOCKED',
+  RETURNED_FOR_INFO: 'SUSPENDED',
+  CANCELLED: 'INACTIVE',
+  SETTLED: 'ACTIVE'
 };
 
 const ClaimsList = () => {
@@ -149,9 +153,9 @@ const ClaimsList = () => {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  content.map((claim, index) => (
+                  Array.isArray(content) && content.map((claim) => (
                     <TableRow 
-                      key={claim.id} 
+                      key={claim?.id ?? Math.random()} 
                       hover
                       sx={{ '&:hover': { bgcolor: 'action.hover', cursor: 'pointer' } }}
                     >
@@ -159,55 +163,58 @@ const ClaimsList = () => {
                         <Stack direction="row" spacing={0.5} alignItems="center" justifyContent="center">
                           <ReceiptIcon fontSize="small" color="action" />
                           <Typography variant="subtitle2">
-                            {claim.id}
+                            {claim?.id ?? '-'}
                           </Typography>
                         </Stack>
                       </TableCell>
                       <TableCell>
                         <Typography variant="body2">
-                          {claim.memberFullNameArabic}
+                          {claim?.memberFullNameArabic ?? claim?.memberFullNameEnglish ?? '-'}
                         </Typography>
                         <Typography variant="caption" color="text.secondary" fontFamily="monospace">
-                          {claim.memberCivilId}
+                          {claim?.memberCivilId ?? '-'}
                         </Typography>
                       </TableCell>
                       <TableCell>
                         <Typography variant="body2">
-                          {claim.companyName}
+                          {claim?.companyName ?? '-'}
                         </Typography>
                       </TableCell>
                       <TableCell>
                         <Typography variant="body2">
-                          {claim.providerName}
+                          {claim?.providerName ?? '-'}
                         </Typography>
                       </TableCell>
                       <TableCell>
                         <Typography variant="body2" color="text.secondary">
-                          {new Date(claim.visitDate).toLocaleDateString('ar-SA')}
+                          {claim?.visitDate ? new Date(claim.visitDate).toLocaleDateString('ar-SA') : '-'}
                         </Typography>
                       </TableCell>
                       <TableCell align="right">
                         <Typography variant="body2" fontWeight={500}>
-                          {claim.requestedAmount?.toLocaleString('ar-SA', {
-                            minimumFractionDigits: 2
-                          })}
+                          {typeof claim?.requestedAmount === 'number'
+                            ? claim.requestedAmount.toLocaleString('ar-SA', { minimumFractionDigits: 2 })
+                            : '-'}
                         </Typography>
                       </TableCell>
                       <TableCell align="right">
-                        <Typography variant="body2" fontWeight={500} color="success.main">
-                          {claim.approvedAmount
-                            ? claim.approvedAmount.toLocaleString('ar-SA', {
-                                minimumFractionDigits: 2
-                              })
+                        <Typography 
+                          variant="body2" 
+                          fontWeight={500} 
+                          color={claim?.approvedAmount > 0 ? 'success.main' : 'text.secondary'}
+                        >
+                          {typeof claim?.approvedAmount === 'number' && claim.approvedAmount > 0
+                            ? claim.approvedAmount.toLocaleString('ar-SA', { minimumFractionDigits: 2 })
                             : '-'}
                         </Typography>
                       </TableCell>
                       <TableCell align="center">
-                        <Chip
-                          label={claim.statusLabel}
-                          color={STATUS_COLORS[claim.status] || 'default'}
+                        {/* Insurance UX - CardStatusBadge for claim status */}
+                        <CardStatusBadge
+                          status={CLAIM_STATUS_MAP[claim?.status] ?? 'PENDING'}
+                          customLabel={claim?.statusLabel}
                           size="small"
-                          variant="outlined"
+                          variant="chip"
                         />
                       </TableCell>
                       <TableCell align="center">
@@ -216,7 +223,7 @@ const ClaimsList = () => {
                             <IconButton
                               size="small"
                               color="primary"
-                              onClick={() => navigate(`/claims/view/${claim.id}`)}
+                              onClick={() => navigate(`/claims/view/${claim?.id}`)}
                             >
                               <Visibility fontSize="small" />
                             </IconButton>
@@ -225,7 +232,7 @@ const ClaimsList = () => {
                             <IconButton
                               size="small"
                               color="info"
-                              onClick={() => navigate(`/claims/edit/${claim.id}`)}
+                              onClick={() => navigate(`/claims/edit/${claim?.id}`)}
                             >
                               <Edit fontSize="small" />
                             </IconButton>
@@ -234,7 +241,7 @@ const ClaimsList = () => {
                             <IconButton
                               size="small"
                               color="error"
-                              onClick={() => handleDelete(claim.id)}
+                              onClick={() => handleDelete(claim?.id)}
                               disabled={deleting}
                             >
                               <Delete fontSize="small" />
