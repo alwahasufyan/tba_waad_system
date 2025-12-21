@@ -54,7 +54,7 @@ const ClaimCreate = () => {
             <TextField
               fullWidth
               required
-              label="رقم العضو"
+              label="رقم المؤمَّن عليه"
               value={formData.memberId}
               onChange={handleChange('memberId')}
               type="number"

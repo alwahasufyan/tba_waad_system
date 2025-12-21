@@ -169,7 +169,7 @@ const ClaimView = () => {
                 </Typography>
                 <Divider sx={{ mb: 2 }} />
                 <InfoRow label="رقم المطالبة" value={claim?.id} />
-                <InfoRow label="اسم العضو" value={claim?.memberFullNameArabic ?? claim?.memberFullNameEnglish} />
+                <InfoRow label="المؤمَّن عليه" value={claim?.memberFullNameArabic ?? claim?.memberFullNameEnglish} />
                 <InfoRow label="الرقم المدني" value={claim?.memberCivilId} />
                 <InfoRow label="شركة التأمين" value={claim?.companyName} />
                 {claim?.policyName && (

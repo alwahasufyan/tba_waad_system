@@ -289,16 +289,16 @@ const MemberCreate = () => {
   return (
     <>
       <ModernPageHeader
-        title="Add New Member"
-        subtitle="Create a new insurance member"
+        title="إضافة مؤمَّن عليه جديد"
+        subtitle="إنشاء سجل جديد للمؤمَّن عليه"
         icon={PeopleAltIcon}
         breadcrumbs={[
-          { label: 'Members', path: '/members' },
-          { label: 'Add Member', path: '/members/create' }
+          { label: 'المؤمَّن عليهم', path: '/members' },
+          { label: 'إضافة جديد', path: '/members/create' }
         ]}
         actions={
           <Button variant="outlined" startIcon={<ArrowBackIcon />} onClick={() => navigate('/members')}>
-            Back to List
+            العودة للقائمة
           </Button>
         }
       />
@@ -306,13 +306,13 @@ const MemberCreate = () => {
       <form onSubmit={handleSubmit}>
         <Stack spacing={3}>
           {/* SECTION 1: Personal Information */}
-          <MainCard title="Personal Information">
+          <MainCard title="البيانات الشخصية">
             <Grid container spacing={2}>
               <Grid item xs={12} md={6}>
                 <TextField
                   fullWidth
                   required
-                  label="Full Name (Arabic)"
+                  label="الاسم بالعربية"
                   value={form.fullNameArabic}
                   onChange={handleChange('fullNameArabic')}
                   error={!!errors.fullNameArabic}
@@ -324,7 +324,7 @@ const MemberCreate = () => {
               <Grid item xs={12} md={6}>
                 <TextField
                   fullWidth
-                  label="Full Name (English)"
+                  label="الاسم بالإنجليزية"
                   value={form.fullNameEnglish}
                   onChange={handleChange('fullNameEnglish')}
                   placeholder="Ahmed Mohammed Ali"
@@ -335,7 +335,7 @@ const MemberCreate = () => {
                 <TextField
                   fullWidth
                   required
-                  label="Civil ID"
+                  label="الرقم المدني"
                   value={form.civilId}
                   onChange={handleChange('civilId')}
                   error={!!errors.civilId}
@@ -347,7 +347,7 @@ const MemberCreate = () => {
               <Grid item xs={12} md={6}>
                 <TextField
                   fullWidth
-                  label="Card Number"
+                  label="رقم البطاقة"
                   value={form.cardNumber}
                   onChange={handleChange('cardNumber')}
                   placeholder="MEM-123456"
@@ -356,7 +356,7 @@ const MemberCreate = () => {
 
               <Grid item xs={12} md={4}>
                 <DatePicker
-                  label="Birth Date *"
+                  label="تاريخ الميلاد *"
                   value={form.birthDate ? dayjs(form.birthDate) : null}
                   onChange={handleDateChange('birthDate')}
                   slotProps={{
@@ -372,10 +372,10 @@ const MemberCreate = () => {
 
               <Grid item xs={12} md={4}>
                 <FormControl fullWidth required error={!!errors.gender}>
-                  <InputLabel>Gender</InputLabel>
-                  <Select value={form.gender} onChange={handleChange('gender')} label="Gender">
-                    <MenuItem value="MALE">Male (ذكر)</MenuItem>
-                    <MenuItem value="FEMALE">Female (أنثى)</MenuItem>
+                  <InputLabel>الجنس</InputLabel>
+                  <Select value={form.gender} onChange={handleChange('gender')} label="الجنس">
+                    <MenuItem value="MALE">ذكر</MenuItem>
+                    <MenuItem value="FEMALE">أنثى</MenuItem>
                   </Select>
                   {errors.gender && <FormHelperText>{errors.gender}</FormHelperText>}
                 </FormControl>
@@ -383,13 +383,13 @@ const MemberCreate = () => {
 
               <Grid item xs={12} md={4}>
                 <FormControl fullWidth>
-                  <InputLabel>Marital Status</InputLabel>
-                  <Select value={form.maritalStatus} onChange={handleChange('maritalStatus')} label="Marital Status">
-                    <MenuItem value="">None</MenuItem>
-                    <MenuItem value="SINGLE">Single (أعزب)</MenuItem>
-                    <MenuItem value="MARRIED">Married (متزوج)</MenuItem>
-                    <MenuItem value="DIVORCED">Divorced (مطلق)</MenuItem>
-                    <MenuItem value="WIDOWED">Widowed (أرمل)</MenuItem>
+                  <InputLabel>الحالة الاجتماعية</InputLabel>
+                  <Select value={form.maritalStatus} onChange={handleChange('maritalStatus')} label="الحالة الاجتماعية">
+                    <MenuItem value="">غير محدد</MenuItem>
+                    <MenuItem value="SINGLE">أعزب</MenuItem>
+                    <MenuItem value="MARRIED">متزوج</MenuItem>
+                    <MenuItem value="DIVORCED">مطلق</MenuItem>
+                    <MenuItem value="WIDOWED">أرمل</MenuItem>
                   </Select>
                 </FormControl>
               </Grid>
@@ -397,25 +397,25 @@ const MemberCreate = () => {
               <Grid item xs={12} md={6}>
                 <TextField
                   fullWidth
-                  label="Nationality"
+                  label="الجنسية"
                   value={form.nationality}
                   onChange={handleChange('nationality')}
-                  placeholder="Kuwaiti"
+                  placeholder="ليبي"
                 />
               </Grid>
             </Grid>
           </MainCard>
 
           {/* SECTION 2: Contact Information */}
-          <MainCard title="Contact Information">
+          <MainCard title="بيانات التواصل">
             <Grid container spacing={2}>
               <Grid item xs={12} md={4}>
                 <TextField
                   fullWidth
-                  label="Phone"
+                  label="الهاتف"
                   value={form.phone}
                   onChange={handleChange('phone')}
-                  placeholder="+96512345678"
+                  placeholder="+218912345678"
                 />
               </Grid>
 
@@ -423,7 +423,7 @@ const MemberCreate = () => {
                 <TextField
                   fullWidth
                   type="email"
-                  label="Email"
+                  label="البريد الإلكتروني"
                   value={form.email}
                   onChange={handleChange('email')}
                   error={!!errors.email}
@@ -435,23 +435,23 @@ const MemberCreate = () => {
               <Grid item xs={12} md={4}>
                 <TextField
                   fullWidth
-                  label="Address"
+                  label="العنوان"
                   value={form.address}
                   onChange={handleChange('address')}
-                  placeholder="Block 5, Street 10, House 25"
+                  placeholder="طرابلس، شارع ..."
                 />
               </Grid>
             </Grid>
           </MainCard>
 
           {/* SECTION 3: Employment Information */}
-          <MainCard title="Employment Information">
+          <MainCard title="بيانات العمل">
             <Grid container spacing={2}>
               <Grid item xs={12} md={6}>
                 <FormControl fullWidth required error={!!errors.employerId}>
-                  <InputLabel>Employer</InputLabel>
-                  <Select value={form.employerId} onChange={handleChange('employerId')} label="Employer">
-                    <MenuItem value="">Select Employer</MenuItem>
+                  <InputLabel>جهة العمل</InputLabel>
+                  <Select value={form.employerId} onChange={handleChange('employerId')} label="جهة العمل">
+                    <MenuItem value="">-- اختر جهة العمل --</MenuItem>
                     {Array.isArray(employers) && employers.map((emp) => (
                       <MenuItem key={emp.id} value={emp.id}>
                         {emp.code} - {emp.nameAr}
@@ -465,7 +465,7 @@ const MemberCreate = () => {
               <Grid item xs={12} md={6}>
                 <TextField
                   fullWidth
-                  label="Employee Number"
+                  label="الرقم الوظيفي"
                   value={form.employeeNumber}
                   onChange={handleChange('employeeNumber')}
                   placeholder="EMP-001"
@@ -474,7 +474,7 @@ const MemberCreate = () => {
 
               <Grid item xs={12} md={6}>
                 <DatePicker
-                  label="Join Date"
+                  label="تاريخ الالتحاق"
                   value={form.joinDate ? dayjs(form.joinDate) : null}
                   onChange={handleDateChange('joinDate')}
                   slotProps={{ textField: { fullWidth: true } }}
@@ -484,22 +484,22 @@ const MemberCreate = () => {
               <Grid item xs={12} md={6}>
                 <TextField
                   fullWidth
-                  label="Occupation"
+                  label="المهنة"
                   value={form.occupation}
                   onChange={handleChange('occupation')}
-                  placeholder="Software Engineer"
+                  placeholder="مهندس برمجيات"
                 />
               </Grid>
             </Grid>
           </MainCard>
 
           {/* SECTION 4: Insurance Information */}
-          <MainCard title="Insurance Information">
+          <MainCard title="بيانات التأمين">
             <Grid container spacing={2}>
               <Grid item xs={12} md={4}>
                 <TextField
                   fullWidth
-                  label="Policy Number"
+                  label="رقم البوليصة"
                   value={form.policyNumber}
                   onChange={handleChange('policyNumber')}
                   placeholder="POL-2024-001"
@@ -508,13 +508,13 @@ const MemberCreate = () => {
 
               <Grid item xs={12} md={4}>
                 <FormControl fullWidth>
-                  <InputLabel>Insurance Company</InputLabel>
+                  <InputLabel>شركة التأمين</InputLabel>
                   <Select
                     value={form.insuranceCompanyId}
                     onChange={handleChange('insuranceCompanyId')}
-                    label="Insurance Company"
+                    label="شركة التأمين"
                   >
-                    <MenuItem value="">None</MenuItem>
+                    <MenuItem value="">-- اختر شركة التأمين --</MenuItem>
                     {Array.isArray(insuranceCompanies) && insuranceCompanies.map((ins) => (
                       <MenuItem key={ins.id} value={ins.id}>
                         {ins.nameAr}
@@ -526,9 +526,9 @@ const MemberCreate = () => {
 
               <Grid item xs={12} md={4}>
                 <FormControl fullWidth>
-                  <InputLabel>Benefit Package</InputLabel>
-                  <Select value={form.benefitPackageId} onChange={handleChange('benefitPackageId')} label="Benefit Package">
-                    <MenuItem value="">None</MenuItem>
+                  <InputLabel>باقة المنافع</InputLabel>
+                  <Select value={form.benefitPackageId} onChange={handleChange('benefitPackageId')} label="باقة المنافع">
+                    <MenuItem value="">-- اختر باقة المنافع --</MenuItem>
                     {Array.isArray(benefitPackages) && benefitPackages.map((pkg) => (
                       <MenuItem key={pkg.id} value={pkg.id}>
                         {pkg.nameAr}
@@ -541,35 +541,35 @@ const MemberCreate = () => {
           </MainCard>
 
           {/* SECTION 5: Membership Period */}
-          <MainCard title="Membership Period & Status">
+          <MainCard title="فترة التغطية والحالة">
             <Grid container spacing={2}>
               <Grid item xs={12} md={3}>
                 <FormControl fullWidth>
-                  <InputLabel>Member Status</InputLabel>
-                  <Select value={form.status} onChange={handleChange('status')} label="Member Status">
-                    <MenuItem value="ACTIVE">Active</MenuItem>
-                    <MenuItem value="SUSPENDED">Suspended</MenuItem>
-                    <MenuItem value="TERMINATED">Terminated</MenuItem>
-                    <MenuItem value="PENDING">Pending</MenuItem>
+                  <InputLabel>حالة العضوية</InputLabel>
+                  <Select value={form.status} onChange={handleChange('status')} label="حالة العضوية">
+                    <MenuItem value="ACTIVE">نشط</MenuItem>
+                    <MenuItem value="SUSPENDED">موقوف</MenuItem>
+                    <MenuItem value="TERMINATED">منتهي</MenuItem>
+                    <MenuItem value="PENDING">قيد الانتظار</MenuItem>
                   </Select>
                 </FormControl>
               </Grid>
 
               <Grid item xs={12} md={3}>
                 <FormControl fullWidth>
-                  <InputLabel>Card Status</InputLabel>
-                  <Select value={form.cardStatus} onChange={handleChange('cardStatus')} label="Card Status">
-                    <MenuItem value="ACTIVE">Active</MenuItem>
-                    <MenuItem value="INACTIVE">Inactive</MenuItem>
-                    <MenuItem value="BLOCKED">Blocked</MenuItem>
-                    <MenuItem value="EXPIRED">Expired</MenuItem>
+                  <InputLabel>حالة البطاقة</InputLabel>
+                  <Select value={form.cardStatus} onChange={handleChange('cardStatus')} label="حالة البطاقة">
+                    <MenuItem value="ACTIVE">نشطة</MenuItem>
+                    <MenuItem value="INACTIVE">غير نشطة</MenuItem>
+                    <MenuItem value="BLOCKED">محظورة</MenuItem>
+                    <MenuItem value="EXPIRED">منتهية</MenuItem>
                   </Select>
                 </FormControl>
               </Grid>
 
               <Grid item xs={12} md={3}>
                 <DatePicker
-                  label="Start Date"
+                  label="تاريخ بداية التغطية"
                   value={form.startDate ? dayjs(form.startDate) : null}
                   onChange={handleDateChange('startDate')}
                   slotProps={{ textField: { fullWidth: true } }}
@@ -578,7 +578,7 @@ const MemberCreate = () => {
 
               <Grid item xs={12} md={3}>
                 <DatePicker
-                  label="End Date"
+                  label="تاريخ انتهاء التغطية"
                   value={form.endDate ? dayjs(form.endDate) : null}
                   onChange={handleDateChange('endDate')}
                   slotProps={{ textField: { fullWidth: true } }}
@@ -590,17 +590,17 @@ const MemberCreate = () => {
                   fullWidth
                   multiline
                   rows={3}
-                  label="Notes"
+                  label="ملاحظات"
                   value={form.notes}
                   onChange={handleChange('notes')}
-                  placeholder="Any additional notes..."
+                  placeholder="أي ملاحظات إضافية..."
                 />
               </Grid>
             </Grid>
           </MainCard>
 
           {/* SECTION 6: Family Members */}
-          <MainCard title="Family Members">
+          <MainCard title="التابعين">
             <Stack spacing={2}>
               {/* Family Members List */}
               {Array.isArray(form.familyMembers) && form.familyMembers.length > 0 && (
@@ -608,12 +608,12 @@ const MemberCreate = () => {
                   <Table size="small">
                     <TableHead>
                       <TableRow>
-                        <TableCell>Full Name (AR)</TableCell>
-                        <TableCell>Civil ID</TableCell>
-                        <TableCell>Birth Date</TableCell>
-                        <TableCell>Gender</TableCell>
-                        <TableCell>Relationship</TableCell>
-                        <TableCell align="center">Actions</TableCell>
+                        <TableCell>الاسم بالعربية</TableCell>
+                        <TableCell>الرقم المدني</TableCell>
+                        <TableCell>تاريخ الميلاد</TableCell>
+                        <TableCell>الجنس</TableCell>
+                        <TableCell>صلة القرابة</TableCell>
+                        <TableCell align="center">الإجراءات</TableCell>
                       </TableRow>
                     </TableHead>
                     <TableBody>
@@ -640,7 +640,7 @@ const MemberCreate = () => {
 
               {/* Add Family Member Form */}
               <Typography variant="h6" gutterBottom>
-                Add Family Member
+                إضافة تابع
               </Typography>
 
               <Grid container spacing={2}>
@@ -648,7 +648,7 @@ const MemberCreate = () => {
                   <TextField
                     fullWidth
                     size="small"
-                    label="Full Name (Arabic)"
+                    label="الاسم بالعربية"
                     value={familyDraft.fullNameArabic}
                     onChange={handleFamilyDraftChange('fullNameArabic')}
                     placeholder="محمد أحمد"
@@ -659,7 +659,7 @@ const MemberCreate = () => {
                   <TextField
                     fullWidth
                     size="small"
-                    label="Full Name (English)"
+                    label="الاسم بالإنجليزية"
                     value={familyDraft.fullNameEnglish}
                     onChange={handleFamilyDraftChange('fullNameEnglish')}
                     placeholder="Mohammed Ahmed"
@@ -670,7 +670,7 @@ const MemberCreate = () => {
                   <TextField
                     fullWidth
                     size="small"
-                    label="Civil ID"
+                    label="الرقم المدني"
                     value={familyDraft.civilId}
                     onChange={handleFamilyDraftChange('civilId')}
                     placeholder="289123456789"
@@ -679,7 +679,7 @@ const MemberCreate = () => {
 
                 <Grid item xs={12} md={3}>
                   <DatePicker
-                    label="Birth Date"
+                    label="تاريخ الميلاد"
                     value={familyDraft.birthDate ? dayjs(familyDraft.birthDate) : null}
                     onChange={handleFamilyDateChange}
                     slotProps={{ textField: { fullWidth: true, size: 'small' } }}
@@ -688,37 +688,37 @@ const MemberCreate = () => {
 
                 <Grid item xs={12} md={3}>
                   <FormControl fullWidth size="small">
-                    <InputLabel>Gender</InputLabel>
-                    <Select value={familyDraft.gender} onChange={handleFamilyDraftChange('gender')} label="Gender">
-                      <MenuItem value="MALE">Male</MenuItem>
-                      <MenuItem value="FEMALE">Female</MenuItem>
+                    <InputLabel>الجنس</InputLabel>
+                    <Select value={familyDraft.gender} onChange={handleFamilyDraftChange('gender')} label="الجنس">
+                      <MenuItem value="MALE">ذكر</MenuItem>
+                      <MenuItem value="FEMALE">أنثى</MenuItem>
                     </Select>
                   </FormControl>
                 </Grid>
 
                 <Grid item xs={12} md={3}>
                   <FormControl fullWidth size="small">
-                    <InputLabel>Relationship</InputLabel>
+                    <InputLabel>صلة القرابة</InputLabel>
                     <Select
                       value={familyDraft.relationship}
                       onChange={handleFamilyDraftChange('relationship')}
-                      label="Relationship"
+                      label="صلة القرابة"
                     >
-                      <MenuItem value="WIFE">Wife (زوجة)</MenuItem>
-                      <MenuItem value="HUSBAND">Husband (زوج)</MenuItem>
-                      <MenuItem value="SON">Son (ابن)</MenuItem>
-                      <MenuItem value="DAUGHTER">Daughter (ابنة)</MenuItem>
-                      <MenuItem value="FATHER">Father (أب)</MenuItem>
-                      <MenuItem value="MOTHER">Mother (أم)</MenuItem>
-                      <MenuItem value="BROTHER">Brother (أخ)</MenuItem>
-                      <MenuItem value="SISTER">Sister (أخت)</MenuItem>
+                      <MenuItem value="WIFE">زوجة</MenuItem>
+                      <MenuItem value="HUSBAND">زوج</MenuItem>
+                      <MenuItem value="SON">ابن</MenuItem>
+                      <MenuItem value="DAUGHTER">ابنة</MenuItem>
+                      <MenuItem value="FATHER">أب</MenuItem>
+                      <MenuItem value="MOTHER">أم</MenuItem>
+                      <MenuItem value="BROTHER">أخ</MenuItem>
+                      <MenuItem value="SISTER">أخت</MenuItem>
                     </Select>
                   </FormControl>
                 </Grid>
 
                 <Grid item xs={12} md={3}>
                   <Button fullWidth variant="outlined" startIcon={<AddIcon />} onClick={addFamilyMember}>
-                    Add Family Member
+                    إضافة تابع
                   </Button>
                 </Grid>
               </Grid>
@@ -729,10 +729,10 @@ const MemberCreate = () => {
           <MainCard>
             <Stack direction="row" spacing={2} justifyContent="flex-end">
               <Button variant="outlined" onClick={() => navigate('/members')} disabled={loading}>
-                Cancel
+                إلغاء
               </Button>
               <Button type="submit" variant="contained" startIcon={<SaveIcon />} disabled={loading}>
-                {loading ? 'Creating...' : 'Create Member'}
+                {loading ? 'جاري الحفظ...' : 'حفظ البيانات'}
               </Button>
             </Stack>
           </MainCard>

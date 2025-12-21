@@ -213,7 +213,7 @@ const PreApprovalView = () => {
                 <Divider sx={{ mb: 2 }} />
                 <InfoRow label="رقم الطلب" value={preApproval?.id} />
                 <InfoRow 
-                  label="اسم العضو" 
+                  label="المؤمَّن عليه" 
                   value={preApproval?.member?.fullNameArabic ?? preApproval?.memberFullNameArabic} 
                 />
                 <InfoRow 
@@ -338,7 +338,7 @@ const PreApprovalView = () => {
                         تحويل إلى مطالبة
                       </Typography>
                       <Typography variant="body2" color="text.secondary">
-                        يمكنك تحويل هذه الموافقة المسبقة إلى مطالبة بعد تقديم الخدمة للعضو
+                        يمكنك تحويل هذه الموافقة المسبقة إلى مطالبة بعد تقديم الخدمة للمؤمَّن عليه
                       </Typography>
                     </Box>
                     {/* Placeholder button - disabled until implementation */}

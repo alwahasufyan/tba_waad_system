@@ -79,19 +79,19 @@ const MemberView = () => {
     return (
       <>
         <ModernPageHeader
-          title="Member Details"
-          subtitle="View member information"
+          title="بيانات المؤمَّن عليه"
+          subtitle="عرض معلومات المؤمَّن عليه"
           icon={PeopleAltIcon}
           breadcrumbs={[
-            { label: 'Members', path: '/members' },
-            { label: 'View Member', path: `/members/view/${id}` }
+            { label: 'المؤمَّن عليهم', path: '/members' },
+            { label: 'عرض البيانات', path: `/members/view/${id}` }
           ]}
         />
         <MainCard>
           <Alert severity="error">{error}</Alert>
           <Box sx={{ mt: 2 }}>
             <Button variant="outlined" onClick={() => navigate('/members')}>
-              Back to List
+              العودة للقائمة
             </Button>
           </Box>
         </MainCard>
@@ -132,20 +132,20 @@ const MemberView = () => {
   return (
     <>
       <ModernPageHeader
-        title={member.fullNameArabic || member.fullNameEnglish || 'Member Details'}
-        subtitle={`Civil ID: ${member.civilId || 'N/A'}`}
+        title={member.fullNameArabic || member.fullNameEnglish || 'بيانات المؤمَّن عليه'}
+        subtitle={`الرقم المدني: ${member.civilId || 'غير متوفر'}`}
         icon={PeopleAltIcon}
         breadcrumbs={[
-          { label: 'Members', path: '/members' },
-          { label: 'View Member', path: `/members/view/${id}` }
+          { label: 'المؤمَّن عليهم', path: '/members' },
+          { label: 'عرض البيانات', path: `/members/view/${id}` }
         ]}
         actions={
           <Stack direction="row" spacing={2}>
             <Button variant="outlined" startIcon={<ArrowBackIcon />} onClick={() => navigate('/members')}>
-              Back to List
+              العودة للقائمة
             </Button>
             <Button variant="contained" startIcon={<EditIcon />} onClick={() => navigate(`/members/edit/${id}`)}>
-              Edit Member
+              تعديل البيانات
             </Button>
           </Stack>
         }
@@ -153,23 +153,23 @@ const MemberView = () => {
 
       <Stack spacing={3}>
         {/* Personal Information */}
-        <SectionCard title="Personal Information" icon={<PersonIcon color="primary" />}>
-          <InfoRow label="Full Name (Arabic)" value={member?.fullNameArabic} />
-          <InfoRow label="Full Name (English)" value={member?.fullNameEnglish} />
+        <SectionCard title="البيانات الشخصية" icon={<PersonIcon color="primary" />}>
+          <InfoRow label="الاسم بالعربية" value={member?.fullNameArabic} />
+          <InfoRow label="الاسم بالإنجليزية" value={member?.fullNameEnglish} />
           <Divider />
-          <InfoRow label="Civil ID" value={member?.civilId} />
-          <InfoRow label="Card Number" value={member?.cardNumber} />
+          <InfoRow label="الرقم المدني" value={member?.civilId} />
+          <InfoRow label="رقم البطاقة" value={member?.cardNumber} />
           <Divider />
-          <InfoRow label="Birth Date" value={member?.birthDate} />
-          <InfoRow label="Gender" value={member?.gender} />
-          <InfoRow label="Marital Status" value={member?.maritalStatus} />
-          <InfoRow label="Nationality" value={member?.nationality} />
+          <InfoRow label="تاريخ الميلاد" value={member?.birthDate} />
+          <InfoRow label="الجنس" value={member?.gender} />
+          <InfoRow label="الحالة الاجتماعية" value={member?.maritalStatus} />
+          <InfoRow label="الجنسية" value={member?.nationality} />
           <Divider />
           {/* Insurance UX - MemberTypeIndicator */}
           <Grid container spacing={2} sx={{ py: 1 }}>
             <Grid item xs={12} sm={4}>
               <Typography variant="body2" color="text.secondary" fontWeight={500}>
-                Member Type
+                نوع العضوية
               </Typography>
             </Grid>
             <Grid item xs={12} sm={8}>
@@ -185,7 +185,7 @@ const MemberView = () => {
           <Grid container spacing={2} sx={{ py: 1 }}>
             <Grid item xs={12} sm={4}>
               <Typography variant="body2" color="text.secondary" fontWeight={500}>
-                Card Status
+                حالة البطاقة
               </Typography>
             </Grid>
             <Grid item xs={12} sm={8}>
@@ -199,38 +199,38 @@ const MemberView = () => {
         </SectionCard>
 
         {/* Contact Information */}
-        <SectionCard title="Contact Information" icon={<PhoneIcon color="primary" />}>
-          <InfoRow label="Phone" value={member?.phone} />
-          <InfoRow label="Email" value={member?.email} />
-          <InfoRow label="Address" value={member?.address} />
+        <SectionCard title="بيانات التواصل" icon={<PhoneIcon color="primary" />}>
+          <InfoRow label="الهاتف" value={member?.phone} />
+          <InfoRow label="البريد الإلكتروني" value={member?.email} />
+          <InfoRow label="العنوان" value={member?.address} />
         </SectionCard>
 
         {/* Employment Information */}
-        <SectionCard title="Employment Information" icon={<WorkIcon color="primary" />}>
-          <InfoRow label="Employer" value={member?.employerName} />
-          <InfoRow label="Employee Number" value={member?.employeeNumber} />
-          <InfoRow label="Join Date" value={member?.joinDate} />
-          <InfoRow label="Occupation" value={member?.occupation} />
+        <SectionCard title="بيانات العمل" icon={<WorkIcon color="primary" />}>
+          <InfoRow label="جهة العمل" value={member?.employerName} />
+          <InfoRow label="الرقم الوظيفي" value={member?.employeeNumber} />
+          <InfoRow label="تاريخ الالتحاق" value={member?.joinDate} />
+          <InfoRow label="المهنة" value={member?.occupation} />
         </SectionCard>
 
         {/* Insurance Information */}
-        <SectionCard title="Insurance Information" icon={<LocalHospitalIcon color="primary" />}>
-          <InfoRow label="Policy Number" value={member?.policyNumber} />
-          <InfoRow label="Insurance Company" value={member?.insuranceCompanyName} />
-          <InfoRow label="Benefit Package ID" value={member?.benefitPackageId} />
+        <SectionCard title="بيانات التأمين" icon={<LocalHospitalIcon color="primary" />}>
+          <InfoRow label="رقم البوليصة" value={member?.policyNumber} />
+          <InfoRow label="شركة التأمين" value={member?.insuranceCompanyName} />
+          <InfoRow label="باقة المنافع" value={member?.benefitPackageId} />
         </SectionCard>
 
         {/* Membership Period & Status */}
-        <SectionCard title="Membership Period & Status" icon={<CalendarMonthIcon color="primary" />}>
-          <InfoRow label="Member Status" value={member?.status} />
-          <InfoRow label="Card Status" value={member?.cardStatus} />
+        <SectionCard title="فترة التغطية والحالة" icon={<CalendarMonthIcon color="primary" />}>
+          <InfoRow label="حالة العضوية" value={member?.status} />
+          <InfoRow label="حالة البطاقة" value={member?.cardStatus} />
           <Divider />
           {/* Insurance UX - CoverageGauge */}
           {(member?.startDate || member?.endDate) && (
             <Grid container spacing={2} sx={{ py: 2 }}>
               <Grid item xs={12} sm={4}>
                 <Typography variant="body2" color="text.secondary" fontWeight={500}>
-                  Coverage Period
+                  فترة التغطية
                 </Typography>
               </Grid>
               <Grid item xs={12} sm={8}>
@@ -247,32 +247,32 @@ const MemberView = () => {
               </Grid>
             </Grid>
           )}
-          <InfoRow label="Start Date" value={member?.startDate} />
-          <InfoRow label="End Date" value={member?.endDate} />
+          <InfoRow label="تاريخ بداية التغطية" value={member?.startDate} />
+          <InfoRow label="تاريخ انتهاء التغطية" value={member?.endDate} />
           <Divider />
-          <InfoRow label="Blocked Reason" value={member?.blockedReason} />
-          <InfoRow label="Eligibility Status" value={member?.eligibilityStatus ? 'Eligible' : 'Not Eligible'} />
+          <InfoRow label="سبب الإيقاف" value={member?.blockedReason} />
+          <InfoRow label="حالة الأهلية" value={member?.eligibilityStatus ? 'مؤهل' : 'غير مؤهل'} />
           <Divider />
-          <InfoRow label="QR Code" value={member?.qrCodeValue} />
-          <InfoRow label="Photo URL" value={member?.photoUrl} />
-          <InfoRow label="Notes" value={member?.notes} />
+          <InfoRow label="رمز QR" value={member?.qrCodeValue} />
+          <InfoRow label="رابط الصورة" value={member?.photoUrl} />
+          <InfoRow label="ملاحظات" value={member?.notes} />
         </SectionCard>
 
         {/* Family Members */}
         {Array.isArray(member?.familyMembers) && member.familyMembers.length > 0 && (
-          <SectionCard title={`Family Members (${member?.familyMembersCount || member.familyMembers.length})`} icon={<FamilyRestroomIcon color="primary" />}>
+          <SectionCard title={`التابعين (${member?.familyMembersCount || member.familyMembers.length})`} icon={<FamilyRestroomIcon color="primary" />}>
             <TableContainer component={Paper} variant="outlined">
               <Table size="small">
                 <TableHead>
                   <TableRow>
-                    <TableCell>Full Name (AR)</TableCell>
-                    <TableCell>Full Name (EN)</TableCell>
-                    <TableCell>Relationship</TableCell>
-                    <TableCell>Civil ID</TableCell>
-                    <TableCell>Birth Date</TableCell>
-                    <TableCell>Gender</TableCell>
-                    <TableCell>Card Number</TableCell>
-                    <TableCell>Card Status</TableCell>
+                    <TableCell>الاسم بالعربية</TableCell>
+                    <TableCell>الاسم بالإنجليزية</TableCell>
+                    <TableCell>صلة القرابة</TableCell>
+                    <TableCell>الرقم المدني</TableCell>
+                    <TableCell>تاريخ الميلاد</TableCell>
+                    <TableCell>الجنس</TableCell>
+                    <TableCell>رقم البطاقة</TableCell>
+                    <TableCell>حالة البطاقة</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -310,11 +310,11 @@ const MemberView = () => {
         )}
 
         {/* Audit Information */}
-        <SectionCard title="Audit Information" icon={<CalendarMonthIcon color="primary" />}>
-          <InfoRow label="Created By" value={member?.createdBy} />
-          <InfoRow label="Created At" value={member?.createdAt ? new Date(member.createdAt).toLocaleString() : '-'} />
-          <InfoRow label="Updated By" value={member?.updatedBy} />
-          <InfoRow label="Updated At" value={member?.updatedAt ? new Date(member.updatedAt).toLocaleString() : '-'} />
+        <SectionCard title="معلومات النظام" icon={<CalendarMonthIcon color="primary" />}>
+          <InfoRow label="أُنشئ بواسطة" value={member?.createdBy} />
+          <InfoRow label="تاريخ الإنشاء" value={member?.createdAt ? new Date(member.createdAt).toLocaleString('ar-LY') : '-'} />
+          <InfoRow label="آخر تعديل بواسطة" value={member?.updatedBy} />
+          <InfoRow label="تاريخ آخر تعديل" value={member?.updatedAt ? new Date(member.updatedAt).toLocaleString('ar-LY') : '-'} />
         </SectionCard>
       </Stack>
     </>

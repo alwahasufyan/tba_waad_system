@@ -240,8 +240,8 @@ const VisitView = () => {
             } 
             contentSX={{ pt: 2 }}
           >
-            <InfoRow label="اسم العضو" value={memberName} icon={PersonIcon} />
-            <InfoRow label="معرف العضو" value={visit?.memberId ?? visit?.member?.id ?? '—'} />
+            <InfoRow label="المؤمَّن عليه" value={memberName} icon={PersonIcon} />
+            <InfoRow label="معرف المؤمَّن عليه" value={visit?.memberId ?? visit?.member?.id ?? '—'} />
             {visit?.member?.membershipNumber && (
               <InfoRow label="رقم العضوية" value={visit.member.membershipNumber} />
             )}

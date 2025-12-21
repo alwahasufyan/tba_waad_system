@@ -267,7 +267,7 @@ const PreApprovalEdit = () => {
                 if (value) fetchMembers(value);
               }}
               disabled
-              renderInput={(params) => <TextField {...params} label="العضو" disabled />}
+              renderInput={(params) => <TextField {...params} label="المؤمَّن عليه" disabled />}
             />
           </Grid>
 

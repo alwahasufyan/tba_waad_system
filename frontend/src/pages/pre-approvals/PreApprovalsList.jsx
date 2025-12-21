@@ -109,7 +109,7 @@ const PreApprovalsList = () => {
       <Box sx={{ mb: 3 }}>
         <Stack direction="row" spacing={2} alignItems="center">
           <TextField
-            placeholder="بحث بالمزود، التشخيص، أو اسم العضو..."
+            placeholder="بحث بالمزود، التشخيص، أو اسم المؤمَّن عليه..."
             variant="outlined"
             size="small"
             value={searchTerm}
@@ -127,7 +127,7 @@ const PreApprovalsList = () => {
           <TableHead>
             <TableRow sx={{ bgcolor: 'grey.50' }}>
               <TableCell sx={{ fontWeight: 600 }}>#</TableCell>
-              <TableCell sx={{ fontWeight: 600 }}>اسم العضو</TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>المؤمَّن عليه</TableCell>
               <TableCell sx={{ fontWeight: 600 }}>شركة التأمين</TableCell>
               <TableCell sx={{ fontWeight: 600 }}>مقدم الخدمة</TableCell>
               <TableCell align="center" sx={{ fontWeight: 600 }}>الأولوية</TableCell>

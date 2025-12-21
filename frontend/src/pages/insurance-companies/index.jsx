@@ -47,16 +47,16 @@ export default function InsuranceCompaniesPage() {
       header: 'Status',
       accessorKey: 'active',
       cell: ({ getValue }) => (
-        <Chip label={getValue() ? 'Active' : 'Inactive'} color={getValue() ? 'success' : 'default'} size="small" />
+        <Chip label={getValue() ? 'نشط' : 'غير نشط'} color={getValue() ? 'success' : 'default'} size="small" />
       )
     }
   ], []);
 
   const validationSchema = Yup.object({
-    name: Yup.string().required('Company name is required').max(255),
-    code: Yup.string().required('Company code is required').max(50),
+    name: Yup.string().required('اسم الشركة مطلوب').max(255),
+    code: Yup.string().required('رمز الشركة مطلوب').max(50),
     phone: Yup.string().max(20),
-    email: Yup.string().email('Invalid email').max(255),
+    email: Yup.string().email('بريد إلكتروني غير صالح').max(255),
     contactPerson: Yup.string().max(255),
     address: Yup.string().max(500)
   });
@@ -65,14 +65,14 @@ export default function InsuranceCompaniesPage() {
     try {
       if (selected) {
         await insuranceService.update(selected.id, values);
-        enqueueSnackbar('Insurance company updated successfully', { variant: 'success' });
+        enqueueSnackbar('تم تحديث شركة التأمين بنجاح', { variant: 'success' });
       } else {
         await insuranceService.create(values);
-        enqueueSnackbar('Insurance company created successfully', { variant: 'success' });
+        enqueueSnackbar('تم إضافة شركة التأمين بنجاح', { variant: 'success' });
       }
       loadData();
     } catch (error) {
-      enqueueSnackbar('Failed to save insurance company', { variant: 'error' });
+      enqueueSnackbar('فشل في حفظ بيانات شركة التأمين', { variant: 'error' });
       throw error;
     }
   };
@@ -80,10 +80,10 @@ export default function InsuranceCompaniesPage() {
   const confirmDelete = async () => {
     try {
       await insuranceService.remove(toDelete.id);
-      enqueueSnackbar('Insurance company deleted successfully', { variant: 'success' });
+      enqueueSnackbar('تم حذف شركة التأمين بنجاح', { variant: 'success' });
       loadData();
     } catch (error) {
-      enqueueSnackbar('Failed to delete insurance company', { variant: 'error' });
+      enqueueSnackbar('فشل في حذف شركة التأمين', { variant: 'error' });
     } finally {
       setDeleteDialogOpen(false);
       setToDelete(null);
@@ -96,21 +96,21 @@ export default function InsuranceCompaniesPage() {
     <>
       <RBACGuard requiredPermissions={['READ_INSURANCE']}>
         <DataTable
-          title="Insurance Companies"
+          title="إدارة شركات التأمين"
           data={companies}
           columns={columns}
           loading={loading}
           onAdd={() => { setSelected(null); setDrawerOpen(true); }}
           onEdit={(row) => { setSelected(row); setDrawerOpen(true); }}
           onDelete={(row) => { setToDelete(row); setDeleteDialogOpen(true); }}
-          addButtonLabel="Add Insurance Company"
+          addButtonLabel="إضافة شركة تأمين"
         />
       </RBACGuard>
 
       <CrudDrawer
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
-        title={selected ? 'Edit Insurance Company' : 'Add Insurance Company'}
+        title={selected ? 'تعديل شركة التأمين' : 'إضافة شركة تأمين'}
         initialValues={initialValues}
         validationSchema={validationSchema}
         onSubmit={handleSubmit}
@@ -120,13 +120,13 @@ export default function InsuranceCompaniesPage() {
       </CrudDrawer>
 
       <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
-        <DialogTitle>Confirm Delete</DialogTitle>
+        <DialogTitle>تأكيد الحذف</DialogTitle>
         <DialogContent>
-          <DialogContentText>Are you sure you want to delete "{toDelete?.name}"?</DialogContentText>
+          <DialogContentText>هل أنت متأكد من حذف "{toDelete?.name}"؟</DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
-          <Button onClick={confirmDelete} color="error" variant="contained">Delete</Button>
+          <Button onClick={() => setDeleteDialogOpen(false)}>إلغاء</Button>
+          <Button onClick={confirmDelete} color="error" variant="contained">حذف</Button>
         </DialogActions>
       </Dialog>
     </>
@@ -137,12 +137,12 @@ function InsuranceForm() {
   const { values, errors, touched, handleChange, handleBlur } = useFormikContext();
   return (
     <>
-      <div><InputLabel>Company Name *</InputLabel><TextField fullWidth name="name" value={values.name} onChange={handleChange} onBlur={handleBlur} error={touched.name && Boolean(errors.name)} helperText={touched.name && errors.name} /></div>
-      <div><InputLabel>Company Code *</InputLabel><TextField fullWidth name="code" value={values.code} onChange={handleChange} onBlur={handleBlur} error={touched.code && Boolean(errors.code)} helperText={touched.code && errors.code} /></div>
-      <div><InputLabel>Contact Person</InputLabel><TextField fullWidth name="contactPerson" value={values.contactPerson} onChange={handleChange} onBlur={handleBlur} error={touched.contactPerson && Boolean(errors.contactPerson)} helperText={touched.contactPerson && errors.contactPerson} /></div>
-      <div><InputLabel>Phone</InputLabel><TextField fullWidth name="phone" value={values.phone} onChange={handleChange} onBlur={handleBlur} error={touched.phone && Boolean(errors.phone)} helperText={touched.phone && errors.phone} /></div>
-      <div><InputLabel>Email</InputLabel><TextField fullWidth type="email" name="email" value={values.email} onChange={handleChange} onBlur={handleBlur} error={touched.email && Boolean(errors.email)} helperText={touched.email && errors.email} /></div>
-      <div><InputLabel>Address</InputLabel><TextField fullWidth multiline rows={3} name="address" value={values.address} onChange={handleChange} onBlur={handleBlur} error={touched.address && Boolean(errors.address)} helperText={touched.address && errors.address} /></div>
+      <div><InputLabel>اسم الشركة *</InputLabel><TextField fullWidth name="name" value={values.name} onChange={handleChange} onBlur={handleBlur} error={touched.name && Boolean(errors.name)} helperText={touched.name && errors.name} /></div>
+      <div><InputLabel>رمز الشركة *</InputLabel><TextField fullWidth name="code" value={values.code} onChange={handleChange} onBlur={handleBlur} error={touched.code && Boolean(errors.code)} helperText={touched.code && errors.code} /></div>
+      <div><InputLabel>مسؤول التواصل</InputLabel><TextField fullWidth name="contactPerson" value={values.contactPerson} onChange={handleChange} onBlur={handleBlur} error={touched.contactPerson && Boolean(errors.contactPerson)} helperText={touched.contactPerson && errors.contactPerson} /></div>
+      <div><InputLabel>الهاتف</InputLabel><TextField fullWidth name="phone" value={values.phone} onChange={handleChange} onBlur={handleBlur} error={touched.phone && Boolean(errors.phone)} helperText={touched.phone && errors.phone} /></div>
+      <div><InputLabel>البريد الإلكتروني</InputLabel><TextField fullWidth type="email" name="email" value={values.email} onChange={handleChange} onBlur={handleBlur} error={touched.email && Boolean(errors.email)} helperText={touched.email && errors.email} /></div>
+      <div><InputLabel>العنوان</InputLabel><TextField fullWidth multiline rows={3} name="address" value={values.address} onChange={handleChange} onBlur={handleBlur} error={touched.address && Boolean(errors.address)} helperText={touched.address && errors.address} /></div>
     </>
   );
 }

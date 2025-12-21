@@ -269,7 +269,7 @@ const VisitsList = () => {
                         تاريخ الزيارة
                       </TableSortLabel>
                     </TableCell>
-                    <TableCell sx={{ fontWeight: 600 }}>اسم العضو</TableCell>
+                    <TableCell sx={{ fontWeight: 600 }}>المؤمَّن عليه</TableCell>
                     <TableCell sx={{ fontWeight: 600 }}>مقدم الخدمة</TableCell>
                     <TableCell sx={{ fontWeight: 600 }}>الخدمات المقدمة</TableCell>
                     <TableCell align="center" sx={{ fontWeight: 600 }}>الحالة</TableCell>

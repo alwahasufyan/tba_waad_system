@@ -123,7 +123,7 @@ const PreApprovalCreate = () => {
     const errors = {};
 
     if (!formData.memberId) {
-      errors.memberId = 'العضو مطلوب';
+      errors.memberId = 'المؤمَّن عليه مطلوب';
     }
 
     if (!formData.insuranceCompanyId) {
@@ -198,7 +198,7 @@ const PreApprovalCreate = () => {
                 if (value) fetchMembers(value);
               }}
               renderInput={(params) => (
-                <TextField {...params} label="العضو" required error={!!formErrors.memberId} helperText={formErrors.memberId} />
+                <TextField {...params} label="المؤمَّن عليه" required error={!!formErrors.memberId} helperText={formErrors.memberId} />
               )}
             />
           </Grid>

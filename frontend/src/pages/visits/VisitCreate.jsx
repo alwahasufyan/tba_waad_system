@@ -70,7 +70,7 @@ const VisitCreate = () => {
     const newErrors = {};
 
     if (!form.visitDate) newErrors.visitDate = 'تاريخ الزيارة مطلوب';
-    if (!form.memberId) newErrors.memberId = 'العضو مطلوب';
+    if (!form.memberId) newErrors.memberId = 'المؤمَّن عليه مطلوب';
     if (!form.providerId) newErrors.providerId = 'مقدم الخدمة مطلوب';
     if (form.serviceIds.length === 0) newErrors.serviceIds = 'يجب اختيار خدمة واحدة على الأقل';
 
@@ -153,12 +153,12 @@ const VisitCreate = () => {
 
             <Grid item xs={12} md={6}>
               <FormControl fullWidth required error={!!errors.memberId}>
-                <InputLabel>العضو</InputLabel>
-                <Select value={form.memberId} onChange={handleChange('memberId')} label="العضو" disabled={membersLoading}>
-                  <MenuItem value="">-- اختر العضو --</MenuItem>
+                <InputLabel>المؤمَّن عليه</InputLabel>
+                <Select value={form.memberId} onChange={handleChange('memberId')} label="المؤمَّن عليه" disabled={membersLoading}>
+                  <MenuItem value="">-- اختر المؤمَّن عليه --</MenuItem>
                   {members?.map((member) => (
                     <MenuItem key={member.id} value={member.id}>
-                      {member.fullName || member.nameAr || member.nameEn || `عضو ${member.id}`}
+                      {member.fullName || member.nameAr || member.nameEn || `مؤمن ${member.id}`}
                     </MenuItem>
                   ))}
                 </Select>

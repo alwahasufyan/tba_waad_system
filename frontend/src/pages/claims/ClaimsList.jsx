@@ -101,7 +101,7 @@ const ClaimsList = () => {
           <Stack direction="row" spacing={2}>
             <TextField
               size="small"
-              placeholder="بحث بمقدم الخدمة، التشخيص، العضو..."
+              placeholder="بحث بمقدم الخدمة، التشخيص، المؤمَّن عليه..."
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
               onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
@@ -133,7 +133,7 @@ const ClaimsList = () => {
               <TableHead>
                 <TableRow sx={{ bgcolor: 'grey.50' }}>
                   <TableCell align="center" sx={{ fontWeight: 600 }}>#</TableCell>
-                  <TableCell sx={{ fontWeight: 600 }}>العضو</TableCell>
+                  <TableCell sx={{ fontWeight: 600 }}>المؤمَّن عليه</TableCell>
                   <TableCell sx={{ fontWeight: 600 }}>شركة التأمين</TableCell>
                   <TableCell sx={{ fontWeight: 600 }}>مقدم الخدمة</TableCell>
                   <TableCell sx={{ fontWeight: 600 }}>تاريخ الزيارة</TableCell>
