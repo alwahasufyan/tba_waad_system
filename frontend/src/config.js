@@ -79,11 +79,11 @@ export const DEFAULT_THEME_MODE = ThemeMode.SYSTEM;
 
 const config = {
   fontFamily: `'Public Sans', sans-serif`,
-  i18n: 'en',
+  i18n: 'ar', // Phase D1.5: Arabic as default language
   menuOrientation: MenuOrientation.VERTICAL,
   container: true,
   presetColor: 'default',
-  themeDirection: ThemeDirection.LTR
+  themeDirection: ThemeDirection.RTL // RTL for Arabic
 };
 
 export default config;

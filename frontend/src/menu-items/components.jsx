@@ -108,30 +108,30 @@ const menuItem = [
     children: [
       {
         id: 'members',
-        title: 'الأعضاء',
+        title: 'المؤمَّن عليهم',
         type: 'item',
         url: '/members',
         icon: PeopleAltIcon,
         breadcrumbs: true,
-        search: 'members patients insurance holders beneficiaries الأعضاء المشتركين'
+        search: 'members patients insurance holders beneficiaries المؤمَّن عليهم المشتركين الأعضاء'
       },
       {
         id: 'employers',
-        title: 'جهات العمل',
+        title: 'جهات التعاقد',
         type: 'item',
         url: '/employers',
         icon: BusinessIcon,
         breadcrumbs: true,
-        search: 'employers companies organizations clients جهات العمل الشركات'
+        search: 'employers companies organizations clients جهات التعاقد جهات العمل الشركات'
       },
       {
         id: 'providers',
-        title: 'مقدمي الخدمة',
+        title: 'مقدمو الخدمة الصحية',
         type: 'item',
         url: '/providers',
         icon: LocalHospitalIcon,
         breadcrumbs: true,
-        search: 'providers hospitals clinics healthcare facilities مقدمي الخدمة المستشفيات'
+        search: 'providers hospitals clinics healthcare facilities مقدمو الخدمة الصحية مقدمي الخدمة المستشفيات'
       }
     ]
   },
@@ -151,12 +151,12 @@ const menuItem = [
       },
       {
         id: 'visits',
-        title: 'الزيارات',
+        title: 'الزيارات الطبية',
         type: 'item',
         url: '/visits',
         icon: LocalHospitalIcon,
         breadcrumbs: true,
-        search: 'visits appointments consultations الزيارات المواعيد'
+        search: 'visits appointments consultations الزيارات الطبية المواعيد'
       },
       {
         id: 'pre-approvals',

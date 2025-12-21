@@ -14,6 +14,7 @@ import NavGroup from './NavGroup';
 import useConfig from 'hooks/useConfig';
 import useAuth from 'hooks/useAuth';
 import useRBACSidebar from 'hooks/useRBACSidebar';
+import useLocale from 'hooks/useLocale';
 import { HORIZONTAL_MAX_ITEM, MenuOrientation } from 'config';
 import { useGetMenuMaster } from 'api/menu';
 
@@ -37,6 +38,9 @@ export default function Navigation() {
 
   // Phase B2: Use dynamic RBAC sidebar
   const { sidebarItems, loading } = useRBACSidebar();
+  
+  // Phase D1.5: Use translation hook
+  const { t } = useLocale();
 
   const [selectedID, setSelectedID] = useState('');
   const [selectedItems, setSelectedItems] = useState('');
@@ -46,16 +50,16 @@ export default function Navigation() {
   useLayoutEffect(() => {
     if (!loading && sidebarItems.length > 0) {
       // Convert flat sidebarItems to menu structure
-      // For now, we'll create a single group with all items as children
+      // Translate labels using the t() function
       const menuStructure = {
         items: [
           {
             id: 'main-group',
             type: 'group',
-            translationKey: '',
+            title: '', // No group title - flat menu
             children: sidebarItems.map(item => ({
               id: item.id,
-              translationKey: item.translationKey,
+              title: t(item.translationKey), // Translate the label
               type: 'item',
               url: item.path,
               icon: item.icon,
@@ -67,7 +71,7 @@ export default function Navigation() {
       
       setMenuItems(menuStructure);
     }
-  }, [loading, sidebarItems]);
+  }, [loading, sidebarItems, t]);
 
   const isHorizontal = state.menuOrientation === MenuOrientation.HORIZONTAL && !downLG;
 
