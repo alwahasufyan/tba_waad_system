@@ -22,6 +22,10 @@ import {
   TableSortLabel,
   Alert
 } from '@mui/material';
+
+// Insurance UX Components - Phase B2
+import { MemberTypeIndicator, CardStatusBadge } from 'components/insurance';
+
 import {
   Add as AddIcon,
   Search as SearchIcon,
@@ -119,6 +123,11 @@ const MembersList = () => {
       sortable: true
     },
     {
+      id: 'memberType',
+      label: intl.formatMessage({ id: 'members.type' }) || 'Type',
+      sortable: false
+    },
+    {
       id: 'civilId',
       label: intl.formatMessage({ id: 'members.civil-id' }) || 'Civil ID',
       sortable: true
@@ -143,7 +152,7 @@ const MembersList = () => {
       label: intl.formatMessage({ id: 'common.email' }) || 'Email',
       sortable: false
     },
-    { id: 'active', label: intl.formatMessage({ id: 'common.status' }) || 'Status', sortable: true },
+    { id: 'cardStatus', label: intl.formatMessage({ id: 'members.card-status' }) || 'Card Status', sortable: true },
     { id: 'actions', label: intl.formatMessage({ id: 'common.actions' }) || 'Actions', sortable: false, align: 'center' }
   ];
 
@@ -190,64 +199,70 @@ const MembersList = () => {
     }
 
     return data.items.map((member) => (
-      <TableRow hover key={member.id} sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
+      <TableRow hover key={member?.id ?? Math.random()} sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
         <TableCell>
           <Typography variant="body2" fontWeight={500}>
-            {member.id}
+            {member?.id ?? '-'}
           </Typography>
         </TableCell>
         <TableCell>
           <Typography variant="body2" fontWeight={500}>
-            {member.fullNameArabic || member.fullNameEnglish || '-'}
+            {member?.fullNameArabic || member?.fullNameEnglish || '-'}
           </Typography>
-          {member.fullNameEnglish && (
+          {member?.fullNameEnglish && (
             <Typography variant="caption" color="text.secondary" display="block">
               {member.fullNameEnglish}
             </Typography>
           )}
         </TableCell>
         <TableCell>
-          <Chip label={member.civilId || '-'} size="small" variant="outlined" color="primary" />
+          {/* Insurance UX - MemberTypeIndicator */}
+          <MemberTypeIndicator
+            memberType={member?.memberType ?? 'PRINCIPAL'}
+            relationship={member?.relationship}
+            size="small"
+            variant="chip"
+          />
         </TableCell>
         <TableCell>
-          <Typography variant="body2">{member.employerName || '-'}</Typography>
+          <Chip label={member?.civilId || '-'} size="small" variant="outlined" color="primary" />
         </TableCell>
         <TableCell>
-          <Typography variant="body2">{member.policyNumber || '-'}</Typography>
+          <Typography variant="body2">{member?.employerName || '-'}</Typography>
         </TableCell>
         <TableCell>
-          <Typography variant="body2">{member.phone || '-'}</Typography>
+          <Typography variant="body2">{member?.policyNumber || '-'}</Typography>
+        </TableCell>
+        <TableCell>
+          <Typography variant="body2">{member?.phone || '-'}</Typography>
         </TableCell>
         <TableCell>
           <Typography variant="body2" sx={{ fontSize: '0.875rem' }}>
-            {member.email || '-'}
+            {member?.email || '-'}
           </Typography>
         </TableCell>
         <TableCell>
-          <Chip
-            label={
-              member.active
-                ? intl.formatMessage({ id: 'common.active' }) || 'Active'
-                : intl.formatMessage({ id: 'common.inactive' }) || 'Inactive'
-            }
+          {/* Insurance UX - CardStatusBadge (replaces simple active/inactive chip) */}
+          <CardStatusBadge
+            status={member?.cardStatus ?? (member?.active ? 'ACTIVE' : 'INACTIVE')}
             size="small"
-            color={member.active ? 'success' : 'error'}
+            variant="chip"
           />
         </TableCell>
         <TableCell align="center">
           <Stack direction="row" spacing={0.5} justifyContent="center">
             <Tooltip title={intl.formatMessage({ id: 'common.view' }) || 'View'}>
-              <IconButton size="small" color="primary" onClick={() => navigate(`/members/view/${member.id}`)}>
+              <IconButton size="small" color="primary" onClick={() => navigate(`/members/view/${member?.id}`)}>
                 <VisibilityIcon fontSize="small" />
               </IconButton>
             </Tooltip>
             <Tooltip title={intl.formatMessage({ id: 'common.edit' }) || 'Edit'}>
-              <IconButton size="small" color="info" onClick={() => navigate(`/members/edit/${member.id}`)}>
+              <IconButton size="small" color="info" onClick={() => navigate(`/members/edit/${member?.id}`)}>
                 <EditIcon fontSize="small" />
               </IconButton>
             </Tooltip>
             <Tooltip title={intl.formatMessage({ id: 'common.delete' }) || 'Delete'}>
-              <IconButton size="small" color="error" onClick={() => handleDelete(member.id)}>
+              <IconButton size="small" color="error" onClick={() => handleDelete(member?.id)}>
                 <DeleteIcon fontSize="small" />
               </IconButton>
             </Tooltip>
