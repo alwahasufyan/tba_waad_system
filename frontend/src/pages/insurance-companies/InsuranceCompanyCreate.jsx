@@ -78,17 +78,17 @@ const InsuranceCompanyCreate = () => {
               {/* Basic Information Section */}
               <Grid item xs={12}>
                 <Typography variant="h5" sx={{ mb: 2 }}>
-                  المعلومات الأساسية
+                  البيانات الأساسية للشركة
                 </Typography>
               </Grid>
 
               <Grid item xs={12} md={6}>
                 <FormControl fullWidth error={Boolean(touched.name && errors.name)}>
-                  <InputLabel htmlFor="name">الاسم *</InputLabel>
+                  <InputLabel htmlFor="name">اسم الشركة *</InputLabel>
                   <OutlinedInput
                     id="name"
                     name="name"
-                    label="الاسم *"
+                    label="اسم الشركة *"
                     value={values.name}
                     onBlur={handleBlur}
                     onChange={handleChange}
@@ -99,11 +99,11 @@ const InsuranceCompanyCreate = () => {
 
               <Grid item xs={12} md={6}>
                 <FormControl fullWidth error={Boolean(touched.code && errors.code)}>
-                  <InputLabel htmlFor="code">الرمز *</InputLabel>
+                  <InputLabel htmlFor="code">الرمز / الكود *</InputLabel>
                   <OutlinedInput
                     id="code"
                     name="code"
-                    label="الرمز *"
+                    label="الرمز / الكود *"
                     value={values.code}
                     onBlur={handleBlur}
                     onChange={handleChange}
@@ -115,17 +115,17 @@ const InsuranceCompanyCreate = () => {
               {/* Contact Information Section */}
               <Grid item xs={12}>
                 <Typography variant="h5" sx={{ mb: 2, mt: 2 }}>
-                  معلومات الاتصال
+                  بيانات التواصل
                 </Typography>
               </Grid>
 
               <Grid item xs={12} md={6}>
                 <FormControl fullWidth error={Boolean(touched.phone && errors.phone)}>
-                  <InputLabel htmlFor="phone">الهاتف</InputLabel>
+                  <InputLabel htmlFor="phone">رقم الهاتف</InputLabel>
                   <OutlinedInput
                     id="phone"
                     name="phone"
-                    label="الهاتف"
+                    label="رقم الهاتف"
                     value={values.phone}
                     onBlur={handleBlur}
                     onChange={handleChange}
@@ -185,7 +185,7 @@ const InsuranceCompanyCreate = () => {
               {/* Status Section */}
               <Grid item xs={12}>
                 <Typography variant="h5" sx={{ mb: 2, mt: 2 }}>
-                  الحالة
+                  حالة الشركة
                 </Typography>
               </Grid>
 
@@ -200,7 +200,7 @@ const InsuranceCompanyCreate = () => {
                       color="primary"
                     />
                   }
-                  label="نشط"
+                  label="شركة نشطة"
                 />
               </Grid>
 

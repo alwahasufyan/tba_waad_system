@@ -79,7 +79,7 @@ const InsuranceCompanyEdit = () => {
   return (
     <MainCard>
       <Typography variant="h4" sx={{ mb: 3 }}>
-        تعديل شركة التأمين
+        تعديل بيانات شركة التأمين
       </Typography>
 
       <Formik
@@ -102,17 +102,17 @@ const InsuranceCompanyEdit = () => {
               {/* Basic Information Section */}
               <Grid item xs={12}>
                 <Typography variant="h5" sx={{ mb: 2 }}>
-                  المعلومات الأساسية
+                  البيانات الأساسية للشركة
                 </Typography>
               </Grid>
 
               <Grid item xs={12} md={6}>
                 <FormControl fullWidth error={Boolean(touched.name && errors.name)}>
-                  <InputLabel htmlFor="name">الاسم</InputLabel>
+                  <InputLabel htmlFor="name">اسم الشركة</InputLabel>
                   <OutlinedInput
                     id="name"
                     name="name"
-                    label="الاسم"
+                    label="اسم الشركة"
                     value={values.name}
                     onBlur={handleBlur}
                     onChange={handleChange}
@@ -123,11 +123,11 @@ const InsuranceCompanyEdit = () => {
 
               <Grid item xs={12} md={6}>
                 <FormControl fullWidth error={Boolean(touched.code && errors.code)}>
-                  <InputLabel htmlFor="code">الرمز</InputLabel>
+                  <InputLabel htmlFor="code">الرمز / الكود</InputLabel>
                   <OutlinedInput
                     id="code"
                     name="code"
-                    label="الرمز"
+                    label="الرمز / الكود"
                     value={values.code}
                     onBlur={handleBlur}
                     onChange={handleChange}
@@ -139,17 +139,17 @@ const InsuranceCompanyEdit = () => {
               {/* Contact Information Section */}
               <Grid item xs={12}>
                 <Typography variant="h5" sx={{ mb: 2, mt: 2 }}>
-                  معلومات الاتصال
+                  بيانات التواصل
                 </Typography>
               </Grid>
 
               <Grid item xs={12} md={6}>
                 <FormControl fullWidth error={Boolean(touched.phone && errors.phone)}>
-                  <InputLabel htmlFor="phone">الهاتف</InputLabel>
+                  <InputLabel htmlFor="phone">رقم الهاتف</InputLabel>
                   <OutlinedInput
                     id="phone"
                     name="phone"
-                    label="الهاتف"
+                    label="رقم الهاتف"
                     value={values.phone}
                     onBlur={handleBlur}
                     onChange={handleChange}
@@ -176,11 +176,11 @@ const InsuranceCompanyEdit = () => {
 
               <Grid item xs={12} md={6}>
                 <FormControl fullWidth error={Boolean(touched.contactPerson && errors.contactPerson)}>
-                  <InputLabel htmlFor="contactPerson">الشخص المسؤول</InputLabel>
+                  <InputLabel htmlFor="contactPerson">الشخص المسؤول / جهة الاتصال</InputLabel>
                   <OutlinedInput
                     id="contactPerson"
                     name="contactPerson"
-                    label="الشخص المسؤول"
+                    label="الشخص المسؤول / جهة الاتصال"
                     value={values.contactPerson}
                     onBlur={handleBlur}
                     onChange={handleChange}
@@ -209,7 +209,7 @@ const InsuranceCompanyEdit = () => {
               {/* Status Section */}
               <Grid item xs={12}>
                 <Typography variant="h5" sx={{ mb: 2, mt: 2 }}>
-                  الحالة
+                  حالة الشركة
                 </Typography>
               </Grid>
 
@@ -224,7 +224,7 @@ const InsuranceCompanyEdit = () => {
                       color="primary"
                     />
                   }
-                  label="نشط"
+                  label="شركة نشطة"
                 />
               </Grid>
 
