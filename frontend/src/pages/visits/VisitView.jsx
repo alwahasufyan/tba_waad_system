@@ -14,7 +14,9 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  Paper
+  Paper,
+  Divider,
+  Tooltip
 } from '@mui/material';
 import {
   Edit as EditIcon,
@@ -24,12 +26,55 @@ import {
   Cancel as CancelIcon,
   Person as PersonIcon,
   Business as BusinessIcon,
-  CalendarMonth as CalendarMonthIcon
+  CalendarMonth as CalendarMonthIcon,
+  MedicalServices as MedicalServicesIcon,
+  Notes as NotesIcon,
+  Info as InfoIcon,
+  Assignment as AssignmentIcon
 } from '@mui/icons-material';
 
 import MainCard from 'components/MainCard';
 import ModernPageHeader from 'components/tba/ModernPageHeader';
 import { useVisitDetails } from 'hooks/useVisits';
+
+// Insurance UX Components - Phase B3
+import { NetworkBadge, CardStatusBadge } from 'components/insurance';
+
+// ============ VISIT CONFIGURATION ============
+// Visit Type Labels (Arabic)
+const VISIT_TYPE_LABELS_AR = {
+  EMERGENCY: 'طوارئ',
+  SCHEDULED: 'مجدولة',
+  FOLLOW_UP: 'متابعة',
+  ROUTINE: 'روتينية'
+};
+
+// Status Labels (Arabic)
+const STATUS_LABELS_AR = {
+  ACTIVE: 'نشطة',
+  INACTIVE: 'غير نشطة',
+  COMPLETED: 'مكتملة',
+  CANCELLED: 'ملغاة'
+};
+
+// Network Status mapping
+const getNetworkTier = (provider) => {
+  if (!provider) return null;
+  if (provider?.networkStatus) return provider.networkStatus;
+  if (provider?.inNetwork === true) return 'IN_NETWORK';
+  if (provider?.inNetwork === false) return 'OUT_OF_NETWORK';
+  if (provider?.contracted === true) return 'IN_NETWORK';
+  if (provider?.contracted === false) return 'OUT_OF_NETWORK';
+  return null;
+};
+
+// Get visit status
+const getVisitStatus = (visit) => {
+  if (visit?.status) return visit.status;
+  if (visit?.active === true) return 'ACTIVE';
+  if (visit?.active === false) return 'INACTIVE';
+  return 'ACTIVE';
+};
 
 /**
  * Visit View Page
@@ -64,31 +109,85 @@ const VisitView = () => {
       <>
         <ModernPageHeader title="خطأ" subtitle="فشل تحميل بيانات الزيارة" icon={<LocalHospitalIcon />} breadcrumbs={breadcrumbs} />
         <MainCard>
-          <Alert severity="error">
-            {error?.message || 'لم يتم العثور على الزيارة'}
-            <Button onClick={() => navigate('/visits')} sx={{ mt: 2 }}>
+          <Stack spacing={3} alignItems="center" sx={{ py: 4 }}>
+            <LocalHospitalIcon sx={{ fontSize: 48, color: '#ff4d4f' }} />
+            <Typography variant="h5" color="error">
+              الزيارة غير موجودة
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              {error?.message ?? 'تأكد من صحة الرابط أو أن الزيارة لم يتم حذفها'}
+            </Typography>
+            <Button variant="contained" startIcon={<ArrowBackIcon />} onClick={() => navigate('/visits')}>
               العودة إلى القائمة
             </Button>
-          </Alert>
+          </Stack>
         </MainCard>
       </>
     );
   }
 
-  const InfoRow = ({ label, value }) => (
+  // Derive values defensively
+  const visitStatus = getVisitStatus(visit);
+  const networkTier = getNetworkTier(visit?.provider);
+  const memberName = visit?.member?.fullName ?? visit?.member?.nameAr ?? visit?.member?.nameEn ?? '—';
+  const providerName = visit?.provider?.nameAr ?? visit?.provider?.nameEn ?? visit?.provider?.name ?? '—';
+  const services = Array.isArray(visit?.services) ? visit.services : [];
+
+  // Enhanced InfoRow with icon support and defensive coding
+  const InfoRow = ({ label, value, icon: Icon }) => (
     <Box sx={{ mb: 2 }}>
-      <Typography variant="caption" color="text.secondary" display="block" gutterBottom>
-        {label}
-      </Typography>
-      <Typography variant="body1">{value || '-'}</Typography>
+      <Stack direction="row" spacing={1} alignItems="center">
+        {Icon && <Icon sx={{ fontSize: 16, color: 'text.secondary' }} />}
+        <Typography variant="caption" color="text.secondary" display="block">
+          {label ?? '—'}
+        </Typography>
+      </Stack>
+      <Typography variant="body1" sx={{ mt: 0.5 }}>{value ?? '—'}</Typography>
     </Box>
   );
 
   return (
     <>
       <ModernPageHeader
-        title="عرض الزيارة"
-        subtitle={`تفاصيل الزيارة #${id}`}
+        title={
+          <Stack direction="row" spacing={2} alignItems="center">
+            <LocalHospitalIcon sx={{ fontSize: 28 }} />
+            <Box>
+              <Typography variant="h5">زيارة #{visit?.id ?? id}</Typography>
+              <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 0.5 }}>
+                {/* Visit Type */}
+                {visit?.visitType && (
+                  <Chip
+                    label={VISIT_TYPE_LABELS_AR[visit.visitType] ?? visit.visitType}
+                    size="small"
+                    color="primary"
+                    variant="outlined"
+                  />
+                )}
+                {/* Status Badge */}
+                <CardStatusBadge
+                  status={visitStatus}
+                  customLabel={STATUS_LABELS_AR[visitStatus] ?? 'غير محدد'}
+                  size="small"
+                  variant="chip"
+                />
+                {/* Pre-Approval hint if exists */}
+                {(visit?.preApprovalId ?? visit?.preApproval?.id) && (
+                  <Tooltip title="مرتبطة بموافقة مسبقة">
+                    <Chip
+                      icon={<AssignmentIcon sx={{ fontSize: 14 }} />}
+                      label={`موافقة #${visit?.preApprovalId ?? visit?.preApproval?.id}`}
+                      size="small"
+                      color="info"
+                      variant="outlined"
+                    />
+                  </Tooltip>
+                )}
+              </Stack>
+            </Box>
+          </Stack>
+        }
+        subtitle={`${memberName} - ${visit?.visitDate ? new Date(visit.visitDate).toLocaleDateString('ar-LY', { dateStyle: 'long' }) : '—'}`}
         icon={<LocalHospitalIcon />}
         breadcrumbs={breadcrumbs}
         actions={
@@ -106,78 +205,126 @@ const VisitView = () => {
       <Grid container spacing={3}>
         {/* Visit Information */}
         <Grid item xs={12} md={6}>
-          <MainCard title="معلومات الزيارة" contentSX={{ pt: 2 }}>
-            <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2 }}>
-              <CalendarMonthIcon color="primary" />
-              <Typography variant="subtitle2">التاريخ</Typography>
-            </Stack>
+          <MainCard 
+            title={
+              <Stack direction="row" spacing={1} alignItems="center">
+                <CalendarMonthIcon color="primary" />
+                <span>معلومات الزيارة</span>
+              </Stack>
+            } 
+            contentSX={{ pt: 2 }}
+          >
             <InfoRow
               label="تاريخ الزيارة"
-              value={visit.visitDate ? new Date(visit.visitDate).toLocaleDateString('ar-LY', { dateStyle: 'long' }) : '-'}
+              value={visit?.visitDate ? new Date(visit.visitDate).toLocaleDateString('ar-LY', { dateStyle: 'long' }) : '—'}
+              icon={CalendarMonthIcon}
             />
+            {visit?.visitType && (
+              <InfoRow
+                label="نوع الزيارة"
+                value={VISIT_TYPE_LABELS_AR[visit.visitType] ?? visit.visitType}
+              />
+            )}
+            <InfoRow label="معرف الزيارة" value={visit?.id ?? '—'} />
           </MainCard>
         </Grid>
 
         {/* Member Information */}
         <Grid item xs={12} md={6}>
-          <MainCard title="معلومات العضو" contentSX={{ pt: 2 }}>
-            <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2 }}>
-              <PersonIcon color="primary" />
-              <Typography variant="subtitle2">العضو</Typography>
-            </Stack>
-            <InfoRow label="اسم العضو" value={visit.member?.fullName || visit.member?.nameAr || visit.member?.nameEn || '-'} />
-            <InfoRow label="معرف العضو" value={visit.memberId || visit.member?.id || '-'} />
+          <MainCard 
+            title={
+              <Stack direction="row" spacing={1} alignItems="center">
+                <PersonIcon color="primary" />
+                <span>المؤمَّن عليه</span>
+              </Stack>
+            } 
+            contentSX={{ pt: 2 }}
+          >
+            <InfoRow label="اسم العضو" value={memberName} icon={PersonIcon} />
+            <InfoRow label="معرف العضو" value={visit?.memberId ?? visit?.member?.id ?? '—'} />
+            {visit?.member?.membershipNumber && (
+              <InfoRow label="رقم العضوية" value={visit.member.membershipNumber} />
+            )}
           </MainCard>
         </Grid>
 
         {/* Provider Information */}
         <Grid item xs={12} md={6}>
-          <MainCard title="معلومات مقدم الخدمة" contentSX={{ pt: 2 }}>
-            <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2 }}>
-              <BusinessIcon color="primary" />
-              <Typography variant="subtitle2">مقدم الخدمة</Typography>
-            </Stack>
-            <InfoRow label="الاسم بالعربية" value={visit.provider?.nameAr || '-'} />
-            <InfoRow label="الاسم بالإنجليزية" value={visit.provider?.nameEn || '-'} />
-            <InfoRow label="معرف المقدم" value={visit.providerId || visit.provider?.id || '-'} />
+          <MainCard 
+            title={
+              <Stack direction="row" spacing={1} alignItems="center">
+                <BusinessIcon color="primary" />
+                <span>مقدم الخدمة الصحية</span>
+              </Stack>
+            } 
+            contentSX={{ pt: 2 }}
+          >
+            <InfoRow label="الاسم بالعربية" value={visit?.provider?.nameAr ?? '—'} icon={BusinessIcon} />
+            <InfoRow label="الاسم بالإنجليزية" value={visit?.provider?.nameEn ?? '—'} />
+            <InfoRow label="معرف المقدم" value={visit?.providerId ?? visit?.provider?.id ?? '—'} />
+            {/* Network Status */}
+            <Box sx={{ mb: 2 }}>
+              <Typography variant="caption" color="text.secondary" display="block">
+                حالة الشبكة
+              </Typography>
+              <Box sx={{ mt: 0.5 }}>
+                {networkTier ? (
+                  <NetworkBadge
+                    networkTier={networkTier}
+                    showLabel={true}
+                    size="small"
+                    language="ar"
+                  />
+                ) : (
+                  <Typography variant="body1">—</Typography>
+                )}
+              </Box>
+            </Box>
           </MainCard>
         </Grid>
 
         {/* Services */}
         <Grid item xs={12} md={6}>
           <MainCard
-            title="الخدمات المقدمة"
+            title={
+              <Stack direction="row" spacing={1} alignItems="center">
+                <MedicalServicesIcon color="primary" />
+                <span>الخدمات الطبية</span>
+              </Stack>
+            }
             contentSX={{ pt: 2 }}
             secondary={
               <Chip
-                label={`${visit.services?.length || 0} خدمة`}
+                label={`${services.length} خدمة`}
                 color="primary"
                 size="small"
                 sx={{ backgroundColor: 'primary.lighter', color: 'primary.main' }}
               />
             }
           >
-            {Array.isArray(visit.services) && visit.services.length > 0 ? (
+            {services.length > 0 ? (
               <TableContainer component={Paper} variant="outlined">
                 <Table size="small">
                   <TableHead>
-                    <TableRow>
-                      <TableCell>الرمز</TableCell>
-                      <TableCell>الاسم بالعربية</TableCell>
-                      <TableCell>الاسم بالإنجليزية</TableCell>
-                      <TableCell align="center">السعر</TableCell>
-                      <TableCell align="center">يتطلب موافقة</TableCell>
+                    <TableRow sx={{ bgcolor: 'grey.50' }}>
+                      <TableCell sx={{ fontWeight: 600 }}>الرمز</TableCell>
+                      <TableCell sx={{ fontWeight: 600 }}>الاسم بالعربية</TableCell>
+                      <TableCell sx={{ fontWeight: 600 }}>الاسم بالإنجليزية</TableCell>
+                      <TableCell align="center" sx={{ fontWeight: 600 }}>السعر</TableCell>
+                      <TableCell align="center" sx={{ fontWeight: 600 }}>يتطلب موافقة</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {visit.services.map((service) => (
-                      <TableRow key={service.id}>
-                        <TableCell>{service.code || '-'}</TableCell>
-                        <TableCell>{service.nameAr || '-'}</TableCell>
-                        <TableCell>{service.nameEn || '-'}</TableCell>
-                        <TableCell align="center">{service.price ? `${service.price.toFixed(2)} د.ل` : '-'}</TableCell>
+                    {services.map((service, idx) => (
+                      <TableRow key={service?.id ?? idx}>
+                        <TableCell>{service?.code ?? '—'}</TableCell>
+                        <TableCell>{service?.nameAr ?? '—'}</TableCell>
+                        <TableCell>{service?.nameEn ?? '—'}</TableCell>
                         <TableCell align="center">
-                          {service.requiresApproval ? (
+                          {typeof service?.price === 'number' ? `${service.price.toFixed(2)} د.ل` : '—'}
+                        </TableCell>
+                        <TableCell align="center">
+                          {service?.requiresApproval ? (
                             <CheckCircleIcon color="success" fontSize="small" />
                           ) : (
                             <CancelIcon color="disabled" fontSize="small" />
@@ -189,25 +336,34 @@ const VisitView = () => {
                 </Table>
               </TableContainer>
             ) : (
-              <Alert severity="info">لا توجد خدمات مسجلة</Alert>
+              <Alert severity="info">لا توجد خدمات مسجلة لهذه الزيارة</Alert>
             )}
           </MainCard>
         </Grid>
 
         {/* Notes & Diagnosis */}
         <Grid item xs={12}>
-          <MainCard title="الملاحظات والتشخيص" contentSX={{ pt: 2 }}>
+          <MainCard 
+            title={
+              <Stack direction="row" spacing={1} alignItems="center">
+                <NotesIcon color="primary" />
+                <span>الملاحظات والتشخيص</span>
+              </Stack>
+            } 
+            contentSX={{ pt: 2 }}
+          >
             <Grid container spacing={3}>
               <Grid item xs={12} md={6}>
                 <InfoRow
                   label="الملاحظات"
+                  icon={NotesIcon}
                   value={
-                    visit.notes ? (
+                    visit?.notes ? (
                       <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
                         {visit.notes}
                       </Typography>
                     ) : (
-                      '-'
+                      '—'
                     )
                   }
                 />
@@ -216,12 +372,12 @@ const VisitView = () => {
                 <InfoRow
                   label="التشخيص"
                   value={
-                    visit.diagnosis ? (
+                    visit?.diagnosis ? (
                       <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
                         {visit.diagnosis}
                       </Typography>
                     ) : (
-                      '-'
+                      '—'
                     )
                   }
                 />
@@ -232,15 +388,28 @@ const VisitView = () => {
 
         {/* Status */}
         <Grid item xs={12} md={6}>
-          <MainCard title="الحالة" contentSX={{ pt: 2 }}>
+          <MainCard 
+            title={
+              <Stack direction="row" spacing={1} alignItems="center">
+                <InfoIcon color="primary" />
+                <span>حالة الزيارة</span>
+              </Stack>
+            } 
+            contentSX={{ pt: 2 }}
+          >
             <Stack direction="row" spacing={2} alignItems="center">
-              {visit.active ? <CheckCircleIcon color="success" /> : <CancelIcon color="error" />}
+              <CardStatusBadge
+                status={visitStatus}
+                customLabel={STATUS_LABELS_AR[visitStatus] ?? 'غير محدد'}
+                size="medium"
+                variant="chip"
+              />
               <Box>
                 <Typography variant="body1" fontWeight="bold">
-                  {visit.active ? 'نشط' : 'غير نشط'}
+                  {STATUS_LABELS_AR[visitStatus] ?? 'غير محدد'}
                 </Typography>
                 <Typography variant="caption" color="text.secondary">
-                  {visit.active ? 'هذه الزيارة مفعلة في النظام' : 'هذه الزيارة غير مفعلة'}
+                  {visitStatus === 'ACTIVE' ? 'هذه الزيارة مفعلة في النظام' : 'هذه الزيارة غير مفعلة'}
                 </Typography>
               </Box>
             </Stack>
@@ -249,17 +418,24 @@ const VisitView = () => {
 
         {/* System Metadata */}
         <Grid item xs={12} md={6}>
-          <MainCard title="معلومات النظام" contentSX={{ pt: 2 }}>
-            <InfoRow label="المعرف" value={visit.id} />
-            {visit.createdAt && (
-              <InfoRow label="تاريخ الإنشاء" value={new Date(visit.createdAt).toLocaleString('ar-LY', { dateStyle: 'medium', timeStyle: 'short' })} />
-            )}
-            {visit.updatedAt && (
-              <InfoRow
-                label="آخر تحديث"
-                value={new Date(visit.updatedAt).toLocaleString('ar-LY', { dateStyle: 'medium', timeStyle: 'short' })}
-              />
-            )}
+          <MainCard 
+            title={
+              <Stack direction="row" spacing={1} alignItems="center">
+                <InfoIcon color="primary" />
+                <span>معلومات النظام</span>
+              </Stack>
+            } 
+            contentSX={{ pt: 2 }}
+          >
+            <InfoRow label="المعرف" value={visit?.id ?? '—'} />
+            <InfoRow 
+              label="تاريخ الإنشاء" 
+              value={visit?.createdAt ? new Date(visit.createdAt).toLocaleString('ar-LY', { dateStyle: 'medium', timeStyle: 'short' }) : '—'} 
+            />
+            <InfoRow
+              label="آخر تحديث"
+              value={visit?.updatedAt ? new Date(visit.updatedAt).toLocaleString('ar-LY', { dateStyle: 'medium', timeStyle: 'short' }) : '—'}
+            />
           </MainCard>
         </Grid>
       </Grid>
