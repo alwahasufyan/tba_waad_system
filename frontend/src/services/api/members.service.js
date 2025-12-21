@@ -6,7 +6,7 @@ import axiosClient from 'utils/axios';
  * Backend: MemberController.java
  */
 
-const BASE_URL = '/api/members';
+const BASE_URL = '/members';
 
 /**
  * Helper function to unwrap ApiResponse

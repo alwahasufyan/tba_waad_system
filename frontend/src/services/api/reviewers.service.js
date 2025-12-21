@@ -2,7 +2,7 @@ import apiClient from './axiosClient';
 
 // ==============================|| REVIEWER COMPANIES SERVICE ||============================== //
 
-const BASE_URL = '/api/reviewer-companies';
+const BASE_URL = '/reviewer-companies';
 
 /**
  * Helper function to unwrap ApiResponse

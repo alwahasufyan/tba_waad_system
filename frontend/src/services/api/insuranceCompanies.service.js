@@ -2,7 +2,7 @@ import apiClient from './axiosClient';
 
 // ==============================|| INSURANCE COMPANIES SERVICE ||============================== //
 
-const BASE_URL = '/api/insurance-companies';
+const BASE_URL = '/insurance-companies';
 
 /**
  * Helper function to unwrap ApiResponse

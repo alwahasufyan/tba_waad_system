@@ -90,223 +90,214 @@ export const filterMenuByRoles = (menuItems, userRoles = []) => {
 const menuItem = [
   {
     id: 'group-main',
-    title: 'Main',
+    title: 'الرئيسية',
     type: 'group',
     children: [
       {
         id: 'dashboard',
-        title: 'Dashboard',
+        title: 'لوحة التحكم',
         type: 'item',
         url: '/dashboard',
         icon: DashboardIcon,
         breadcrumbs: false,
-        search: 'dashboard home main'
+        search: 'dashboard home main لوحة التحكم الرئيسية'
       }
     ]
   },
   {
     id: 'group-management',
-    title: 'Management',
+    title: 'إدارة البيانات',
     type: 'group',
     children: [
       {
         id: 'members',
-        title: 'Members',
+        title: 'الأعضاء',
         type: 'item',
         url: '/members',
         icon: PeopleAltIcon,
         breadcrumbs: true,
-        search: 'members patients insurance holders beneficiaries'
+        search: 'members patients insurance holders beneficiaries الأعضاء المشتركين'
       },
       {
         id: 'employers',
-        title: 'Employers',
+        title: 'جهات العمل',
         type: 'item',
         url: '/employers',
         icon: BusinessIcon,
         breadcrumbs: true,
-        search: 'employers companies organizations clients'
+        search: 'employers companies organizations clients جهات العمل الشركات'
       },
       {
         id: 'providers',
-        title: 'Providers',
+        title: 'مقدمي الخدمة',
         type: 'item',
         url: '/providers',
         icon: LocalHospitalIcon,
         breadcrumbs: true,
-        search: 'providers hospitals clinics healthcare facilities'
+        search: 'providers hospitals clinics healthcare facilities مقدمي الخدمة المستشفيات'
       },
       {
         id: 'insurance-companies',
-        title: 'Insurance Companies',
+        title: 'شركات التأمين',
         type: 'item',
         url: '/insurance-companies',
         icon: HealthAndSafetyIcon,
         breadcrumbs: true,
-        search: 'insurance companies payers'
+        search: 'insurance companies payers شركات التأمين'
       }
     ]
   },
   {
     id: 'group-claims',
-    title: 'Claims & Services',
+    title: 'المطالبات والخدمات',
     type: 'group',
     children: [
       {
         id: 'claims',
-        title: 'Claims',
+        title: 'المطالبات',
         type: 'item',
         url: '/claims',
         icon: ReceiptIcon,
         breadcrumbs: true,
-        search: 'claims requests reimbursement billing'
+        search: 'claims requests reimbursement billing المطالبات الفواتير'
       },
       {
         id: 'visits',
-        title: 'Visits',
+        title: 'الزيارات',
         type: 'item',
         url: '/visits',
         icon: AssignmentIcon,
         breadcrumbs: true,
-        search: 'visits appointments consultations'
+        search: 'visits appointments consultations الزيارات المواعيد'
       },
       {
         id: 'pre-approvals',
-        title: 'Pre-Approvals',
+        title: 'الموافقات المسبقة',
         type: 'item',
         url: '/pre-approvals',
         icon: DescriptionIcon,
         breadcrumbs: true,
-        search: 'pre-approvals authorization approval requests'
+        search: 'pre-approvals authorization approval requests الموافقات المسبقة'
       }
     ]
   },
   {
     id: 'group-medical',
-    title: 'Medical Setup',
+    title: 'الإعدادات الطبية',
     type: 'group',
     children: [
       {
         id: 'medical-categories',
-        title: 'Medical Categories',
+        title: 'التصنيفات الطبية',
         type: 'item',
         url: '/medical-categories',
         icon: CategoryIcon,
         breadcrumbs: true,
-        search: 'medical categories services types'
+        search: 'medical categories services types التصنيفات الطبية'
       },
       {
         id: 'medical-services',
-        title: 'Medical Services',
+        title: 'الخدمات الطبية',
         type: 'item',
         url: '/medical-services',
         icon: MedicalServicesIcon,
         breadcrumbs: true,
-        search: 'medical services procedures treatments'
+        search: 'medical services procedures treatments الخدمات الطبية'
       },
       {
         id: 'medical-packages',
-        title: 'Medical Packages',
+        title: 'الباقات الطبية',
         type: 'item',
         url: '/medical-packages',
         icon: InventoryIcon,
         breadcrumbs: true,
-        search: 'medical packages bundles plans'
+        search: 'medical packages bundles plans الباقات الطبية'
       },
       {
         id: 'benefit-packages',
-        title: 'Benefit Packages',
+        title: 'باقات المنافع',
         type: 'item',
         url: '/benefit-packages',
         icon: CardGiftcardIcon,
         breadcrumbs: true,
-        search: 'benefit packages insurance coverage plans'
-      },
-      {
-        id: 'visits',
-        title: 'Visits',
-        type: 'item',
-        url: '/visits',
-        icon: EventNoteIcon,
-        breadcrumbs: true,
-        search: 'visits appointments patient records'
+        search: 'benefit packages insurance coverage plans باقات المنافع التغطية'
       }
     ]
   },
   {
     id: 'group-contracts',
-    title: 'Contracts & Policies',
+    title: 'العقود والوثائق',
     type: 'group',
     children: [
       {
         id: 'provider-contracts',
-        title: 'Provider Contracts',
+        title: 'عقود مقدمي الخدمة',
         type: 'item',
         url: '/provider-contracts',
         icon: BusinessCenterIcon,
         breadcrumbs: true,
-        search: 'provider contracts agreements partnerships'
+        search: 'provider contracts agreements partnerships عقود مقدمي الخدمة'
       },
       {
         id: 'policies',
-        title: 'Insurance Policies',
+        title: 'وثائق التأمين',
         type: 'item',
         url: '/policies',
         icon: GavelIcon,
         breadcrumbs: true,
-        search: 'policies insurance coverage plans'
+        search: 'policies insurance coverage plans وثائق التأمين البوالص'
       }
     ]
   },
   {
     id: 'group-admin',
-    title: 'Administration',
+    title: 'الإدارة',
     type: 'group',
     children: [
       {
         id: 'users',
-        title: 'Users',
+        title: 'المستخدمين',
         type: 'item',
         url: '/admin/users',
         icon: GroupIcon,
         breadcrumbs: true,
-        search: 'users accounts staff employees'
+        search: 'users accounts staff employees المستخدمين الحسابات'
       },
       {
         id: 'roles',
-        title: 'Roles',
+        title: 'الصلاحيات',
         type: 'item',
         url: '/admin/roles',
         icon: BadgeIcon,
         breadcrumbs: true,
-        search: 'roles permissions access rights'
+        search: 'roles permissions access rights الصلاحيات الأدوار'
       },
       {
         id: 'companies',
-        title: 'Companies',
+        title: 'الشركات',
         type: 'item',
         url: '/admin/companies',
         icon: BusinessIcon,
         breadcrumbs: true,
-        search: 'companies organizations branches entities'
+        search: 'companies organizations branches entities الشركات الفروع'
       },
       {
         id: 'audit',
-        title: 'Audit Log',
+        title: 'سجل المراجعة',
         type: 'item',
         url: '/audit',
         icon: AssessmentIcon,
         breadcrumbs: true,
-        search: 'audit log history tracking changes'
+        search: 'audit log history tracking changes سجل المراجعة التتبع'
       },
       {
         id: 'settings',
-        title: 'Settings',
+        title: 'الإعدادات',
         type: 'item',
         url: '/settings',
         icon: SettingsIcon,
         breadcrumbs: true,
-        search: 'settings configuration preferences options'
+        search: 'settings configuration preferences options الإعدادات التفضيلات'
       }
     ]
   }

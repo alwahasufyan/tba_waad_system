@@ -6,7 +6,7 @@ import axiosClient from 'utils/axios';
  * Backend: MedicalServiceController.java
  */
 
-const BASE_URL = '/api/medical-services';
+const BASE_URL = '/medical-services';
 
 /**
  * Helper function to unwrap ApiResponse

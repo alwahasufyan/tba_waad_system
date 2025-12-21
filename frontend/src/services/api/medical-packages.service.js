@@ -6,7 +6,7 @@ import axiosClient from 'utils/axios';
  * Backend: MedicalPackageController.java
  */
 
-const BASE_URL = '/api/medical-packages';
+const BASE_URL = '/medical-packages';
 
 /**
  * Helper function to unwrap ApiResponse

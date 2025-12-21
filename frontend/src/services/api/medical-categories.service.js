@@ -6,7 +6,7 @@ import axiosClient from 'utils/axios';
  * Backend: MedicalCategoryController.java
  */
 
-const BASE_URL = '/api/medical-categories';
+const BASE_URL = '/medical-categories';
 
 /**
  * Helper function to unwrap ApiResponse

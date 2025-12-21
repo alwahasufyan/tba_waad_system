@@ -2,7 +2,7 @@ import apiClient from './axiosClient';
 
 // ==============================|| VISITS SERVICE ||============================== //
 
-const BASE_URL = '/api/visits';
+const BASE_URL = '/visits';
 
 /**
  * Helper function to unwrap ApiResponse

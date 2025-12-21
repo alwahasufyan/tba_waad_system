@@ -5,7 +5,7 @@ import axiosClient from 'utils/axios';
  * Provides CRUD operations for Benefit Packages module
  */
 
-const BASE_URL = '/api/benefit-packages';
+const BASE_URL = '/benefit-packages';
 
 /**
  * Helper function to unwrap ApiResponse

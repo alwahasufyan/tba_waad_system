@@ -32,7 +32,7 @@ import RBACGuard from 'components/tba/RBACGuard';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
 
-const API_BASE = '/api/insurance-policies';
+const API_BASE = '/insurance-policies';
 
 const fetchInsurancePolicies = async (params) => {
   const { data } = await axios.get(API_BASE, { params });

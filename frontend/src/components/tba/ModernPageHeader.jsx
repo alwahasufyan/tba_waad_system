@@ -1,4 +1,5 @@
 import PropTypes from 'prop-types';
+import { isValidElement } from 'react';
 import { Box, Typography, Breadcrumbs, Link, Stack, Chip } from '@mui/material';
 import { NavigateNext } from '@mui/icons-material';
 import { Link as RouterLink } from 'react-router-dom';
@@ -6,6 +7,10 @@ import { Link as RouterLink } from 'react-router-dom';
 /**
  * Modern Clean Page Header Component
  * Displays page title, breadcrumbs, and action buttons
+ * 
+ * Icon prop can be either:
+ * - A React component (e.g., PeopleAltIcon) - will be rendered as <Icon sx={...} />
+ * - A JSX element (e.g., <LocalHospitalIcon />) - will be cloned with sx props
  */
 const ModernPageHeader = ({ 
   title, 
@@ -13,8 +18,59 @@ const ModernPageHeader = ({
   breadcrumbs = [], 
   actions, 
   statusChip,
-  icon: Icon 
+  icon
 }) => {
+  // Render icon - handles both ComponentType and JSX Element
+  const renderIcon = () => {
+    if (!icon) return null;
+    
+    const iconSx = { fontSize: '1.5rem' };
+    
+    // If icon is a JSX element (e.g., <LocalHospitalIcon />), clone it with sx
+    if (isValidElement(icon)) {
+      // Clone the element and merge sx props
+      const existingSx = icon.props?.sx || {};
+      return (
+        <Box 
+          sx={{ 
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: 40,
+            height: 40,
+            borderRadius: 1,
+            bgcolor: 'primary.lighter',
+            color: 'primary.main'
+          }}
+        >
+          {/* Clone element with merged sx */}
+          {isValidElement(icon) && typeof icon.type !== 'string'
+            ? { ...icon, props: { ...icon.props, sx: { ...iconSx, ...existingSx } } }
+            : icon}
+        </Box>
+      );
+    }
+    
+    // If icon is a component type (e.g., PeopleAltIcon), render it
+    const Icon = icon;
+    return (
+      <Box 
+        sx={{ 
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          width: 40,
+          height: 40,
+          borderRadius: 1,
+          bgcolor: 'primary.lighter',
+          color: 'primary.main'
+        }}
+      >
+        <Icon sx={iconSx} />
+      </Box>
+    );
+  };
+
   return (
     <Box sx={{ mb: 3 }}>
       {/* Breadcrumbs */}
@@ -62,22 +118,7 @@ const ModernPageHeader = ({
       >
         {/* Title Section */}
         <Stack direction="row" alignItems="center" spacing={1.5}>
-          {Icon && (
-            <Box 
-              sx={{ 
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                width: 40,
-                height: 40,
-                borderRadius: 1,
-                bgcolor: 'primary.lighter',
-                color: 'primary.main'
-              }}
-            >
-              <Icon sx={{ fontSize: '1.5rem' }} />
-            </Box>
-          )}
+          {renderIcon()}
           <Box>
             <Stack direction="row" alignItems="center" spacing={1.5}>
               <Typography variant="h3" component="h1" sx={{ fontWeight: 600 }}>
@@ -129,7 +170,8 @@ ModernPageHeader.propTypes = {
     label: PropTypes.string.isRequired,
     color: PropTypes.oneOf(['default', 'primary', 'secondary', 'error', 'warning', 'info', 'success'])
   }),
-  icon: PropTypes.elementType
+  // Icon can be either a component type OR a JSX element
+  icon: PropTypes.oneOfType([PropTypes.elementType, PropTypes.element])
 };
 
 export default ModernPageHeader;

@@ -14,7 +14,7 @@ import RBACGuard from 'components/tba/RBACGuard';
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
 
-const API_BASE = '/api/insurance-policies';
+const API_BASE = '/insurance-policies';
 
 const fetchInsurancePolicy = async (id) => {
   const { data } = await axios.get(`${API_BASE}/${id}`);

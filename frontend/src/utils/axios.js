@@ -10,10 +10,27 @@ import { useRBACStore } from 'api/rbac';
  * 3. Proper employer header logic
  * 4. Enhanced error logging
  * 5. RBAC store cleanup on 401
+ * 6. URL normalization to prevent /api/api duplication
  */
 
+// Normalize base URL - ensure it ends with /api but not /api/api
+const normalizeBaseUrl = (url) => {
+  if (!url) return 'http://localhost:8080/api';
+  // Remove trailing slash
+  url = url.replace(/\/+$/, '');
+  // If URL ends with /api/api, fix it
+  if (url.endsWith('/api/api')) {
+    url = url.replace(/\/api\/api$/, '/api');
+  }
+  // If URL doesn't end with /api, add it
+  if (!url.endsWith('/api')) {
+    url = url + '/api';
+  }
+  return url;
+};
+
 const axiosServices = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8080/api',
+  baseURL: normalizeBaseUrl(import.meta.env.VITE_API_URL),
   timeout: 30000,
   headers: {
     'Content-Type': 'application/json'
@@ -26,6 +43,12 @@ const axiosServices = axios.create({
 
 axiosServices.interceptors.request.use(
   (config) => {
+    // Normalize URL to prevent /api/api duplication
+    if (config.url && config.url.startsWith('/api/')) {
+      config.url = config.url.replace(/^\/api\//, '/');
+      console.warn('⚠️ Normalized URL: removed duplicate /api/ prefix');
+    }
+    
     console.log(`🌐 API Request: ${config.method?.toUpperCase()} ${config.url}`);
 
     // AUDIT FIX (TASK B): JWT removed from web frontend

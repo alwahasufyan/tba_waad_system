@@ -4,7 +4,7 @@
 
 import apiClient from './axiosClient';
 
-const BASE_URL = '/api/providers';
+const BASE_URL = '/providers';
 
 /**
  * Helper function to unwrap ApiResponse

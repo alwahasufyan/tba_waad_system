@@ -5,7 +5,7 @@ import axiosClient from 'utils/axios';
  * Provides CRUD operations for Employers module
  */
 
-const BASE_URL = '/api/employers';
+const BASE_URL = '/employers';
 
 /**
  * Helper function to unwrap ApiResponse
