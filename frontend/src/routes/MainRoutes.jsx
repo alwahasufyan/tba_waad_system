@@ -122,6 +122,7 @@ const AdminRolesList = Loadable(lazy(() => import('pages/admin/roles')));
 // ==============================|| LAZY LOADING - SETTINGS ||============================== //
 
 const Settings = Loadable(lazy(() => import('pages/settings')));
+const SettingsUsers = Loadable(lazy(() => import('pages/settings/users')));
 
 // ==============================|| LAZY LOADING - PROFILE ||============================== //
 
@@ -727,11 +728,24 @@ const MainRoutes = {
     // Settings
     {
       path: 'settings',
-      element: (
-        <RouteGuard allowedRoles={['ADMIN', 'EMPLOYER']}>
-          <Settings />
-        </RouteGuard>
-      )
+      children: [
+        {
+          path: '',
+          element: (
+            <RouteGuard allowedRoles={['ADMIN', 'EMPLOYER']}>
+              <Settings />
+            </RouteGuard>
+          )
+        },
+        {
+          path: 'users',
+          element: (
+            <RouteGuard allowedRoles={['ADMIN']}>
+              <SettingsUsers />
+            </RouteGuard>
+          )
+        }
+      ]
     },
 
     // Profile

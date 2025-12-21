@@ -1,10 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-// TODO: Create preApprovals.service.js in services/api folder
-const getPreApprovals = async () => ({ items: [], total: 0 });
-const getPreApprovalById = async () => null;
-const createPreApproval = async () => null;
-const updatePreApproval = async () => null;
-const deletePreApproval = async () => null;
+import preApprovalsService from 'services/api/pre-approvals.service';
 
 /**
  * Hook for managing paginated pre-approvals list
@@ -21,7 +16,7 @@ export const usePreApprovalsList = (initialParams = { page: 1, size: 10 }) => {
     try {
       setLoading(true);
       setError(null);
-      const result = await getPreApprovals(params);
+      const result = await preApprovalsService.getAll();
       // Defensive: ensure result has expected shape
       setData({
         items: Array.isArray(result?.items) ? result.items : Array.isArray(result) ? result : [],
@@ -30,7 +25,7 @@ export const usePreApprovalsList = (initialParams = { page: 1, size: 10 }) => {
         size: result?.size ?? params.size
       });
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to fetch pre-approvals');
+      setError(err.response?.data?.message || 'فشل تحميل الموافقات المسبقة');
       console.error('Error fetching pre-approvals:', err);
       // Set safe default on error
       setData({ items: [], total: 0, page: params.page, size: params.size });
@@ -68,10 +63,10 @@ export const usePreApprovalDetails = (id) => {
     try {
       setLoading(true);
       setError(null);
-      const result = await getPreApprovalById(id);
+      const result = await preApprovalsService.getById(id);
       setPreApproval(result);
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to fetch pre-approval details');
+      setError(err.response?.data?.message || 'فشل تحميل تفاصيل الموافقة المسبقة');
       console.error('Error fetching pre-approval:', err);
     } finally {
       setLoading(false);
@@ -102,10 +97,10 @@ export const useCreatePreApproval = () => {
     try {
       setCreating(true);
       setError(null);
-      const result = await createPreApproval(data);
+      const result = await preApprovalsService.create(data);
       return result;
     } catch (err) {
-      const errorMsg = err.response?.data?.message || 'Failed to create pre-approval';
+      const errorMsg = err.response?.data?.message || 'فشل إنشاء الموافقة المسبقة';
       setError(errorMsg);
       throw new Error(errorMsg);
     } finally {
@@ -128,10 +123,10 @@ export const useUpdatePreApproval = () => {
     try {
       setUpdating(true);
       setError(null);
-      const result = await updatePreApproval(id, data);
+      const result = await preApprovalsService.update(id, data);
       return result;
     } catch (err) {
-      const errorMsg = err.response?.data?.message || 'Failed to update pre-approval';
+      const errorMsg = err.response?.data?.message || 'فشل تحديث الموافقة المسبقة';
       setError(errorMsg);
       throw new Error(errorMsg);
     } finally {
@@ -154,10 +149,10 @@ export const useDeletePreApproval = () => {
     try {
       setDeleting(true);
       setError(null);
-      await deletePreApproval(id);
+      await preApprovalsService.remove(id);
       return true;
     } catch (err) {
-      const errorMsg = err.response?.data?.message || 'Failed to delete pre-approval';
+      const errorMsg = err.response?.data?.message || 'فشل حذف الموافقة المسبقة';
       setError(errorMsg);
       throw new Error(errorMsg);
     } finally {

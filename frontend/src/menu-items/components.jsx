@@ -9,22 +9,19 @@ import {
   MedicalServices as MedicalServicesIcon,
   Category as CategoryIcon,
   Inventory as InventoryIcon,
-  HealthAndSafety as HealthAndSafetyIcon,
   Assignment as AssignmentIcon,
   BusinessCenter as BusinessCenterIcon,
   Settings as SettingsIcon,
   Assessment as AssessmentIcon,
-  Group as GroupIcon,
-  Badge as BadgeIcon,
   Gavel as GavelIcon,
-  CardGiftcard as CardGiftcardIcon,
-  EventNote as EventNoteIcon
+  CardGiftcard as CardGiftcardIcon
 } from '@mui/icons-material';
 
 // ==============================|| RBAC MENU FILTERING ||============================== //
 
 /**
  * Filter menu items based on user roles (RBAC)
+ * Enterprise Closed System - Al-Waha Insurance Only
  * @param {Array} menuItems - Full menu structure
  * @param {Array} userRoles - User's assigned roles
  * @returns {Array} Filtered menu items
@@ -37,15 +34,15 @@ export const filterMenuByRoles = (menuItems, userRoles = []) => {
 
   const roleRules = {
     EMPLOYER: {
-      hide: ['employers', 'insurance-companies', 'providers', 'provider-contracts', 'policies', 'users', 'roles', 'companies', 'audit'],
+      hide: ['employers', 'providers', 'provider-contracts', 'policies', 'audit'],
       show: ['dashboard', 'members', 'claims', 'visits', 'pre-approvals', 'medical-categories', 'medical-services', 'medical-packages', 'benefit-packages', 'settings']
     },
     INSURANCE_COMPANY: {
-      hide: ['employers', 'users', 'roles', 'companies'],
-      show: ['dashboard', 'members', 'providers', 'insurance-companies', 'claims', 'visits', 'pre-approvals', 'medical-categories', 'medical-services', 'medical-packages', 'benefit-packages', 'provider-contracts', 'policies', 'audit', 'settings']
+      hide: ['employers'],
+      show: ['dashboard', 'members', 'providers', 'claims', 'visits', 'pre-approvals', 'medical-categories', 'medical-services', 'medical-packages', 'benefit-packages', 'provider-contracts', 'policies', 'audit', 'settings']
     },
     REVIEWER: {
-      hide: ['employers', 'insurance-companies', 'providers', 'members', 'visits', 'provider-contracts', 'policies', 'users', 'roles', 'companies'],
+      hide: ['employers', 'providers', 'members', 'visits', 'provider-contracts', 'policies'],
       show: ['dashboard', 'claims', 'pre-approvals', 'medical-categories', 'medical-services', 'medical-packages', 'benefit-packages', 'audit', 'settings']
     }
   };
@@ -135,15 +132,6 @@ const menuItem = [
         icon: LocalHospitalIcon,
         breadcrumbs: true,
         search: 'providers hospitals clinics healthcare facilities مقدمي الخدمة المستشفيات'
-      },
-      {
-        id: 'insurance-companies',
-        title: 'شركات التأمين',
-        type: 'item',
-        url: '/insurance-companies',
-        icon: HealthAndSafetyIcon,
-        breadcrumbs: true,
-        search: 'insurance companies payers شركات التأمين'
       }
     ]
   },
@@ -250,36 +238,18 @@ const menuItem = [
     ]
   },
   {
-    id: 'group-admin',
-    title: 'الإدارة',
+    id: 'group-settings',
+    title: 'الإعدادات',
     type: 'group',
     children: [
       {
-        id: 'users',
-        title: 'المستخدمين',
+        id: 'settings',
+        title: 'إعدادات النظام',
         type: 'item',
-        url: '/admin/users',
-        icon: GroupIcon,
+        url: '/settings',
+        icon: SettingsIcon,
         breadcrumbs: true,
-        search: 'users accounts staff employees المستخدمين الحسابات'
-      },
-      {
-        id: 'roles',
-        title: 'الصلاحيات',
-        type: 'item',
-        url: '/admin/roles',
-        icon: BadgeIcon,
-        breadcrumbs: true,
-        search: 'roles permissions access rights الصلاحيات الأدوار'
-      },
-      {
-        id: 'companies',
-        title: 'الشركات',
-        type: 'item',
-        url: '/admin/companies',
-        icon: BusinessIcon,
-        breadcrumbs: true,
-        search: 'companies organizations branches entities الشركات الفروع'
+        search: 'settings configuration system إعدادات النظام'
       },
       {
         id: 'audit',
@@ -288,16 +258,7 @@ const menuItem = [
         url: '/audit',
         icon: AssessmentIcon,
         breadcrumbs: true,
-        search: 'audit log history tracking changes سجل المراجعة التتبع'
-      },
-      {
-        id: 'settings',
-        title: 'الإعدادات',
-        type: 'item',
-        url: '/settings',
-        icon: SettingsIcon,
-        breadcrumbs: true,
-        search: 'settings configuration preferences options الإعدادات التفضيلات'
+        search: 'audit log history سجل المراجعة'
       }
     ]
   }

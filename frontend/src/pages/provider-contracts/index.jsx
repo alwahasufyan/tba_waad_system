@@ -1,3 +1,7 @@
+// NOTE: Provider Contracts module is deferred to Phase C
+// Business workflow and pricing models not yet finalized
+// Last Updated: 2024-12-21
+
 import MainCard from 'components/MainCard';
 import RBACGuard from 'components/tba/RBACGuard';
 import { Typography, Box } from '@mui/material';
