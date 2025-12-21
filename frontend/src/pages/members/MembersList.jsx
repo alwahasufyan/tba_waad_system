@@ -189,7 +189,7 @@ const MembersList = () => {
               title={LABELS.noFound}
               description={LABELS.noFoundDesc}
               action={
-                <Button variant="contained" startIcon={<AddIcon />} onClick={() => navigate('/members/create')}>
+                <Button variant="contained" startIcon={<AddIcon />} onClick={() => navigate('/members/add')}>
                   {LABELS.addMember}
                 </Button>
               }
@@ -253,7 +253,7 @@ const MembersList = () => {
         <TableCell align="center">
           <Stack direction="row" spacing={0.5} justifyContent="center">
             <Tooltip title={LABELS.view}>
-              <IconButton size="small" color="primary" onClick={() => navigate(`/members/view/${member?.id}`)}>
+              <IconButton size="small" color="primary" onClick={() => navigate(`/members/${member?.id}`)}>
                 <VisibilityIcon fontSize="small" />
               </IconButton>
             </Tooltip>
@@ -287,7 +287,7 @@ const MembersList = () => {
                 <RefreshIcon />
               </IconButton>
             </Tooltip>
-            <Button variant="contained" startIcon={<AddIcon />} onClick={() => navigate('/members/create')}>
+            <Button variant="contained" startIcon={<AddIcon />} onClick={() => navigate('/members/add')}>
               {LABELS.addMember}
             </Button>
           </Stack>

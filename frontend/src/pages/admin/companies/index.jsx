@@ -1,19 +1,23 @@
+// NOTE: Admin Companies module - Deferred to Phase C
+// Super Admin company management not yet finalized
+// Last Updated: 2024-12-21
+
+import { Box } from '@mui/material';
+import { ScheduleOutlined } from '@ant-design/icons';
 import MainCard from 'components/MainCard';
+import ModernEmptyState from 'components/tba/ModernEmptyState';
 import RBACGuard from 'components/tba/RBACGuard';
-import { Typography, Box } from '@mui/material';
 
 const CompaniesList = () => {
   return (
     <RBACGuard permission="COMPANY_VIEW">
-      <MainCard title="Companies">
-        <Box sx={{ textAlign: 'center', py: 4 }}>
-          <Typography variant="h6" color="text.secondary">
-            Companies Module
-          </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-            Manage insurance companies and reviewer companies
-          </Typography>
-        </Box>
+      <MainCard title="إدارة الشركات">
+        <ModernEmptyState
+          icon={ScheduleOutlined}
+          title="إدارة الشركات"
+          description="هذه الوحدة مخطط لها ضمن مراحل لاحقة من النظام"
+          height={300}
+        />
       </MainCard>
     </RBACGuard>
   );

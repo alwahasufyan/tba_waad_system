@@ -308,11 +308,11 @@ export default function ProvidersList() {
   };
 
   const handleCreate = () => {
-    navigate('/providers/create');
+    navigate('/providers/add');
   };
 
   const handleView = (id) => {
-    navigate(`/providers/view/${id}`);
+    navigate(`/providers/${id}`);
   };
 
   const handleEdit = (id) => {

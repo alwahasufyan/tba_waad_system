@@ -106,10 +106,10 @@ const BenefitPackagesList = () => {
       <ModernPageHeader
         title="باقات المنافع"
         subtitle="إدارة باقات المنافع التأمينية"
-        icon={<CardGiftcardIcon />}
+        icon={CardGiftcardIcon}
         breadcrumbs={breadcrumbs}
         actions={
-          <Button variant="contained" startIcon={<AddIcon />} onClick={() => navigate('/benefit-packages/add')}>
+          <Button variant="contained" startIcon={<AddIcon />} onClick={() => navigate('/benefit-packages/create')}>
             إضافة باقة جديدة
           </Button>
         }
@@ -153,14 +153,14 @@ const BenefitPackagesList = () => {
         {loading && <TableSkeleton columns={7} rows={5} />}
 
         {/* Empty State */}
-        {!loading && data.items.length === 0 && (
+        {!loading && (!data?.items || data.items.length === 0) && (
           <ModernEmptyState
-            icon={<CardGiftcardIcon sx={{ fontSize: 80 }} />}
+            icon={CardGiftcardIcon}
             title="لا توجد باقات منافع"
-            message={params.search ? 'لم يتم العثور على نتائج للبحث' : 'ابدأ بإضافة باقة منافع جديدة'}
+            description={params.search ? 'لم يتم العثور على نتائج للبحث' : 'ابدأ بإضافة باقة منافع جديدة'}
             action={
               !params.search && (
-                <Button variant="contained" startIcon={<AddIcon />} onClick={() => navigate('/benefit-packages/add')}>
+                <Button variant="contained" startIcon={<AddIcon />} onClick={() => navigate('/benefit-packages/create')}>
                   إضافة باقة جديدة
                 </Button>
               )
@@ -169,7 +169,7 @@ const BenefitPackagesList = () => {
         )}
 
         {/* Data Table */}
-        {!loading && data.items.length > 0 && (
+        {!loading && data?.items && data.items.length > 0 && (
           <>
             <TableContainer component={Paper}>
               <Table>

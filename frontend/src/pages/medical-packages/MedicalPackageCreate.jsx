@@ -124,7 +124,7 @@ const MedicalPackageCreate = () => {
       <ModernPageHeader
         title="إضافة باقة طبية جديدة"
         subtitle="أدخل بيانات الباقة الطبية الجديدة"
-        icon={<InventoryIcon />}
+        icon={InventoryIcon}
         breadcrumbs={breadcrumbs}
       />
 

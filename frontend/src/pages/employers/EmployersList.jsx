@@ -168,7 +168,7 @@ const EmployersList = () => {
               title={LABELS.noFound}
               description={LABELS.noFoundDesc}
               action={
-                <Button variant="contained" startIcon={<AddIcon />} onClick={() => navigate('/employers/create')}>
+                <Button variant="contained" startIcon={<AddIcon />} onClick={() => navigate('/employers/add')}>
                   {LABELS.add}
                 </Button>
               }

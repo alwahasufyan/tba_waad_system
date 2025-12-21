@@ -136,7 +136,7 @@ const InsuranceCompaniesList = () => {
         <Button
           variant="contained"
           startIcon={<PlusOutlined />}
-          onClick={() => navigate('/insurance-companies/create')}
+          onClick={() => navigate('/insurance-companies/add')}
         >
           إضافة شركة تأمين
         </Button>
@@ -187,7 +187,7 @@ const InsuranceCompaniesList = () => {
                     <Button
                       variant="outlined"
                       startIcon={<PlusOutlined />}
-                      onClick={() => navigate('/insurance-companies/create')}
+                      onClick={() => navigate('/insurance-companies/add')}
                     >
                       إضافة شركة تأمين
                     </Button>
@@ -268,7 +268,7 @@ const InsuranceCompaniesList = () => {
                           <IconButton
                             color="primary"
                             size="small"
-                            onClick={() => navigate(`/insurance-companies/view/${companyId}`)}
+                            onClick={() => navigate(`/insurance-companies/${companyId}`)}
                           >
                             <EyeOutlined />
                           </IconButton>

@@ -48,7 +48,7 @@ const BenefitPackageView = () => {
         <ModernPageHeader
           title="تفاصيل الباقة"
           subtitle="تحميل البيانات..."
-          icon={<CardGiftcardIcon />}
+          icon={CardGiftcardIcon}
           breadcrumbs={breadcrumbs}
         />
         <MainCard>
@@ -67,7 +67,7 @@ const BenefitPackageView = () => {
   if (error || !pkg) {
     return (
       <>
-        <ModernPageHeader title="خطأ" subtitle="فشل تحميل بيانات الباقة" icon={<CardGiftcardIcon />} breadcrumbs={breadcrumbs} />
+        <ModernPageHeader title="خطأ" subtitle="فشل تحميل بيانات الباقة" icon={CardGiftcardIcon} breadcrumbs={breadcrumbs} />
         <MainCard>
           <Alert severity="error">
             {error?.message || 'لم يتم العثور على الباقة'}
@@ -85,7 +85,7 @@ const BenefitPackageView = () => {
       <ModernPageHeader
         title="تفاصيل باقة المنافع"
         subtitle={pkg.nameAr || pkg.nameEn}
-        icon={<CardGiftcardIcon />}
+        icon={CardGiftcardIcon}
         breadcrumbs={breadcrumbs}
         actions={
           <Stack direction="row" spacing={2}>

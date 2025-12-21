@@ -1,19 +1,23 @@
+// NOTE: Admin Roles module - Deferred to Phase C
+// Role-based access control not yet finalized
+// Last Updated: 2024-12-21
+
+import { Box } from '@mui/material';
+import { ScheduleOutlined } from '@ant-design/icons';
 import MainCard from 'components/MainCard';
+import ModernEmptyState from 'components/tba/ModernEmptyState';
 import RBACGuard from 'components/tba/RBACGuard';
-import { Typography, Box } from '@mui/material';
 
 const RolesList = () => {
   return (
     <RBACGuard permission="ROLE_VIEW">
-      <MainCard title="Roles & Permissions">
-        <Box sx={{ textAlign: 'center', py: 4 }}>
-          <Typography variant="h6" color="text.secondary">
-            Roles & Permissions Module
-          </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-            Configure roles and assign permissions
-          </Typography>
-        </Box>
+      <MainCard title="الأدوار والصلاحيات">
+        <ModernEmptyState
+          icon={ScheduleOutlined}
+          title="الأدوار والصلاحيات"
+          description="هذه الوحدة مخطط لها ضمن مراحل لاحقة من النظام"
+          height={300}
+        />
       </MainCard>
     </RBACGuard>
   );

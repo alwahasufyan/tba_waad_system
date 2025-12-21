@@ -134,7 +134,7 @@ const VisitEdit = () => {
   if (loadingVisit) {
     return (
       <>
-        <ModernPageHeader title="تعديل زيارة" subtitle="تحميل بيانات الزيارة..." icon={<LocalHospitalIcon />} breadcrumbs={breadcrumbs} />
+        <ModernPageHeader title="تعديل زيارة" subtitle="تحميل بيانات الزيارة..." icon={LocalHospitalIcon} breadcrumbs={breadcrumbs} />
         <MainCard>
           <Grid container spacing={3}>
             {[1, 2, 3, 4, 5, 6].map((i) => (
@@ -151,7 +151,7 @@ const VisitEdit = () => {
   if (visitError || !visit) {
     return (
       <>
-        <ModernPageHeader title="خطأ" subtitle="فشل تحميل بيانات الزيارة" icon={<LocalHospitalIcon />} breadcrumbs={breadcrumbs} />
+        <ModernPageHeader title="خطأ" subtitle="فشل تحميل بيانات الزيارة" icon={LocalHospitalIcon} breadcrumbs={breadcrumbs} />
         <MainCard>
           <Alert severity="error">
             {visitError?.message || 'لم يتم العثور على الزيارة'}
@@ -166,7 +166,7 @@ const VisitEdit = () => {
 
   return (
     <>
-      <ModernPageHeader title="تعديل زيارة" subtitle="تعديل بيانات الزيارة" icon={<LocalHospitalIcon />} breadcrumbs={breadcrumbs} />
+      <ModernPageHeader title="تعديل زيارة" subtitle="تعديل بيانات الزيارة" icon={LocalHospitalIcon} breadcrumbs={breadcrumbs} />
 
       <MainCard>
         {apiError && (

@@ -270,7 +270,7 @@ export default function PoliciesList() {
   };
 
   const handleCreatePolicy = () => {
-    navigate('/policies/create');
+    navigate('/policies/add');
   };
 
   const handleRetry = () => {

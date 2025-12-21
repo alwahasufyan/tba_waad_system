@@ -117,7 +117,7 @@ const ClaimsList = () => {
             <Button
               variant="contained"
               startIcon={<Add />}
-              onClick={() => navigate('/claims/create')}
+              onClick={() => navigate('/claims/add')}
             >
               إضافة مطالبة
             </Button>
@@ -223,7 +223,7 @@ const ClaimsList = () => {
                             <IconButton
                               size="small"
                               color="primary"
-                              onClick={() => navigate(`/claims/view/${claim?.id}`)}
+                              onClick={() => navigate(`/claims/${claim?.id}`)}
                             >
                               <Visibility fontSize="small" />
                             </IconButton>

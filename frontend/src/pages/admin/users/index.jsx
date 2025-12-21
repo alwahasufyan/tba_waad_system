@@ -1,19 +1,23 @@
+// NOTE: Admin Users module - Deferred to Phase C
+// Super Admin user management not yet finalized
+// Last Updated: 2024-12-21
+
+import { Box } from '@mui/material';
+import { ScheduleOutlined } from '@ant-design/icons';
 import MainCard from 'components/MainCard';
+import ModernEmptyState from 'components/tba/ModernEmptyState';
 import RBACGuard from 'components/tba/RBACGuard';
-import { Typography, Box } from '@mui/material';
 
 const UsersList = () => {
   return (
     <RBACGuard permission="USER_VIEW">
-      <MainCard title="Users">
-        <Box sx={{ textAlign: 'center', py: 4 }}>
-          <Typography variant="h6" color="text.secondary">
-            Users Management Module
-          </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-            Manage system users and their access
-          </Typography>
-        </Box>
+      <MainCard title="إدارة المستخدمين">
+        <ModernEmptyState
+          icon={ScheduleOutlined}
+          title="إدارة المستخدمين"
+          description="هذه الوحدة مخطط لها ضمن مراحل لاحقة من النظام"
+          height={300}
+        />
       </MainCard>
     </RBACGuard>
   );

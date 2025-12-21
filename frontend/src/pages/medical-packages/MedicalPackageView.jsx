@@ -58,7 +58,7 @@ const MedicalPackageView = () => {
         <ModernPageHeader
           title="تفاصيل الباقة"
           subtitle="تحميل البيانات..."
-          icon={<InventoryIcon />}
+          icon={InventoryIcon}
           breadcrumbs={breadcrumbs}
         />
         <MainCard>
@@ -78,7 +78,7 @@ const MedicalPackageView = () => {
   if (error || !pkg) {
     return (
       <>
-        <ModernPageHeader title="خطأ" subtitle="فشل تحميل بيانات الباقة" icon={<InventoryIcon />} breadcrumbs={breadcrumbs} />
+        <ModernPageHeader title="خطأ" subtitle="فشل تحميل بيانات الباقة" icon={InventoryIcon} breadcrumbs={breadcrumbs} />
         <MainCard>
           <Alert severity="error">
             {error?.message || 'لم يتم العثور على الباقة'}
@@ -96,7 +96,7 @@ const MedicalPackageView = () => {
       <ModernPageHeader
         title="تفاصيل الباقة"
         subtitle={pkg.nameAr || pkg.nameEn}
-        icon={<InventoryIcon />}
+        icon={InventoryIcon}
         breadcrumbs={breadcrumbs}
         actions={
           <Stack direction="row" spacing={2}>

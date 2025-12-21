@@ -116,7 +116,7 @@ const BenefitPackageCreate = () => {
       <ModernPageHeader
         title="إضافة باقة منافع جديدة"
         subtitle="أدخل بيانات باقة المنافع الجديدة"
-        icon={<CardGiftcardIcon />}
+        icon={CardGiftcardIcon}
         breadcrumbs={breadcrumbs}
       />
 

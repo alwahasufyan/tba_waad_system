@@ -88,7 +88,7 @@ const PoliciesList = () => {
   };
 
   const handleView = (id) => {
-    navigate(`/policies/view/${id}`);
+    navigate(`/policies/${id}`);
   };
 
   const handleEdit = (id) => {
@@ -107,7 +107,7 @@ const PoliciesList = () => {
   };
 
   const handleCreate = () => {
-    navigate('/policies/create');
+    navigate('/policies/add');
   };
 
   return (

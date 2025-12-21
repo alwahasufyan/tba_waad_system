@@ -90,7 +90,7 @@ const VisitView = () => {
   if (loading) {
     return (
       <>
-        <ModernPageHeader title="عرض الزيارة" subtitle="تحميل بيانات الزيارة..." icon={<LocalHospitalIcon />} breadcrumbs={breadcrumbs} />
+        <ModernPageHeader title="عرض الزيارة" subtitle="تحميل بيانات الزيارة..." icon={LocalHospitalIcon} breadcrumbs={breadcrumbs} />
         <MainCard>
           <Grid container spacing={3}>
             {[1, 2, 3, 4].map((i) => (
@@ -107,7 +107,7 @@ const VisitView = () => {
   if (error || !visit) {
     return (
       <>
-        <ModernPageHeader title="خطأ" subtitle="فشل تحميل بيانات الزيارة" icon={<LocalHospitalIcon />} breadcrumbs={breadcrumbs} />
+        <ModernPageHeader title="خطأ" subtitle="فشل تحميل بيانات الزيارة" icon={LocalHospitalIcon} breadcrumbs={breadcrumbs} />
         <MainCard>
           <Stack spacing={3} alignItems="center" sx={{ py: 4 }}>
             <LocalHospitalIcon sx={{ fontSize: 48, color: '#ff4d4f' }} />
@@ -188,7 +188,7 @@ const VisitView = () => {
           </Stack>
         }
         subtitle={`${memberName} - ${visit?.visitDate ? new Date(visit.visitDate).toLocaleDateString('ar-LY', { dateStyle: 'long' }) : '—'}`}
-        icon={<LocalHospitalIcon />}
+        icon={LocalHospitalIcon}
         breadcrumbs={breadcrumbs}
         actions={
           <Stack direction="row" spacing={2}>

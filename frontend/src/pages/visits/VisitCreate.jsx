@@ -118,7 +118,7 @@ const VisitCreate = () => {
       <ModernPageHeader
         title="إضافة زيارة جديدة"
         subtitle="أدخل بيانات الزيارة الجديدة"
-        icon={<LocalHospitalIcon />}
+        icon={LocalHospitalIcon}
         breadcrumbs={breadcrumbs}
       />
 

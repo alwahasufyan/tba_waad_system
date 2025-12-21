@@ -82,7 +82,7 @@ const PreApprovalsList = () => {
   };
 
   const handleView = (id) => {
-    navigate(`/pre-approvals/view/${id}`);
+    navigate(`/pre-approvals/${id}`);
   };
 
   const handleEdit = (id) => {
@@ -101,7 +101,7 @@ const PreApprovalsList = () => {
   };
 
   const handleCreate = () => {
-    navigate('/pre-approvals/create');
+    navigate('/pre-approvals/add');
   };
 
   return (

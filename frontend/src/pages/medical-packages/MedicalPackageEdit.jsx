@@ -146,7 +146,7 @@ const MedicalPackageEdit = () => {
         <ModernPageHeader
           title="تعديل باقة طبية"
           subtitle="تحميل بيانات الباقة..."
-          icon={<InventoryIcon />}
+          icon={InventoryIcon}
           breadcrumbs={breadcrumbs}
         />
         <MainCard>
@@ -166,7 +166,7 @@ const MedicalPackageEdit = () => {
   if (packageError || !pkg) {
     return (
       <>
-        <ModernPageHeader title="خطأ" subtitle="فشل تحميل بيانات الباقة" icon={<InventoryIcon />} breadcrumbs={breadcrumbs} />
+        <ModernPageHeader title="خطأ" subtitle="فشل تحميل بيانات الباقة" icon={InventoryIcon} breadcrumbs={breadcrumbs} />
         <MainCard>
           <Alert severity="error">
             {packageError?.message || 'لم يتم العثور على الباقة'}
@@ -184,7 +184,7 @@ const MedicalPackageEdit = () => {
       <ModernPageHeader
         title="تعديل باقة طبية"
         subtitle={`تعديل: ${pkg.nameAr || pkg.nameEn}`}
-        icon={<InventoryIcon />}
+        icon={InventoryIcon}
         breadcrumbs={breadcrumbs}
       />
 

@@ -136,7 +136,7 @@ const BenefitPackageEdit = () => {
         <ModernPageHeader
           title="تعديل باقة منافع"
           subtitle="تحميل بيانات الباقة..."
-          icon={<CardGiftcardIcon />}
+          icon={CardGiftcardIcon}
           breadcrumbs={breadcrumbs}
         />
         <MainCard>
@@ -155,7 +155,7 @@ const BenefitPackageEdit = () => {
   if (packageError || !pkg) {
     return (
       <>
-        <ModernPageHeader title="خطأ" subtitle="فشل تحميل بيانات الباقة" icon={<CardGiftcardIcon />} breadcrumbs={breadcrumbs} />
+        <ModernPageHeader title="خطأ" subtitle="فشل تحميل بيانات الباقة" icon={CardGiftcardIcon} breadcrumbs={breadcrumbs} />
         <MainCard>
           <Alert severity="error">
             {packageError?.message || 'لم يتم العثور على الباقة'}
@@ -173,7 +173,7 @@ const BenefitPackageEdit = () => {
       <ModernPageHeader
         title="تعديل باقة منافع"
         subtitle={`تعديل: ${pkg.nameAr || pkg.nameEn}`}
-        icon={<CardGiftcardIcon />}
+        icon={CardGiftcardIcon}
         breadcrumbs={breadcrumbs}
       />
 

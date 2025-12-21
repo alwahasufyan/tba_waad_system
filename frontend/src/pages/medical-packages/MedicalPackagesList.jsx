@@ -107,7 +107,7 @@ const MedicalPackagesList = () => {
       <ModernPageHeader
         title="الباقات الطبية"
         subtitle="إدارة الباقات الطبية الشاملة"
-        icon={<InventoryIcon />}
+        icon={InventoryIcon}
         breadcrumbs={breadcrumbs}
         actions={
           <Button variant="contained" startIcon={<AddIcon />} onClick={() => navigate('/medical-packages/add')}>
@@ -154,11 +154,11 @@ const MedicalPackagesList = () => {
         {loading && <TableSkeleton columns={7} rows={5} />}
 
         {/* Empty State */}
-        {!loading && data.items.length === 0 && (
+        {!loading && (!data?.items || data.items.length === 0) && (
           <ModernEmptyState
-            icon={<InventoryIcon sx={{ fontSize: 80 }} />}
+            icon={InventoryIcon}
             title="لا توجد باقات"
-            message={params.search ? 'لم يتم العثور على نتائج للبحث' : 'ابدأ بإضافة باقة طبية جديدة'}
+            description={params.search ? 'لم يتم العثور على نتائج للبحث' : 'ابدأ بإضافة باقة طبية جديدة'}
             action={
               !params.search && (
                 <Button variant="contained" startIcon={<AddIcon />} onClick={() => navigate('/medical-packages/add')}>
@@ -170,7 +170,7 @@ const MedicalPackagesList = () => {
         )}
 
         {/* Data Table */}
-        {!loading && data.items.length > 0 && (
+        {!loading && data?.items && data.items.length > 0 && (
           <>
             <TableContainer component={Paper}>
               <Table>

@@ -196,10 +196,10 @@ const VisitsList = () => {
       <ModernPageHeader
         title="الزيارات"
         subtitle="إدارة زيارات الأعضاء لمقدمي الخدمة"
-        icon={<LocalHospitalIcon />}
+        icon={LocalHospitalIcon}
         breadcrumbs={breadcrumbs}
         actions={
-          <Button variant="contained" startIcon={<AddIcon />} onClick={() => navigate('/visits/add')}>
+          <Button variant="contained" startIcon={<AddIcon />} onClick={() => navigate('/visits/create')}>
             إضافة زيارة جديدة
           </Button>
         }
@@ -241,12 +241,12 @@ const VisitsList = () => {
 
         {!loading && extractItems(data).length === 0 && (
           <ModernEmptyState
-            icon={<LocalHospitalIcon sx={{ fontSize: 80 }} />}
+            icon={LocalHospitalIcon}
             title="لا توجد زيارات طبية مسجلة حاليًا"
-            message={params.search ? 'لم يتم العثور على نتائج للبحث' : 'ابدأ بإضافة زيارة طبية جديدة'}
+            description={params.search ? 'لم يتم العثور على نتائج للبحث' : 'ابدأ بإضافة زيارة طبية جديدة'}
             action={
               !params.search && (
-                <Button variant="contained" startIcon={<AddIcon />} onClick={() => navigate('/visits/add')}>
+                <Button variant="contained" startIcon={<AddIcon />} onClick={() => navigate('/visits/create')}>
                   إضافة زيارة جديدة
                 </Button>
               )

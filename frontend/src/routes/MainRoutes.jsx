@@ -100,6 +100,9 @@ const MedicalCategoryView = Loadable(lazy(() => import('pages/medical-categories
 // ==============================|| LAZY LOADING - MEDICAL PACKAGES ||============================== //
 
 const MedicalPackagesList = Loadable(lazy(() => import('pages/medical-packages')));
+const MedicalPackageCreate = Loadable(lazy(() => import('pages/medical-packages/MedicalPackageCreate')));
+const MedicalPackageEdit = Loadable(lazy(() => import('pages/medical-packages/MedicalPackageEdit')));
+const MedicalPackageView = Loadable(lazy(() => import('pages/medical-packages/MedicalPackageView')));
 
 // ==============================|| LAZY LOADING - COMPANIES ||============================== //
 
@@ -579,11 +582,40 @@ const MainRoutes = {
     // Medical Packages Module
     {
       path: 'medical-packages',
-      element: (
-        <RouteGuard allowedRoles={['ADMIN', 'INSURANCE_COMPANY', 'REVIEWER']}>
-          <MedicalPackagesList />
-        </RouteGuard>
-      )
+      children: [
+        {
+          path: '',
+          element: (
+            <RouteGuard allowedRoles={['ADMIN', 'INSURANCE_COMPANY', 'REVIEWER']}>
+              <MedicalPackagesList />
+            </RouteGuard>
+          )
+        },
+        {
+          path: 'add',
+          element: (
+            <RouteGuard allowedRoles={['ADMIN', 'INSURANCE_COMPANY']}>
+              <MedicalPackageCreate />
+            </RouteGuard>
+          )
+        },
+        {
+          path: 'edit/:id',
+          element: (
+            <RouteGuard allowedRoles={['ADMIN', 'INSURANCE_COMPANY']}>
+              <MedicalPackageEdit />
+            </RouteGuard>
+          )
+        },
+        {
+          path: ':id',
+          element: (
+            <RouteGuard allowedRoles={['ADMIN', 'INSURANCE_COMPANY', 'REVIEWER']}>
+              <MedicalPackageView />
+            </RouteGuard>
+          )
+        }
+      ]
     },
 
     // Benefit Packages Module
