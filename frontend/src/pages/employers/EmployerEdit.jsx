@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useIntl } from 'react-intl';
 import {
   Box,
   Button,
@@ -25,10 +24,31 @@ import ModernPageHeader from 'components/tba/ModernPageHeader';
 import { useEmployerDetails } from 'hooks/useEmployers';
 import { updateEmployer } from 'services/api/employers.service';
 
+const LABELS = {
+  list: 'أصحاب العمل',
+  edit: 'تعديل صاحب العمل',
+  back: 'رجوع',
+  backToList: 'رجوع إلى القائمة',
+  employerCode: 'رمز صاحب العمل',
+  employerCodePlaceholder: 'أدخل رمز صاحب العمل',
+  nameAr: 'الاسم (عربي)',
+  nameArPlaceholder: 'أدخل الاسم بالعربية',
+  nameEn: 'الاسم (إنجليزي)',
+  nameEnPlaceholder: 'أدخل الاسم بالإنجليزية',
+  active: 'نشط',
+  cancel: 'إلغاء',
+  save: 'حفظ',
+  saving: 'جار الحفظ...',
+  required: 'مطلوب',
+  fixErrors: 'الرجاء تصحيح الأخطاء',
+  updatedSuccess: 'تم تحديث صاحب العمل بنجاح',
+  saveError: 'فشل في تحديث صاحب العمل',
+  notFound: 'لم يتم العثور على صاحب العمل'
+};
+
 const EmployerEdit = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const intl = useIntl();
   const { enqueueSnackbar } = useSnackbar();
   const { data: employerData, loading: loadingEmployer, error: fetchError } = useEmployerDetails(id);
   const [employer, setEmployer] = useState(null);
@@ -54,10 +74,10 @@ const EmployerEdit = () => {
     if (!employer) return false;
     const newErrors = {};
     if (!employer.code?.trim()) {
-      newErrors.code = intl.formatMessage({ id: 'validation.required' }) || 'Required';
+      newErrors.code = LABELS.required;
     }
     if (!employer.nameAr?.trim()) {
-      newErrors.nameAr = intl.formatMessage({ id: 'validation.required' }) || 'Required';
+      newErrors.nameAr = LABELS.required;
     }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -67,27 +87,18 @@ const EmployerEdit = () => {
     e.preventDefault();
 
     if (!validate()) {
-      enqueueSnackbar(
-        intl.formatMessage({ id: 'validation.fix-errors' }) || 'Please fix validation errors',
-        { variant: 'warning' }
-      );
+      enqueueSnackbar(LABELS.fixErrors, { variant: 'warning' });
       return;
     }
 
     try {
       setSaving(true);
       await updateEmployer(id, employer);
-      enqueueSnackbar(
-        intl.formatMessage({ id: 'employers.updated-success' }) || 'Employer updated successfully',
-        { variant: 'success' }
-      );
+      enqueueSnackbar(LABELS.updatedSuccess, { variant: 'success' });
       navigate('/employers');
     } catch (err) {
       console.error('Failed to update employer:', err);
-      enqueueSnackbar(
-        intl.formatMessage({ id: 'common.error' }) || 'Failed to update employer',
-        { variant: 'error' }
-      );
+      enqueueSnackbar(LABELS.saveError, { variant: 'error' });
     } finally {
       setSaving(false);
     }
@@ -105,20 +116,20 @@ const EmployerEdit = () => {
     return (
       <>
         <ModernPageHeader
-          title={intl.formatMessage({ id: 'employers.edit' }) || 'Edit Employer'}
+          title={LABELS.edit}
           icon={EditIcon}
           breadcrumbs={[
-            { label: intl.formatMessage({ id: 'employers.list' }) || 'Employers', path: '/employers' },
-            { label: intl.formatMessage({ id: 'employers.edit' }) || 'Edit', path: `/employers/edit/${id}` }
+            { label: LABELS.list, path: '/employers' },
+            { label: LABELS.edit, path: `/employers/edit/${id}` }
           ]}
         />
         <MainCard>
           <Alert severity="error">
-            {intl.formatMessage({ id: 'employers.not-found' }) || 'Employer not found'}
+            {LABELS.notFound}
           </Alert>
           <Box sx={{ mt: 2 }}>
             <Button startIcon={<ArrowBackIcon />} onClick={() => navigate('/employers')} variant="outlined">
-              {intl.formatMessage({ id: 'common.back' }) || 'Back to List'}
+              {LABELS.backToList}
             </Button>
           </Box>
         </MainCard>
@@ -129,16 +140,16 @@ const EmployerEdit = () => {
   return (
     <>
       <ModernPageHeader
-        title={intl.formatMessage({ id: 'employers.edit' }) || 'Edit Employer'}
+        title={LABELS.edit}
         subtitle={employer.nameAr || employer.code}
         icon={EditIcon}
         breadcrumbs={[
-          { label: intl.formatMessage({ id: 'employers.list' }) || 'Employers', path: '/employers' },
-          { label: intl.formatMessage({ id: 'employers.edit' }) || 'Edit', path: `/employers/edit/${id}` }
+          { label: LABELS.list, path: '/employers' },
+          { label: LABELS.edit, path: `/employers/edit/${id}` }
         ]}
         actions={
           <Button startIcon={<ArrowBackIcon />} onClick={() => navigate('/employers')} variant="outlined">
-            {intl.formatMessage({ id: 'common.back' }) || 'Back'}
+            {LABELS.back}
           </Button>
         }
       />
@@ -151,12 +162,12 @@ const EmployerEdit = () => {
               <TextField
                 fullWidth
                 required
-                label={intl.formatMessage({ id: 'employers.employer-code' }) || 'Employer Code'}
+                label={LABELS.employerCode}
                 value={employer.code || ''}
                 onChange={handleChange('code')}
                 error={!!errors.code}
                 helperText={errors.code}
-                placeholder={intl.formatMessage({ id: 'employers.employer-code-placeholder' }) || 'Enter employer code'}
+                placeholder={LABELS.employerCodePlaceholder}
               />
             </Grid>
 
@@ -165,12 +176,12 @@ const EmployerEdit = () => {
               <TextField
                 fullWidth
                 required
-                label={intl.formatMessage({ id: 'employers.name-ar' }) || 'Name (Arabic)'}
+                label={LABELS.nameAr}
                 value={employer.nameAr || ''}
                 onChange={handleChange('nameAr')}
                 error={!!errors.nameAr}
                 helperText={errors.nameAr}
-                placeholder={intl.formatMessage({ id: 'employers.name-ar-placeholder' }) || 'Enter Arabic name'}
+                placeholder={LABELS.nameArPlaceholder}
               />
             </Grid>
 
@@ -178,10 +189,10 @@ const EmployerEdit = () => {
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
-                label={intl.formatMessage({ id: 'employers.name-en' }) || 'Name (English)'}
+                label={LABELS.nameEn}
                 value={employer.nameEn || ''}
                 onChange={handleChange('nameEn')}
-                placeholder={intl.formatMessage({ id: 'employers.name-en-placeholder' }) || 'Enter English name'}
+                placeholder={LABELS.nameEnPlaceholder}
               />
             </Grid>
 
@@ -189,7 +200,7 @@ const EmployerEdit = () => {
             <Grid item xs={12} md={6}>
               <FormControlLabel
                 control={<Switch checked={employer.active || false} onChange={handleChange('active')} color="primary" />}
-                label={intl.formatMessage({ id: 'common.active' }) || 'Active'}
+                label={LABELS.active}
               />
             </Grid>
           </Grid>
@@ -198,12 +209,10 @@ const EmployerEdit = () => {
           <Divider sx={{ my: 3 }} />
           <Stack direction="row" spacing={2} justifyContent="flex-end">
             <Button variant="outlined" onClick={() => navigate('/employers')} disabled={saving}>
-              {intl.formatMessage({ id: 'common.cancel' }) || 'Cancel'}
+              {LABELS.cancel}
             </Button>
             <Button type="submit" variant="contained" startIcon={<SaveIcon />} disabled={saving}>
-              {saving
-                ? intl.formatMessage({ id: 'common.saving' }) || 'Saving...'
-                : intl.formatMessage({ id: 'common.save' }) || 'Save'}
+              {saving ? LABELS.saving : LABELS.save}
             </Button>
           </Stack>
         </Box>

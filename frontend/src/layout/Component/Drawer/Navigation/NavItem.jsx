@@ -12,9 +12,6 @@ import Typography from '@mui/material/Typography';
 // project imports
 import { handlerComponentDrawer } from 'api/menu';
 
-// third-party
-import { FormattedMessage } from 'react-intl';
-
 export default function NavItem({ item }) {
   const { pathname } = useLocation();
   const downMD = useMediaQuery((theme) => theme.breakpoints.down('md'));
@@ -64,7 +61,7 @@ export default function NavItem({ item }) {
               ...theme.applyStyles('dark', { color: isSelectedItem ? 'text.primary' : 'grey.400' })
             })}
           >
-            <FormattedMessage id={item.title} />
+            {item.title}
           </Typography>
         }
       />

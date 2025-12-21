@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { useIntl } from 'react-intl';
 import {
   Dialog,
   DialogTitle,
@@ -15,8 +14,24 @@ import {
 import { CloudUpload as CloudUploadIcon, Close as CloseIcon } from '@mui/icons-material';
 import { useSnackbar } from 'notistack';
 
+// Static Arabic labels
+const LABELS = {
+  title: 'رفع الأعضاء بالجملة',
+  close: 'إغلاق',
+  info: 'قم برفع ملف Excel (.xlsx أو .xls) يحتوي على بيانات الأعضاء.',
+  invalidFileType: 'الرجاء اختيار ملف Excel',
+  selectFile: 'الرجاء اختيار ملف أولاً',
+  comingSoon: 'ميزة الرفع الجماعي قريباً!',
+  clickToUpload: 'انقر لاختيار ملف Excel',
+  supportedFormats: 'الصيغ المدعومة: .xlsx, .xls',
+  fileSelected: 'تم اختيار الملف',
+  size: 'الحجم',
+  uploading: 'جار الرفع...',
+  cancel: 'إلغاء',
+  upload: 'رفع'
+};
+
 const MembersBulkUploadDialog = ({ open, onClose, onSuccess }) => {
-  const intl = useIntl();
   const { enqueueSnackbar } = useSnackbar();
   const [selectedFile, setSelectedFile] = useState(null);
   const [uploading, setUploading] = useState(false);
@@ -25,9 +40,7 @@ const MembersBulkUploadDialog = ({ open, onClose, onSuccess }) => {
     const file = event.target.files?.[0];
     if (file) {
       if (!file.name.endsWith('.xlsx') && !file.name.endsWith('.xls')) {
-        enqueueSnackbar(intl.formatMessage({ id: 'common.invalid-file-type' }) || 'Please select an Excel file', {
-          variant: 'error'
-        });
+        enqueueSnackbar(LABELS.invalidFileType, { variant: 'error' });
         return;
       }
       setSelectedFile(file);
@@ -36,19 +49,12 @@ const MembersBulkUploadDialog = ({ open, onClose, onSuccess }) => {
 
   const handleUpload = async () => {
     if (!selectedFile) {
-      enqueueSnackbar(intl.formatMessage({ id: 'common.select-file' }) || 'Please select a file first', {
-        variant: 'warning'
-      });
+      enqueueSnackbar(LABELS.selectFile, { variant: 'warning' });
       return;
     }
 
     // Placeholder functionality - show "Coming Soon" message
-    enqueueSnackbar(
-      intl.formatMessage({ id: 'members.bulk-upload-coming-soon' }) || 'Bulk upload feature coming soon!',
-      {
-        variant: 'info'
-      }
-    );
+    enqueueSnackbar(LABELS.comingSoon, { variant: 'info' });
 
     // Future implementation:
     // setUploading(true);
@@ -75,9 +81,7 @@ const MembersBulkUploadDialog = ({ open, onClose, onSuccess }) => {
     <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
       <DialogTitle>
         <Stack direction="row" alignItems="center" justifyContent="space-between">
-          <Typography variant="h5">
-            {intl.formatMessage({ id: 'members.bulk-upload' }) || 'Bulk Upload Members'}
-          </Typography>
+          <Typography variant="h5">{LABELS.title}</Typography>
           {!uploading && (
             <Button
               size="small"
@@ -85,7 +89,7 @@ const MembersBulkUploadDialog = ({ open, onClose, onSuccess }) => {
               startIcon={<CloseIcon />}
               sx={{ minWidth: 'auto', px: 1 }}
             >
-              {intl.formatMessage({ id: 'common.close' }) || 'Close'}
+              {LABELS.close}
             </Button>
           )}
         </Stack>
@@ -93,10 +97,7 @@ const MembersBulkUploadDialog = ({ open, onClose, onSuccess }) => {
 
       <DialogContent dividers>
         <Stack spacing={3}>
-          <Alert severity="info">
-            {intl.formatMessage({ id: 'members.bulk-upload-info' }) ||
-              'Upload an Excel file (.xlsx or .xls) containing member data. The file should follow the template format.'}
-          </Alert>
+          <Alert severity="info">{LABELS.info}</Alert>
 
           <Box
             sx={{
@@ -125,22 +126,20 @@ const MembersBulkUploadDialog = ({ open, onClose, onSuccess }) => {
             />
             <CloudUploadIcon sx={{ fontSize: 48, color: selectedFile ? 'primary.main' : 'text.secondary', mb: 1 }} />
             <Typography variant="h6" gutterBottom>
-              {selectedFile
-                ? selectedFile.name
-                : intl.formatMessage({ id: 'common.click-to-upload' }) || 'Click to select Excel file'}
+              {selectedFile ? selectedFile.name : LABELS.clickToUpload}
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              {intl.formatMessage({ id: 'common.supported-formats' }) || 'Supported formats: .xlsx, .xls'}
+              {LABELS.supportedFormats}
             </Typography>
           </Box>
 
           {selectedFile && (
             <Alert severity="success">
               <Typography variant="body2">
-                {intl.formatMessage({ id: 'common.file-selected' }) || 'File selected'}: <strong>{selectedFile.name}</strong>
+                {LABELS.fileSelected}: <strong>{selectedFile.name}</strong>
               </Typography>
               <Typography variant="caption" color="text.secondary">
-                {intl.formatMessage({ id: 'common.size' }) || 'Size'}: {(selectedFile.size / 1024).toFixed(2)} KB
+                {LABELS.size}: {(selectedFile.size / 1024).toFixed(2)} KB
               </Typography>
             </Alert>
           )}
@@ -148,7 +147,7 @@ const MembersBulkUploadDialog = ({ open, onClose, onSuccess }) => {
           {uploading && (
             <Box>
               <Typography variant="body2" gutterBottom>
-                {intl.formatMessage({ id: 'common.uploading' }) || 'Uploading...'}
+                {LABELS.uploading}
               </Typography>
               <LinearProgress />
             </Box>
@@ -158,7 +157,7 @@ const MembersBulkUploadDialog = ({ open, onClose, onSuccess }) => {
 
       <DialogActions sx={{ px: 3, py: 2 }}>
         <Button onClick={handleClose} disabled={uploading} color="inherit">
-          {intl.formatMessage({ id: 'common.cancel' }) || 'Cancel'}
+          {LABELS.cancel}
         </Button>
         <Button
           onClick={handleUpload}
@@ -166,9 +165,7 @@ const MembersBulkUploadDialog = ({ open, onClose, onSuccess }) => {
           variant="contained"
           startIcon={<CloudUploadIcon />}
         >
-          {uploading
-            ? intl.formatMessage({ id: 'common.uploading' }) || 'Uploading...'
-            : intl.formatMessage({ id: 'common.upload' }) || 'Upload'}
+          {uploading ? LABELS.uploading : LABELS.upload}
         </Button>
       </DialogActions>
     </Dialog>

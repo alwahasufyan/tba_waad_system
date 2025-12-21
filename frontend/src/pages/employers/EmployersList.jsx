@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useIntl } from 'react-intl';
 import {
   Box,
   Button,
@@ -39,9 +38,36 @@ import TableSkeleton from 'components/tba/LoadingSkeleton';
 import { useEmployersList } from 'hooks/useEmployers';
 import { deleteEmployer } from 'services/api/employers.service';
 
+// Static Arabic labels
+const LABELS = {
+  list: 'أصحاب العمل',
+  listDesc: 'إدارة أصحاب العمل ومعلوماتهم',
+  add: 'إضافة صاحب عمل',
+  code: 'الرمز',
+  nameAr: 'الاسم (عربي)',
+  nameEn: 'الاسم (إنجليزي)',
+  phone: 'الهاتف',
+  status: 'الحالة',
+  actions: 'الإجراءات',
+  active: 'نشط',
+  inactive: 'غير نشط',
+  edit: 'تعديل',
+  delete: 'حذف',
+  cancel: 'إلغاء',
+  deleting: 'جار الحذف...',
+  refresh: 'تحديث',
+  noFound: 'لم يتم العثور على أصحاب عمل',
+  noFoundDesc: 'ابدأ بإضافة أول صاحب عمل',
+  deleteConfirmTitle: 'حذف صاحب العمل',
+  deleteConfirm: 'هل أنت متأكد من حذف صاحب العمل هذا؟',
+  deletedSuccess: 'تم حذف صاحب العمل بنجاح',
+  error: 'خطأ',
+  loadError: 'فشل في تحميل أصحاب العمل',
+  deleteError: 'فشل في حذف صاحب العمل'
+};
+
 const EmployersList = () => {
   const navigate = useNavigate();
-  const intl = useIntl();
   const { enqueueSnackbar } = useSnackbar();
   const { data: employers, loading, error, refetch } = useEmployersList();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -59,19 +85,13 @@ const EmployersList = () => {
     try {
       setDeleting(true);
       await deleteEmployer(employerToDelete.id);
-      enqueueSnackbar(
-        intl.formatMessage({ id: 'employers.deleted-success' }) || 'Employer deleted successfully',
-        { variant: 'success' }
-      );
+      enqueueSnackbar(LABELS.deletedSuccess, { variant: 'success' });
       refetch();
       setDeleteDialogOpen(false);
       setEmployerToDelete(null);
     } catch (err) {
       console.error('Failed to delete employer:', err);
-      enqueueSnackbar(
-        intl.formatMessage({ id: 'common.error' }) || 'Failed to delete employer',
-        { variant: 'error' }
-      );
+      enqueueSnackbar(LABELS.deleteError, { variant: 'error' });
     } finally {
       setDeleting(false);
     }
@@ -90,10 +110,10 @@ const EmployersList = () => {
     return (
       <Box>
         <ModernPageHeader
-          title={intl.formatMessage({ id: 'employers.list' }) || 'Employers'}
-          subtitle={intl.formatMessage({ id: 'employers.list-desc' }) || 'Manage employers'}
+          title={LABELS.list}
+          subtitle={LABELS.listDesc}
           icon={BusinessIcon}
-          breadcrumbs={[{ label: intl.formatMessage({ id: 'employers.list' }) || 'Employers', path: '/employers' }]}
+          breadcrumbs={[{ label: LABELS.list, path: '/employers' }]}
         />
         <MainCard content={false}>
           <TableSkeleton />
@@ -106,13 +126,13 @@ const EmployersList = () => {
     return (
       <Box>
         <ModernPageHeader
-          title={intl.formatMessage({ id: 'employers.list' }) || 'Employers'}
+          title={LABELS.list}
           icon={BusinessIcon}
-          breadcrumbs={[{ label: intl.formatMessage({ id: 'employers.list' }) || 'Employers', path: '/employers' }]}
+          breadcrumbs={[{ label: LABELS.list, path: '/employers' }]}
         />
         <MainCard>
           <Alert severity="error">
-            {intl.formatMessage({ id: 'common.error' }) || 'Error'}: {error.message || 'Failed to load employers'}
+            {LABELS.error}: {error.message || LABELS.loadError}
           </Alert>
         </MainCard>
       </Box>
@@ -122,19 +142,19 @@ const EmployersList = () => {
   return (
     <>
       <ModernPageHeader
-        title={intl.formatMessage({ id: 'employers.list' }) || 'Employers'}
-        subtitle={intl.formatMessage({ id: 'employers.list-desc' }) || 'Manage employers and their information'}
+        title={LABELS.list}
+        subtitle={LABELS.listDesc}
         icon={BusinessIcon}
-        breadcrumbs={[{ label: intl.formatMessage({ id: 'employers.list' }) || 'Employers', path: '/employers' }]}
+        breadcrumbs={[{ label: LABELS.list, path: '/employers' }]}
         actions={
           <Stack direction="row" spacing={2}>
-            <Tooltip title={intl.formatMessage({ id: 'common.refresh' }) || 'Refresh'}>
+            <Tooltip title={LABELS.refresh}>
               <IconButton onClick={handleRefresh} color="primary">
                 <RefreshIcon />
               </IconButton>
             </Tooltip>
             <Button variant="contained" startIcon={<AddIcon />} onClick={() => navigate('/employers/create')}>
-              {intl.formatMessage({ id: 'employers.add' }) || 'Add Employer'}
+              {LABELS.add}
             </Button>
           </Stack>
         }
@@ -145,13 +165,11 @@ const EmployersList = () => {
           <Box sx={{ p: 3 }}>
             <ModernEmptyState
               icon={BusinessIcon}
-              title={intl.formatMessage({ id: 'employers.no-found' }) || 'No employers found'}
-              description={
-                intl.formatMessage({ id: 'employers.no-found-desc' }) || 'Start by adding your first employer'
-              }
+              title={LABELS.noFound}
+              description={LABELS.noFoundDesc}
               action={
                 <Button variant="contained" startIcon={<AddIcon />} onClick={() => navigate('/employers/create')}>
-                  {intl.formatMessage({ id: 'employers.add' }) || 'Add Employer'}
+                  {LABELS.add}
                 </Button>
               }
             />
@@ -161,24 +179,12 @@ const EmployersList = () => {
             <Table sx={{ minWidth: 650 }} size="medium">
               <TableHead>
                 <TableRow>
-                  <TableCell sx={{ fontWeight: 600 }}>
-                    {intl.formatMessage({ id: 'employers.code' }) || 'Code'}
-                  </TableCell>
-                  <TableCell sx={{ fontWeight: 600 }}>
-                    {intl.formatMessage({ id: 'employers.name-ar' }) || 'Name (Arabic)'}
-                  </TableCell>
-                  <TableCell sx={{ fontWeight: 600 }}>
-                    {intl.formatMessage({ id: 'employers.name-en' }) || 'Name (English)'}
-                  </TableCell>
-                  <TableCell sx={{ fontWeight: 600 }}>
-                    {intl.formatMessage({ id: 'common.phone' }) || 'Phone'}
-                  </TableCell>
-                  <TableCell sx={{ fontWeight: 600 }}>
-                    {intl.formatMessage({ id: 'common.status' }) || 'Status'}
-                  </TableCell>
-                  <TableCell align="center" sx={{ fontWeight: 600 }}>
-                    {intl.formatMessage({ id: 'common.actions' }) || 'Actions'}
-                  </TableCell>
+                  <TableCell sx={{ fontWeight: 600 }}>{LABELS.code}</TableCell>
+                  <TableCell sx={{ fontWeight: 600 }}>{LABELS.nameAr}</TableCell>
+                  <TableCell sx={{ fontWeight: 600 }}>{LABELS.nameEn}</TableCell>
+                  <TableCell sx={{ fontWeight: 600 }}>{LABELS.phone}</TableCell>
+                  <TableCell sx={{ fontWeight: 600 }}>{LABELS.status}</TableCell>
+                  <TableCell align="center" sx={{ fontWeight: 600 }}>{LABELS.actions}</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -200,23 +206,19 @@ const EmployersList = () => {
                     </TableCell>
                     <TableCell>
                       <Chip
-                        label={
-                          employer.active
-                            ? intl.formatMessage({ id: 'common.active' }) || 'Active'
-                            : intl.formatMessage({ id: 'common.inactive' }) || 'Inactive'
-                        }
+                        label={employer.active ? LABELS.active : LABELS.inactive}
                         size="small"
                         color={employer.active ? 'success' : 'error'}
                       />
                     </TableCell>
                     <TableCell align="center">
                       <Stack direction="row" spacing={0.5} justifyContent="center">
-                        <Tooltip title={intl.formatMessage({ id: 'common.edit' }) || 'Edit'}>
+                        <Tooltip title={LABELS.edit}>
                           <IconButton size="small" color="info" onClick={() => navigate(`/employers/edit/${employer.id}`)}>
                             <EditIcon fontSize="small" />
                           </IconButton>
                         </Tooltip>
-                        <Tooltip title={intl.formatMessage({ id: 'common.delete' }) || 'Delete'}>
+                        <Tooltip title={LABELS.delete}>
                           <IconButton size="small" color="error" onClick={() => handleDeleteClick(employer)}>
                             <DeleteIcon fontSize="small" />
                           </IconButton>
@@ -233,10 +235,10 @@ const EmployersList = () => {
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={deleteDialogOpen} onClose={handleDeleteCancel} maxWidth="xs" fullWidth>
-        <DialogTitle>{intl.formatMessage({ id: 'employers.delete-confirm-title' }) || 'Delete Employer'}</DialogTitle>
+        <DialogTitle>{LABELS.deleteConfirmTitle}</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            {intl.formatMessage({ id: 'employers.delete-confirm' }) || 'Are you sure you want to delete this employer?'}
+            {LABELS.deleteConfirm}
             {employerToDelete && (
               <Box sx={{ mt: 2 }}>
                 <Typography variant="body2" fontWeight={600}>
@@ -248,12 +250,10 @@ const EmployersList = () => {
         </DialogContent>
         <DialogActions sx={{ px: 3, py: 2 }}>
           <Button onClick={handleDeleteCancel} disabled={deleting} color="inherit">
-            {intl.formatMessage({ id: 'common.cancel' }) || 'Cancel'}
+            {LABELS.cancel}
           </Button>
           <Button onClick={handleDeleteConfirm} disabled={deleting} variant="contained" color="error">
-            {deleting
-              ? intl.formatMessage({ id: 'common.deleting' }) || 'Deleting...'
-              : intl.formatMessage({ id: 'common.delete' }) || 'Delete'}
+            {deleting ? LABELS.deleting : LABELS.delete}
           </Button>
         </DialogActions>
       </Dialog>

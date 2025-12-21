@@ -16,9 +16,6 @@ import Box from '@mui/material/Box';
 import Dot from 'components/@extended/Dot';
 import IconButton from 'components/@extended/IconButton';
 
-// third-party
-import { FormattedMessage } from 'react-intl';
-
 import { MenuOrientation, ThemeMode, NavActionType } from 'config';
 import useConfig from 'hooks/useConfig';
 import { handlerDrawerOpen, useGetMenuMaster } from 'api/menu';
@@ -124,7 +121,7 @@ export default function NavItem({ item, level, isParents = false, setSelectedID 
               <ListItemText
                 primary={
                   <Typography variant="h6" sx={{ color: isSelected ? iconSelectedColor : textColor }}>
-                    <FormattedMessage id={item.translationKey || item.title} />
+                    {item.title}
                   </Typography>
                 }
               />
@@ -230,7 +227,7 @@ export default function NavItem({ item, level, isParents = false, setSelectedID 
           <ListItemText
             primary={
               <Typography variant="h6" color={isSelected ? 'primary.main' : 'secondary.dark'}>
-                <FormattedMessage id={item.translationKey || item.title} />
+                {item.title}
               </Typography>
             }
           />

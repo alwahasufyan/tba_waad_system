@@ -9,8 +9,12 @@ import Box from '@mui/material/Box';
 import MainCard from 'components/MainCard';
 import { ThemeDirection } from 'config';
 
-// third-party
-import { FormattedMessage } from 'react-intl';
+// Static Arabic labels (no react-intl)
+const LABELS = {
+  welcome: 'مرحباً بك في نظام وعد للتأمين',
+  welcomeDesc: 'لوحة التحكم الرئيسية لإدارة التأمين الصحي',
+  viewStatistics: 'عرض الإحصائيات'
+};
 
 //asset
 import WelcomeImage from 'assets/images/analytics/welcome-banner.png';
@@ -35,10 +39,10 @@ export default function WelcomeBanner() {
             sx={(theme) => ({ gap: 2, padding: 3.4, color: 'background.paper', ...theme.applyStyles('dark', { color: 'text.primary' }) })}
           >
             <Typography variant="h2">
-              <FormattedMessage id="dashboard.welcome" />
+              {LABELS.welcome}
             </Typography>
             <Typography variant="h6">
-              <FormattedMessage id="dashboard.welcome-description" />
+              {LABELS.welcomeDesc}
             </Typography>
             <Box>
               <Button
@@ -56,7 +60,7 @@ export default function WelcomeBanner() {
                   }
                 })}
               >
-                <FormattedMessage id="dashboard.view-statistics" />
+                {LABELS.viewStatistics}
               </Button>
             </Box>
           </Stack>

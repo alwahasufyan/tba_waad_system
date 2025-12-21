@@ -1,6 +1,5 @@
 import { useState, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useIntl } from 'react-intl';
 import {
   Box,
   Button,
@@ -43,6 +42,37 @@ import TableSkeleton from 'components/tba/LoadingSkeleton';
 import { useMembersList } from 'hooks/useMembers';
 import { deleteMember } from 'services/api/members.service';
 
+// Static Arabic labels
+const LABELS = {
+  members: 'الأعضاء',
+  membersDesc: 'إدارة أعضاء التأمين',
+  addMember: 'إضافة عضو',
+  search: 'البحث في الأعضاء...',
+  searchBtn: 'بحث',
+  deleteConfirm: 'هل تريد حذف هذا العضو؟',
+  deleteError: 'فشل في حذف العضو',
+  noFound: 'لم يتم العثور على أعضاء',
+  noFoundDesc: 'ابدأ بإضافة أول عضو',
+  error: 'خطأ',
+  loadError: 'فشل في تحميل الأعضاء',
+  rowsPerPage: 'عدد الصفوف في الصفحة:',
+  refresh: 'تحديث',
+  view: 'عرض',
+  edit: 'تعديل',
+  delete: 'حذف',
+  // Table headers
+  id: 'رقم',
+  fullName: 'الاسم الكامل',
+  memberType: 'نوع العضو',
+  civilId: 'رقم الهوية المدنية',
+  employer: 'صاحب العمل',
+  policyNumber: 'رقم البوليصة',
+  phone: 'الهاتف',
+  email: 'البريد الإلكتروني',
+  cardStatus: 'حالة البطاقة',
+  actions: 'الإجراءات'
+};
+
 /**
  * Members List Page
  * Displays paginated list of members with search, sort, and CRUD operations
@@ -50,7 +80,6 @@ import { deleteMember } from 'services/api/members.service';
  */
 const MembersList = () => {
   const navigate = useNavigate();
-  const intl = useIntl();
   const [searchInput, setSearchInput] = useState('');
   const [orderBy, setOrderBy] = useState('createdAt');
   const [order, setOrder] = useState('desc');
@@ -98,13 +127,13 @@ const MembersList = () => {
   );
 
   const handleDelete = async (id) => {
-    if (!window.confirm(intl.formatMessage({ id: 'members.delete-confirm' }) || 'Delete this member?')) return;
+    if (!window.confirm(LABELS.deleteConfirm)) return;
     try {
       await deleteMember(id);
       refresh();
     } catch (err) {
       console.error('[MembersList] Failed to delete member:', err);
-      alert(intl.formatMessage({ id: 'common.error' }) || 'Failed to delete member');
+      alert(LABELS.deleteError);
     }
   };
 
@@ -116,44 +145,16 @@ const MembersList = () => {
 
   // Table columns based on MemberViewDto fields
   const headCells = [
-    { id: 'id', label: intl.formatMessage({ id: 'common.id' }) || 'ID', sortable: true },
-    {
-      id: 'fullNameArabic',
-      label: intl.formatMessage({ id: 'members.full-name' }) || 'Full Name',
-      sortable: true
-    },
-    {
-      id: 'memberType',
-      label: intl.formatMessage({ id: 'members.type' }) || 'Type',
-      sortable: false
-    },
-    {
-      id: 'civilId',
-      label: intl.formatMessage({ id: 'members.civil-id' }) || 'Civil ID',
-      sortable: true
-    },
-    {
-      id: 'employerName',
-      label: intl.formatMessage({ id: 'members.employer' }) || 'Employer',
-      sortable: false
-    },
-    {
-      id: 'policyNumber',
-      label: intl.formatMessage({ id: 'members.policy-number' }) || 'Policy Number',
-      sortable: true
-    },
-    {
-      id: 'phone',
-      label: intl.formatMessage({ id: 'common.phone' }) || 'Phone',
-      sortable: false
-    },
-    {
-      id: 'email',
-      label: intl.formatMessage({ id: 'common.email' }) || 'Email',
-      sortable: false
-    },
-    { id: 'cardStatus', label: intl.formatMessage({ id: 'members.card-status' }) || 'Card Status', sortable: true },
-    { id: 'actions', label: intl.formatMessage({ id: 'common.actions' }) || 'Actions', sortable: false, align: 'center' }
+    { id: 'id', label: LABELS.id, sortable: true },
+    { id: 'fullNameArabic', label: LABELS.fullName, sortable: true },
+    { id: 'memberType', label: LABELS.memberType, sortable: false },
+    { id: 'civilId', label: LABELS.civilId, sortable: true },
+    { id: 'employerName', label: LABELS.employer, sortable: false },
+    { id: 'policyNumber', label: LABELS.policyNumber, sortable: true },
+    { id: 'phone', label: LABELS.phone, sortable: false },
+    { id: 'email', label: LABELS.email, sortable: false },
+    { id: 'cardStatus', label: LABELS.cardStatus, sortable: true },
+    { id: 'actions', label: LABELS.actions, sortable: false, align: 'center' }
   ];
 
   const tableContent = useMemo(() => {
@@ -172,7 +173,7 @@ const MembersList = () => {
         <TableRow>
           <TableCell colSpan={headCells.length}>
             <Alert severity="error" sx={{ my: 2 }}>
-              {intl.formatMessage({ id: 'common.error' }) || 'Error'}: {error.message || 'Failed to load members'}
+              {LABELS.error}: {error.message || LABELS.loadError}
             </Alert>
           </TableCell>
         </TableRow>
@@ -185,11 +186,11 @@ const MembersList = () => {
           <TableCell colSpan={headCells.length}>
             <ModernEmptyState
               icon={PeopleAltIcon}
-              title={intl.formatMessage({ id: 'members.no-found' }) || 'No members found'}
-              description={intl.formatMessage({ id: 'members.no-found-desc' }) || 'Start by adding your first member'}
+              title={LABELS.noFound}
+              description={LABELS.noFoundDesc}
               action={
                 <Button variant="contained" startIcon={<AddIcon />} onClick={() => navigate('/members/create')}>
-                  {intl.formatMessage({ id: 'members.add' }) || 'Add Member'}
+                  {LABELS.addMember}
                 </Button>
               }
             />
@@ -251,17 +252,17 @@ const MembersList = () => {
         </TableCell>
         <TableCell align="center">
           <Stack direction="row" spacing={0.5} justifyContent="center">
-            <Tooltip title={intl.formatMessage({ id: 'common.view' }) || 'View'}>
+            <Tooltip title={LABELS.view}>
               <IconButton size="small" color="primary" onClick={() => navigate(`/members/view/${member?.id}`)}>
                 <VisibilityIcon fontSize="small" />
               </IconButton>
             </Tooltip>
-            <Tooltip title={intl.formatMessage({ id: 'common.edit' }) || 'Edit'}>
+            <Tooltip title={LABELS.edit}>
               <IconButton size="small" color="info" onClick={() => navigate(`/members/edit/${member?.id}`)}>
                 <EditIcon fontSize="small" />
               </IconButton>
             </Tooltip>
-            <Tooltip title={intl.formatMessage({ id: 'common.delete' }) || 'Delete'}>
+            <Tooltip title={LABELS.delete}>
               <IconButton size="small" color="error" onClick={() => handleDelete(member?.id)}>
                 <DeleteIcon fontSize="small" />
               </IconButton>
@@ -270,24 +271,24 @@ const MembersList = () => {
         </TableCell>
       </TableRow>
     ));
-  }, [data, loading, error, headCells.length, intl, navigate]);
+  }, [data, loading, error, headCells.length, navigate]);
 
   return (
     <>
       <ModernPageHeader
-        title={intl.formatMessage({ id: 'members.list' }) || 'Members'}
-        subtitle={intl.formatMessage({ id: 'members.list-desc' }) || 'Manage insurance members'}
+        title={LABELS.members}
+        subtitle={LABELS.membersDesc}
         icon={PeopleAltIcon}
-        breadcrumbs={[{ label: intl.formatMessage({ id: 'members.list' }) || 'Members', path: '/members' }]}
+        breadcrumbs={[{ label: LABELS.members, path: '/members' }]}
         actions={
           <Stack direction="row" spacing={2}>
-            <Tooltip title={intl.formatMessage({ id: 'common.refresh' }) || 'Refresh'}>
+            <Tooltip title={LABELS.refresh}>
               <IconButton onClick={handleRefresh} color="primary">
                 <RefreshIcon />
               </IconButton>
             </Tooltip>
             <Button variant="contained" startIcon={<AddIcon />} onClick={() => navigate('/members/create')}>
-              {intl.formatMessage({ id: 'members.add' }) || 'Add Member'}
+              {LABELS.addMember}
             </Button>
           </Stack>
         }
@@ -300,7 +301,7 @@ const MembersList = () => {
             <TextField
               fullWidth
               size="small"
-              placeholder={intl.formatMessage({ id: 'members.search' }) || 'Search members...'}
+              placeholder={LABELS.search}
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
               onKeyPress={(e) => e.key === 'Enter' && handleSearchSubmit(e)}
@@ -314,7 +315,7 @@ const MembersList = () => {
               sx={{ maxWidth: { sm: 400 } }}
             />
             <Button variant="outlined" onClick={handleSearchSubmit} sx={{ minWidth: 100 }}>
-              {intl.formatMessage({ id: 'common.search' }) || 'Search'}
+              {LABELS.searchBtn}
             </Button>
           </Stack>
         </Box>
@@ -355,7 +356,7 @@ const MembersList = () => {
             page={params.page - 1}
             onPageChange={handleChangePage}
             onRowsPerPageChange={handleChangeRowsPerPage}
-            labelRowsPerPage={intl.formatMessage({ id: 'common.rows-per-page' }) || 'Rows per page:'}
+            labelRowsPerPage={LABELS.rowsPerPage}
           />
         )}
       </MainCard>

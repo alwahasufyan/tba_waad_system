@@ -1,46 +1,14 @@
 import PropTypes from 'prop-types';
-import { useEffect, useState, useMemo } from 'react';
-
-// third-party
-import { IntlProvider } from 'react-intl';
-
-// project imports
-import useConfig from 'hooks/useConfig';
-
-// load locales files
-const loadLocaleData = (locale) => {
-  switch (locale) {
-    case 'ar':
-      return import('utils/locales/ar.json');
-    case 'en':
-    default:
-      return import('utils/locales/en.json');
-  }
-};
 
 // ==============================|| LOCALIZATION ||============================== //
+// Simplified Locales wrapper - Static Arabic UX for Closed Enterprise
+// react-intl removed to prevent runtime crashes from missing message IDs
+// All text now uses static Arabic strings via utils/labels.js
 
 export default function Locales({ children }) {
-  const { state } = useConfig();
-
-  const [messages, setMessages] = useState();
-  const localeDataPromise = useMemo(() => loadLocaleData(state.i18n), [state.i18n]);
-
-  useEffect(() => {
-    localeDataPromise.then((d) => {
-      setMessages(d.default);
-    });
-  }, [localeDataPromise]);
-
-  return (
-    <>
-      {messages && (
-        <IntlProvider locale={state.i18n} defaultLocale="en" messages={messages}>
-          {children}
-        </IntlProvider>
-      )}
-    </>
-  );
+  // Simply render children - no IntlProvider needed
+  // Static Arabic terminology is used throughout the application
+  return <>{children}</>;
 }
 
 Locales.propTypes = { children: PropTypes.node };

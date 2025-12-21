@@ -29,9 +29,6 @@ import useConfig from 'hooks/useConfig';
 import useMenuCollapse from 'hooks/useMenuCollapse';
 import { useGetMenuMaster } from 'api/menu';
 
-// third-party
-import { FormattedMessage } from 'react-intl';
-
 // assets
 import BorderOutlined from '@ant-design/icons/BorderOutlined';
 import DownOutlined from '@ant-design/icons/DownOutlined';
@@ -271,13 +268,13 @@ export default function NavCollapse({ menu, level, parentId, setSelectedItems, s
               <ListItemText
                 primary={
                   <Typography variant="h6" color={selected === menu.id || anchorEl ? 'primary' : textColor}>
-                    <FormattedMessage id={menu.title} />
+                    {menu.title}
                   </Typography>
                 }
                 secondary={
                   menu.caption && (
                     <Typography variant="caption" color="secondary">
-                      <FormattedMessage id={menu.caption} />
+                      {menu.caption}
                     </Typography>
                   )
                 }
@@ -384,7 +381,7 @@ export default function NavCollapse({ menu, level, parentId, setSelectedItems, s
             <ListItemText
               primary={
                 <Typography variant="body1" color="inherit" sx={{ my: 'auto' }}>
-                  <FormattedMessage id={menu.title} />
+                  {menu.title}
                 </Typography>
               }
             />

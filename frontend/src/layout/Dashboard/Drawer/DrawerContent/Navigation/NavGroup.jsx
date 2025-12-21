@@ -16,9 +16,6 @@ import Popper from '@mui/material/Popper';
 import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
 
-// third-party
-import { FormattedMessage } from 'react-intl';
-
 // project imports
 import NavItem from './NavItem';
 import NavCollapse from './NavCollapse';
@@ -240,15 +237,15 @@ export default function NavGroup({
         <List
           subheader={
             <>
-              {item.translationKey ? (
+              {item.translationKey || item.title ? (
                 drawerOpen && (
                   <Box sx={{ pl: 3, mb: 1.5 }}>
                     <Typography variant="subtitle2" color="text.secondary">
-                      <FormattedMessage id={item.translationKey} />
+                      {item.title}
                     </Typography>
                     {item.caption && (
                       <Typography variant="caption" color="secondary">
-                        <FormattedMessage id={item.caption} />
+                        {item.caption}
                       </Typography>
                     )}
                   </Box>
@@ -289,9 +286,7 @@ export default function NavGroup({
               sx={{ mr: 1 }}
               primary={
                 <Typography variant="body1" color={isSelected || anchorEl ? 'primary.main' : 'secondary.dark'}>
-                  <FormattedMessage
-                    id={currentItem.id === lastItemId ? 'common.view-more' : currentItem.translationKey || currentItem.title}
-                  />
+                  {currentItem.id === lastItemId ? 'عرض المزيد' : currentItem.title}
                 </Typography>
               }
             />

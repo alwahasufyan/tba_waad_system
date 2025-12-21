@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useIntl } from 'react-intl';
 import {
   Box,
   Button,
@@ -26,6 +25,34 @@ import MainCard from 'components/MainCard';
 import ModernPageHeader from 'components/tba/ModernPageHeader';
 import { getEmployerById } from 'services/api/employers.service';
 
+// Static Arabic labels
+const LABELS = {
+  list: 'أصحاب العمل',
+  view: 'عرض صاحب العمل',
+  viewSubtitle: 'عرض معلومات صاحب العمل',
+  back: 'رجوع',
+  backToList: 'رجوع إلى القائمة',
+  edit: 'تعديل',
+  employerCode: 'رمز صاحب العمل',
+  code: 'الرمز',
+  nameAr: 'الاسم (عربي)',
+  nameEn: 'الاسم (إنجليزي)',
+  status: 'الحالة',
+  active: 'نشط',
+  inactive: 'غير نشط',
+  basicInfo: 'المعلومات الأساسية',
+  additionalInfo: 'معلومات إضافية',
+  insuranceCompany: 'شركة التأمين',
+  policy: 'البوليصة',
+  createdAt: 'تاريخ الإنشاء',
+  updatedAt: 'تاريخ التحديث',
+  statistics: 'الإحصائيات',
+  totalMembers: 'إجمالي الأعضاء',
+  activePolicies: 'البوليصات النشطة',
+  totalClaims: 'إجمالي المطالبات',
+  loadError: 'فشل في تحميل صاحب العمل'
+};
+
 /**
  * Employer View Page (Read-Only)
  * Displays detailed information about an employer
@@ -33,7 +60,6 @@ import { getEmployerById } from 'services/api/employers.service';
 const EmployerView = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const intl = useIntl();
 
   const [employer, setEmployer] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -51,7 +77,7 @@ const EmployerView = () => {
       setEmployer(data);
     } catch (err) {
       console.error('[EmployerView] Failed to load employer:', err);
-      setError(err.response?.data?.message || intl.formatMessage({ id: 'employers.load-error' }) || 'Failed to load employer');
+      setError(err.response?.data?.message || LABELS.loadError);
     } finally {
       setLoading(false);
     }
@@ -69,19 +95,19 @@ const EmployerView = () => {
     return (
       <>
         <ModernPageHeader
-          title={intl.formatMessage({ id: 'employers.view' }) || 'Employer Details'}
-          subtitle={intl.formatMessage({ id: 'employers.view-subtitle' }) || 'View employer information'}
+          title={LABELS.view}
+          subtitle={LABELS.viewSubtitle}
           icon={BusinessIcon}
           breadcrumbs={[
-            { label: intl.formatMessage({ id: 'employers.list' }) || 'Employers', path: '/employers' },
-            { label: intl.formatMessage({ id: 'employers.view' }) || 'View', path: `/employers/${id}` }
+            { label: LABELS.list, path: '/employers' },
+            { label: LABELS.view, path: `/employers/${id}` }
           ]}
         />
         <MainCard>
           <Alert severity="error">{error}</Alert>
           <Box sx={{ mt: 2 }}>
             <Button variant="outlined" startIcon={<ArrowBackIcon />} onClick={() => navigate('/employers')}>
-              {intl.formatMessage({ id: 'common.back-to-list' }) || 'Back to List'}
+              {LABELS.backToList}
             </Button>
           </Box>
         </MainCard>
@@ -121,20 +147,20 @@ const EmployerView = () => {
   return (
     <>
       <ModernPageHeader
-        title={employer.nameAr || employer.nameEn || intl.formatMessage({ id: 'employers.view' }) || 'Employer Details'}
-        subtitle={`${intl.formatMessage({ id: 'employers.employer-code' }) || 'Code'}: ${employer.code || 'N/A'}`}
+        title={employer.nameAr || employer.nameEn || LABELS.view}
+        subtitle={`${LABELS.code}: ${employer.code || 'N/A'}`}
         icon={BusinessIcon}
         breadcrumbs={[
-          { label: intl.formatMessage({ id: 'employers.list' }) || 'Employers', path: '/employers' },
-          { label: intl.formatMessage({ id: 'employers.view' }) || 'View', path: `/employers/${id}` }
+          { label: LABELS.list, path: '/employers' },
+          { label: LABELS.view, path: `/employers/${id}` }
         ]}
         actions={
           <Stack direction="row" spacing={2}>
             <Button variant="outlined" startIcon={<ArrowBackIcon />} onClick={() => navigate('/employers')}>
-              {intl.formatMessage({ id: 'common.back' }) || 'Back'}
+              {LABELS.back}
             </Button>
             <Button variant="contained" startIcon={<EditIcon />} onClick={() => navigate(`/employers/edit/${id}`)}>
-              {intl.formatMessage({ id: 'common.edit' }) || 'Edit'}
+              {LABELS.edit}
             </Button>
           </Stack>
         }
@@ -145,32 +171,32 @@ const EmployerView = () => {
         <Box sx={{ mb: 3 }}>
           <Chip
             icon={employer.active ? <CheckCircleIcon /> : <CancelIcon />}
-            label={employer.active ? (intl.formatMessage({ id: 'common.active' }) || 'Active') : (intl.formatMessage({ id: 'common.inactive' }) || 'Inactive')}
+            label={employer.active ? LABELS.active : LABELS.inactive}
             color={employer.active ? 'success' : 'default'}
             size="medium"
           />
         </Box>
 
         {/* Basic Information Section */}
-        <SectionCard title={intl.formatMessage({ id: 'employers.basic-info' }) || 'Basic Information'}>
+        <SectionCard title={LABELS.basicInfo}>
           <InfoRow
-            label={intl.formatMessage({ id: 'employers.employer-code' }) || 'Employer Code'}
+            label={LABELS.employerCode}
             value={employer.code}
           />
           <InfoRow
-            label={intl.formatMessage({ id: 'employers.name-ar' }) || 'Name (Arabic)'}
+            label={LABELS.nameAr}
             value={employer.nameAr}
           />
           <InfoRow
-            label={intl.formatMessage({ id: 'employers.name-en' }) || 'Name (English)'}
+            label={LABELS.nameEn}
             value={employer.nameEn}
           />
           <InfoRow
-            label={intl.formatMessage({ id: 'common.status' }) || 'Status'}
+            label={LABELS.status}
             value={
               <Chip
                 icon={employer.active ? <CheckCircleIcon /> : <CancelIcon />}
-                label={employer.active ? (intl.formatMessage({ id: 'common.active' }) || 'Active') : (intl.formatMessage({ id: 'common.inactive' }) || 'Inactive')}
+                label={employer.active ? LABELS.active : LABELS.inactive}
                 color={employer.active ? 'success' : 'default'}
                 size="small"
               />
@@ -180,28 +206,28 @@ const EmployerView = () => {
 
         {/* Additional Information Section */}
         {(employer.insuranceCompanyId || employer.policyId || employer.createdAt) && (
-          <SectionCard title={intl.formatMessage({ id: 'employers.additional-info' }) || 'Additional Information'}>
+          <SectionCard title={LABELS.additionalInfo}>
             {employer.insuranceCompanyId && (
               <InfoRow
-                label={intl.formatMessage({ id: 'employers.insurance-company' }) || 'Insurance Company'}
+                label={LABELS.insuranceCompany}
                 value={employer.insuranceCompanyName || `ID: ${employer.insuranceCompanyId}`}
               />
             )}
             {employer.policyId && (
               <InfoRow
-                label={intl.formatMessage({ id: 'employers.policy' }) || 'Policy'}
+                label={LABELS.policy}
                 value={employer.policyName || `ID: ${employer.policyId}`}
               />
             )}
             {employer.createdAt && (
               <InfoRow
-                label={intl.formatMessage({ id: 'common.created-at' }) || 'Created At'}
+                label={LABELS.createdAt}
                 value={new Date(employer.createdAt).toLocaleString()}
               />
             )}
             {employer.updatedAt && (
               <InfoRow
-                label={intl.formatMessage({ id: 'common.updated-at' }) || 'Updated At'}
+                label={LABELS.updatedAt}
                 value={new Date(employer.updatedAt).toLocaleString()}
               />
             )}
@@ -210,7 +236,7 @@ const EmployerView = () => {
 
         {/* Statistics Section (if available) */}
         {(employer.totalMembers !== undefined || employer.activePolicies !== undefined) && (
-          <SectionCard title={intl.formatMessage({ id: 'employers.statistics' }) || 'Statistics'}>
+          <SectionCard title={LABELS.statistics}>
             <Grid container spacing={3}>
               {employer.totalMembers !== undefined && (
                 <Grid item xs={12} sm={6} md={4}>
@@ -220,7 +246,7 @@ const EmployerView = () => {
                         {employer.totalMembers}
                       </Typography>
                       <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                        {intl.formatMessage({ id: 'employers.total-members' }) || 'Total Members'}
+                        {LABELS.totalMembers}
                       </Typography>
                     </CardContent>
                   </Card>
@@ -234,7 +260,7 @@ const EmployerView = () => {
                         {employer.activePolicies}
                       </Typography>
                       <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                        {intl.formatMessage({ id: 'employers.active-policies' }) || 'Active Policies'}
+                        {LABELS.activePolicies}
                       </Typography>
                     </CardContent>
                   </Card>
@@ -248,7 +274,7 @@ const EmployerView = () => {
                         {employer.totalClaims}
                       </Typography>
                       <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                        {intl.formatMessage({ id: 'employers.total-claims' }) || 'Total Claims'}
+                        {LABELS.totalClaims}
                       </Typography>
                     </CardContent>
                   </Card>
@@ -262,10 +288,10 @@ const EmployerView = () => {
         <Divider sx={{ my: 3 }} />
         <Stack direction="row" spacing={2} justifyContent="flex-end">
           <Button variant="outlined" startIcon={<ArrowBackIcon />} onClick={() => navigate('/employers')}>
-            {intl.formatMessage({ id: 'common.back' }) || 'Back'}
+            {LABELS.back}
           </Button>
           <Button variant="contained" startIcon={<EditIcon />} onClick={() => navigate(`/employers/edit/${id}`)}>
-            {intl.formatMessage({ id: 'common.edit' }) || 'Edit'}
+            {LABELS.edit}
           </Button>
         </Stack>
       </MainCard>

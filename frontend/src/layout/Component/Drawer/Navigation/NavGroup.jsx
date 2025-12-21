@@ -6,9 +6,6 @@ import Typography from '@mui/material/Typography';
 // project imports
 import NavItem from './NavItem';
 
-// third-party
-import { FormattedMessage } from 'react-intl';
-
 export default function NavGroup({ item }) {
   const navCollapse = item.children?.map((menu) => {
     switch (menu.type) {
@@ -28,7 +25,7 @@ export default function NavGroup({ item }) {
       subheader={
         item.title && (
           <Typography variant="subtitle1" color="text.primary" sx={{ pl: 3, mb: 1.5 }}>
-            <FormattedMessage id={item.title} />
+            {item.title}
           </Typography>
         )
       }
