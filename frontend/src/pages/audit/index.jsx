@@ -39,6 +39,7 @@ const AuditPage = () => {
 
       <MainCard>
         <ModernEmptyState
+          icon={Timeline}
           title="صفحة سجل التدقيق قيد التطوير"
           description="سيتم إضافة سجل النشاطات والتغييرات قريباً"
           height={300}

@@ -25,6 +25,9 @@ import {
   AssignmentTurnedIn as PreApprovalIcon
 } from '@mui/icons-material';
 import MainCard from 'components/MainCard';
+import ModernPageHeader from 'components/tba/ModernPageHeader';
+import ModernEmptyState from 'components/tba/ModernEmptyState';
+import TableSkeleton from 'components/tba/LoadingSkeleton';
 import { usePreApprovalsList, useDeletePreApproval } from 'hooks/usePreApprovals';
 
 // Insurance UX Components - Phase B2 Step 3
@@ -104,24 +107,49 @@ const PreApprovalsList = () => {
     navigate('/pre-approvals/add');
   };
 
+  // Safe data extraction
+  const safeItems = Array.isArray(data?.items) ? data.items : [];
+
   return (
-    <MainCard title="إدارة طلبات الموافقات المسبقة">
-      <Box sx={{ mb: 3 }}>
-        <Stack direction="row" spacing={2} alignItems="center">
-          <TextField
-            placeholder="بحث بالمزود، التشخيص، أو اسم المؤمَّن عليه..."
-            variant="outlined"
-            size="small"
-            value={searchTerm}
-            onChange={handleSearch}
-            sx={{ flexGrow: 1, maxWidth: 400 }}
-          />
+    <>
+      <ModernPageHeader
+        title="إدارة طلبات الموافقات المسبقة"
+        subtitle="إدارة ومتابعة طلبات الموافقات المسبقة"
+        icon={PreApprovalIcon}
+        breadcrumbs={[{ label: 'الموافقات المسبقة', path: '/pre-approvals' }]}
+        actions={
           <Button variant="contained" startIcon={<AddIcon />} onClick={handleCreate}>
             طلب موافقة جديد
           </Button>
-        </Stack>
+        }
+      />
+
+    <MainCard>
+      <Box sx={{ mb: 3 }}>
+        <TextField
+          placeholder="بحث بالمزود، التشخيص، أو اسم المؤمّن عليه..."
+          variant="outlined"
+          size="small"
+          value={searchTerm}
+          onChange={handleSearch}
+          sx={{ width: { xs: '100%', sm: 400 } }}
+        />
       </Box>
 
+      {/* Loading State */}
+      {loading && <TableSkeleton rows={10} columns={9} />}
+
+      {/* Empty State */}
+      {!loading && safeItems.length === 0 && (
+        <ModernEmptyState
+          icon={PreApprovalIcon}
+          title="لا توجد طلبات موافقة مسبقة"
+          description="لم يتم العثور على طلبات"
+        />
+      )}
+
+      {/* Data Table */}
+      {!loading && safeItems.length > 0 && (
       <TableContainer component={Paper}>
         <Table>
           <TableHead>
@@ -138,22 +166,7 @@ const PreApprovalsList = () => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {loading && (
-              <TableRow>
-                <TableCell colSpan={8} align="center">
-                  <Typography>جاري التحميل...</Typography>
-                </TableCell>
-              </TableRow>
-            )}
-            {!loading && (!data?.items || data.items.length === 0) && (
-              <TableRow>
-                <TableCell colSpan={8} align="center">
-                  <Typography>لا توجد بيانات</Typography>
-                </TableCell>
-              </TableRow>
-            )}
-            {!loading && Array.isArray(data?.items) &&
-              data.items.map((preApproval) => (
+              {safeItems.map((preApproval) => (
                 <TableRow key={preApproval?.id ?? Math.random()} hover>
                   <TableCell>
                     <Stack direction="row" spacing={0.5} alignItems="center">
@@ -242,7 +255,9 @@ const PreApprovalsList = () => {
           labelDisplayedRows={({ from, to, count }) => `${from}-${to} من ${count}`}
         />
       </TableContainer>
+      )}
     </MainCard>
+    </>
   );
 };
 

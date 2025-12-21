@@ -23,10 +23,13 @@ import {
   Edit as EditIcon,
   Delete as DeleteIcon,
   Search as SearchIcon,
-  Add as AddIcon
+  Add as AddIcon,
+  Policy as PolicyIcon
 } from '@mui/icons-material';
 
 import MainCard from 'components/MainCard';
+import ModernPageHeader from 'components/tba/ModernPageHeader';
+import ModernEmptyState from 'components/tba/ModernEmptyState';
 import TableSkeleton from 'components/tba/LoadingSkeleton';
 import RBACGuard from 'components/tba/RBACGuard';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -111,6 +114,9 @@ const InsurancePoliciesList = () => {
     return <Chip label={status || 'N/A'} color={statusColors[status] || 'default'} size="small" variant="outlined" />;
   };
 
+  // Safe data extraction
+  const safeContent = Array.isArray(data?.content) ? data.content : [];
+
   if (error) {
     return (
       <MainCard title="بوليصات التأمين">
@@ -121,16 +127,21 @@ const InsurancePoliciesList = () => {
 
   return (
     <RBACGuard permission="INSURANCE_POLICY_VIEW">
-      <MainCard
+      <ModernPageHeader
         title="بوليصات التأمين"
-        secondary={
+        subtitle="إدارة ومتابعة بوليصات التأمين"
+        icon={PolicyIcon}
+        breadcrumbs={[{ label: 'بوليصات التأمين', path: '/insurance-policies' }]}
+        actions={
           <RBACGuard permission="INSURANCE_POLICY_CREATE">
             <Button variant="contained" startIcon={<AddIcon />} onClick={() => navigate('/insurance-policies/add')}>
               إضافة بوليصة جديدة
             </Button>
           </RBACGuard>
         }
-      >
+      />
+
+      <MainCard>
         {/* Search Bar */}
         <Box sx={{ mb: 3 }}>
           <form onSubmit={handleSearchSubmit}>
@@ -163,10 +174,20 @@ const InsurancePoliciesList = () => {
           </form>
         </Box>
 
-        {/* Table */}
-        {isLoading ? (
-          <TableSkeleton rows={params.size} columns={7} />
-        ) : (
+        {/* Loading State */}
+        {isLoading && <TableSkeleton rows={params.size} columns={7} />}
+
+        {/* Empty State */}
+        {!isLoading && safeContent.length === 0 && (
+          <ModernEmptyState
+            icon={PolicyIcon}
+            title="لا توجد بوليصات تأمين"
+            description="لم يتم العثور على بوليصات"
+          />
+        )}
+
+        {/* Data Table */}
+        {!isLoading && safeContent.length > 0 && (
           <>
             <TableContainer>
               <Table>
@@ -196,8 +217,7 @@ const InsurancePoliciesList = () => {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {Array.isArray(data?.content) && data.content.length > 0 ? (
-                    data.content.map((policy) => (
+                  {safeContent.map((policy) => (
                       <TableRow key={policy.id} hover>
                         <TableCell>{policy.id}</TableCell>
                         <TableCell>
@@ -233,16 +253,7 @@ const InsurancePoliciesList = () => {
                           </Stack>
                         </TableCell>
                       </TableRow>
-                    ))
-                  ) : (
-                    <TableRow>
-                      <TableCell colSpan={7} align="center">
-                        <Typography variant="body2" color="text.secondary" sx={{ py: 3 }}>
-                          لا توجد بوليصات تأمين
-                        </Typography>
-                      </TableCell>
-                    </TableRow>
-                  )}
+                    ))}
                 </TableBody>
               </Table>
             </TableContainer>

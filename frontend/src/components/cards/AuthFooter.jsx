@@ -14,15 +14,15 @@ export default function AuthFooter() {
         sx={{ gap: 2, justifyContent: { xs: 'center', sm: 'space-between', textAlign: { xs: 'center', sm: 'inherit' } } }}
       >
         <Typography variant="subtitle2" color="secondary">
-          © {new Date().getFullYear()} TBA-WAAD Insurance System. All rights reserved.
+          © {new Date().getFullYear()} نظام وعد - إدارة مطالبات التأمين. جميع الحقوق محفوظة.
         </Typography>
 
         <Stack direction={{ xs: 'column', sm: 'row' }} sx={{ gap: { xs: 1, sm: 3 }, textAlign: { xs: 'center', sm: 'inherit' } }}>
           <Typography variant="subtitle2" color="secondary">
-            Terms and Conditions
+            الشروط والأحكام
           </Typography>
           <Typography variant="subtitle2" color="secondary">
-            Privacy Policy
+            سياسة الخصوصية
           </Typography>
         </Stack>
       </Stack>

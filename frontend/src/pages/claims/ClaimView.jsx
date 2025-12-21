@@ -28,6 +28,7 @@ import {
   Description as DocIcon
 } from '@mui/icons-material';
 import MainCard from 'components/MainCard';
+import { ModernPageHeader } from 'components/tba';
 import { useClaimDetails } from 'hooks/useClaims';
 
 // Insurance UX Components - Phase B2 Step 2
@@ -103,21 +104,18 @@ const ClaimView = () => {
   const timelineSteps = getWorkflowSteps('claim', claim?.status, 'ar');
 
   return (
-    <MainCard
-      title={
+    <>
+    <ModernPageHeader
+      title={`مطالبة #${claim?.id ?? '-'}`}
+      subtitle={claim?.memberFullNameArabic ?? claim?.memberFullNameEnglish ?? '-'}
+      icon={ReceiptIcon}
+      breadcrumbs={[
+        { label: 'الرئيسية', href: '/' },
+        { label: 'المطالبات', href: '/claims' },
+        { label: `مطالبة #${claim?.id ?? '-'}` }
+      ]}
+      actions={
         <Stack direction="row" spacing={2} alignItems="center">
-          <ReceiptIcon color="primary" />
-          <Box>
-            <Typography variant="h5">مطالبة #{claim?.id ?? '-'}</Typography>
-            <Typography variant="caption" color="text.secondary">
-              {claim?.memberFullNameArabic ?? claim?.memberFullNameEnglish ?? '-'}
-            </Typography>
-          </Box>
-        </Stack>
-      }
-      secondary={
-        <Stack direction="row" spacing={2} alignItems="center">
-          {/* Insurance UX - CardStatusBadge */}
           <CardStatusBadge
             status={CLAIM_STATUS_MAP[claim?.status] ?? 'PENDING'}
             customLabel={claim?.statusLabel}
@@ -139,7 +137,8 @@ const ClaimView = () => {
           </Button>
         </Stack>
       }
-    >
+    />
+    <MainCard>
       <Stack spacing={3}>
         {/* ===================== CLAIM TIMELINE ===================== */}
         <Card variant="outlined">
@@ -357,6 +356,7 @@ const ClaimView = () => {
         </Grid>
       </Stack>
     </MainCard>
+    </>
   );
 };
 

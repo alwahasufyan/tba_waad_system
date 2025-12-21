@@ -39,6 +39,7 @@ import ModernPageHeader from 'components/tba/ModernPageHeader';
 import { getMemberById, updateMember } from 'services/api/members.service';
 import axiosClient from 'utils/axios';
 import { openSnackbar } from 'api/snackbar';
+import { FIXED_INSURANCE_COMPANY, getFixedInsuranceCompanyId } from 'constants/insuranceCompany';
 
 /**
  * Member Edit Page
@@ -89,7 +90,7 @@ const MemberEdit = () => {
 
   // Selectors Data
   const [employers, setEmployers] = useState([]);
-  const [insuranceCompanies, setInsuranceCompanies] = useState([]);
+  // Insurance company is fixed - no dropdown needed (single-tenant mode)
   const [benefitPackages, setBenefitPackages] = useState([]);
 
   // Loading & Errors
@@ -125,7 +126,7 @@ const MemberEdit = () => {
         nationality: member.nationality || '',
         policyNumber: member.policyNumber || '',
         benefitPackageId: member.benefitPackageId || '',
-        insuranceCompanyId: member.insuranceCompanyId || '',
+        insuranceCompanyId: getFixedInsuranceCompanyId(), // Fixed single-tenant insurance company
         employeeNumber: member.employeeNumber || '',
         joinDate: member.joinDate || null,
         occupation: member.occupation || '',
@@ -151,14 +152,13 @@ const MemberEdit = () => {
 
   const loadSelectors = async () => {
     try {
-      const [employersRes, insuranceRes, packagesRes] = await Promise.all([
+      const [employersRes, packagesRes] = await Promise.all([
         axiosClient.get('/employers/selector'),
-        axiosClient.get('/insurance-companies/selector'),
+        // Insurance company is fixed in single-tenant mode - no API call needed
         axiosClient.get('/benefit-packages/selector')
       ]);
 
       setEmployers(employersRes.data?.data || []);
-      setInsuranceCompanies(insuranceRes.data?.data || []);
       setBenefitPackages(packagesRes.data?.data || []);
     } catch (err) {
       console.error('[MemberEdit] Failed to load selectors:', err);
@@ -483,21 +483,15 @@ const MemberEdit = () => {
               </Grid>
 
               <Grid item xs={12} md={4}>
-                <FormControl fullWidth>
-                  <InputLabel>Insurance Company</InputLabel>
-                  <Select
-                    value={form.insuranceCompanyId}
-                    onChange={handleChange('insuranceCompanyId')}
-                    label="Insurance Company"
-                  >
-                    <MenuItem value="">None</MenuItem>
-                    {Array.isArray(insuranceCompanies) && insuranceCompanies.map((ins) => (
-                      <MenuItem key={ins.id} value={ins.id}>
-                        {ins.nameAr}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
+                {/* Fixed Insurance Company - Single Tenant Mode */}
+                <TextField
+                  fullWidth
+                  label="شركة التأمين"
+                  value={FIXED_INSURANCE_COMPANY.name}
+                  InputProps={{ readOnly: true }}
+                  disabled
+                  helperText="شركة التأمين ثابتة في النظام"
+                />
               </Grid>
 
               <Grid item xs={12} md={4}>

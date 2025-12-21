@@ -33,9 +33,13 @@ import {
   BankOutlined,
   SearchOutlined
 } from '@ant-design/icons';
+import { Business as BusinessIcon } from '@mui/icons-material';
 
 // Project imports
 import MainCard from 'components/MainCard';
+import ModernPageHeader from 'components/tba/ModernPageHeader';
+import ModernEmptyState from 'components/tba/ModernEmptyState';
+import TableSkeleton from 'components/tba/LoadingSkeleton';
 import { useInsuranceCompaniesList, useDeleteInsuranceCompany } from 'hooks/useInsuranceCompanies';
 
 // Insurance UX Components - Phase B2 Step 5
@@ -95,6 +99,9 @@ const InsuranceCompaniesList = () => {
 
   const { remove, deleting } = useDeleteInsuranceCompany();
 
+  // Safe data extraction
+  const safeItems = extractItems(data);
+
   // Debounce search
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -127,20 +134,24 @@ const InsuranceCompaniesList = () => {
   };
 
   return (
+    <>
+      <ModernPageHeader
+        title="إدارة شركات التأمين"
+        subtitle="إدارة ومتابعة شركات التأمين"
+        icon={BusinessIcon}
+        breadcrumbs={[{ label: 'شركات التأمين', path: '/insurance-companies' }]}
+        actions={
+          <Button
+            variant="contained"
+            startIcon={<PlusOutlined />}
+            onClick={() => navigate('/insurance-companies/add')}
+          >
+            إضافة شركة تأمين
+          </Button>
+        }
+      />
+
     <MainCard>
-      <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 3 }}>
-        <Stack direction="row" spacing={1.5} alignItems="center">
-          <BankOutlined style={{ fontSize: 24, color: '#1890ff' }} />
-          <Typography variant="h4">إدارة شركات التأمين</Typography>
-        </Stack>
-        <Button
-          variant="contained"
-          startIcon={<PlusOutlined />}
-          onClick={() => navigate('/insurance-companies/add')}
-        >
-          إضافة شركة تأمين
-        </Button>
-      </Stack>
 
       <Box sx={{ mb: 2 }}>
         <TextField
@@ -154,6 +165,20 @@ const InsuranceCompaniesList = () => {
         />
       </Box>
 
+      {/* Loading State */}
+      {loading && <TableSkeleton rows={10} columns={6} />}
+
+      {/* Empty State */}
+      {!loading && safeItems.length === 0 && (
+        <ModernEmptyState
+          icon={BusinessIcon}
+          title="لا توجد شركات تأمين مسجلة"
+          description="ابدأ بإضافة شركة تأمين جديدة"
+        />
+      )}
+
+      {/* Data Table */}
+      {!loading && safeItems.length > 0 && (
       <TableContainer component={Paper}>
         <Table>
           <TableHead>
@@ -167,35 +192,7 @@ const InsuranceCompaniesList = () => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {loading ? (
-              <TableRow>
-                <TableCell colSpan={6} align="center" sx={{ py: 4 }}>
-                  <Typography color="text.secondary">جاري تحميل شركات التأمين...</Typography>
-                </TableCell>
-              </TableRow>
-            ) : extractItems(data).length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={6} align="center" sx={{ py: 6 }}>
-                  <Stack spacing={2} alignItems="center">
-                    <BankOutlined style={{ fontSize: 48, color: '#d9d9d9' }} />
-                    <Typography variant="h6" color="text.secondary">
-                      لا توجد شركات تأمين مسجلة بعد
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      اضغط على "إضافة شركة تأمين" لإضافة أول شركة
-                    </Typography>
-                    <Button
-                      variant="outlined"
-                      startIcon={<PlusOutlined />}
-                      onClick={() => navigate('/insurance-companies/add')}
-                    >
-                      إضافة شركة تأمين
-                    </Button>
-                  </Stack>
-                </TableCell>
-              </TableRow>
-            ) : (
-              extractItems(data).map((company, index) => {
+            {safeItems.map((company, index) => {
                 // Defensive: ensure company object exists
                 if (!company) return null;
                 const companyId = company?.id ?? `temp-${index}`;
@@ -296,11 +293,11 @@ const InsuranceCompaniesList = () => {
                     </TableCell>
                   </TableRow>
                 );
-              })
-            )}
+              })}
           </TableBody>
         </Table>
       </TableContainer>
+      )}
 
       <TablePagination
         component="div"
@@ -314,6 +311,7 @@ const InsuranceCompaniesList = () => {
         labelDisplayedRows={({ from, to, count }) => `${from}-${to} من ${count !== -1 ? count : `أكثر من ${to}`}`}
       />
     </MainCard>
+    </>
   );
 };
 

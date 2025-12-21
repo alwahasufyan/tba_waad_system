@@ -90,7 +90,7 @@ export default function Profile() {
 
   return (
     <Box sx={{ flexShrink: 0, ml: 'auto' }}>
-      <Tooltip title="Profile" disableInteractive>
+      <Tooltip title="الملف الشخصي" disableInteractive>
         <ButtonBase
           sx={(theme) => ({
             p: 0.25,
@@ -137,13 +137,13 @@ export default function Profile() {
                           <Stack>
                             <Typography variant="h6">{user?.name}</Typography>
                             <Typography variant="body2" color="text.secondary">
-                              UI/UX Designer
+                              {user?.role || 'مستخدم النظام'}
                             </Typography>
                           </Stack>
                         </Stack>
                       </Grid>
                       <Grid>
-                        <Tooltip title="Logout">
+                        <Tooltip title="تسجيل الخروج">
                           <IconButton size="large" sx={{ color: 'text.primary' }} onClick={handleLogout}>
                             <LogoutOutlined />
                           </IconButton>
@@ -167,7 +167,7 @@ export default function Profile() {
                           }
                         }}
                         icon={<UserOutlined />}
-                        label="Profile"
+                        label="الملف الشخصي"
                         {...a11yProps(0)}
                       />
                       <Tab
@@ -183,7 +183,7 @@ export default function Profile() {
                           }
                         }}
                         icon={<SettingOutlined />}
-                        label="Setting"
+                        label="الإعدادات"
                         {...a11yProps(1)}
                       />
                     </Tabs>

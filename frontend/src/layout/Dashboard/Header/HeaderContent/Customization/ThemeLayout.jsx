@@ -18,9 +18,9 @@ import horizontalLayout from 'assets/images/customization/horizontal.svg';
 import miniMenu from 'assets/images/customization/mini-menu.svg';
 
 const layouts = [
-  { value: MenuOrientation.VERTICAL, label: 'Default', img: defaultLayout },
-  { value: MenuOrientation.HORIZONTAL, label: 'Horizontal', img: horizontalLayout },
-  { value: MenuOrientation.MINI_VERTICAL, label: 'Mini Drawer', img: miniMenu }
+  { value: MenuOrientation.VERTICAL, label: 'افتراضي', img: defaultLayout },
+  { value: MenuOrientation.HORIZONTAL, label: 'أفقي', img: horizontalLayout },
+  { value: MenuOrientation.MINI_VERTICAL, label: 'مصغر', img: miniMenu }
 ];
 
 // ==============================|| CUSTOMIZATION - THEME LAYOUT/ORIENTATION ||============================== //

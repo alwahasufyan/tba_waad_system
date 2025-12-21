@@ -179,14 +179,9 @@ const useRBACSidebar = () => {
         roles: ['SUPER_ADMIN', 'INSURANCE_ADMIN'],
         permissions: ['MANAGE_POLICIES']
       },
-      {
-        id: 'companies',
-        label: 'nav.insurance-companies',
-        icon: Business,
-        path: '/insurance-companies',
-        roles: ['SUPER_ADMIN'],
-        permissions: []
-      },
+      // Insurance Companies removed - Single Tenant Lock (Phase D0)
+      // System operates with fixed company: "الواحة للتأمين"
+      // Access only via system settings, not as CRUD module
       {
         id: 'rbac',
         label: 'nav.rbac',

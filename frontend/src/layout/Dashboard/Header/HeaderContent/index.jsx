@@ -13,7 +13,7 @@ import Notification from './Notification';
 import FullScreen from './FullScreen';
 import Customization from './Customization';
 import MobileSection from './MobileSection';
-import MegaMenuSection from './MegaMenuSection';
+// MegaMenuSection removed - Phase D0 (No demo pages)
 
 import useConfig from 'hooks/useConfig';
 import { MenuOrientation } from 'config';
@@ -29,7 +29,7 @@ export default function HeaderContent() {
   const localization = useMemo(() => <Localization />, []);
   const companySwitcher = useMemo(() => <CompanySwitcher />, []);
 
-  const megaMenu = useMemo(() => <MegaMenuSection />, []);
+  // MegaMenuSection removed - Phase D0
 
   return (
     <>
@@ -37,7 +37,7 @@ export default function HeaderContent() {
       <Box sx={{ width: 1, ml: 1 }} />
 
       <Stack direction="row" sx={{ alignItems: 'center', gap: 0.75 }}>
-        {!downLG && megaMenu}
+        {/* MegaMenu removed - No demo pages in production */}
         {!downLG && companySwitcher}
         {!downLG && <Divider orientation="vertical" flexItem sx={{ mx: 0.5 }} />}
         {localization}

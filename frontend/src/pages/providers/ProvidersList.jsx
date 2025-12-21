@@ -40,6 +40,7 @@ import MainCard from 'components/MainCard';
 import RBACGuard from 'components/tba/RBACGuard';
 import TableSkeleton from 'components/tba/LoadingSkeleton';
 import ErrorFallback, { EmptyState } from 'components/tba/ErrorFallback';
+import { ModernPageHeader, ModernEmptyState } from 'components/tba';
 import { providersService } from 'services/api';
 import { useSnackbar } from 'notistack';
 
@@ -347,22 +348,23 @@ export default function ProvidersList() {
 
   return (
     <RBACGuard requiredPermission="PROVIDER_READ">
-      <MainCard
-        title={
-          <Stack direction="row" spacing={1.5} alignItems="center">
-            <MedicineBoxOutlined style={{ fontSize: 24, color: '#1890ff' }} />
-            <Typography variant="h4">إدارة مقدمي الخدمات الصحية</Typography>
-          </Stack>
-        }
-        content={false}
-        secondary={
+      <>
+      <ModernPageHeader
+        title="إدارة مقدمي الخدمات الصحية"
+        icon={MedicineBoxOutlined}
+        breadcrumbs={[
+          { label: 'الرئيسية', href: '/' },
+          { label: 'مقدمو الخدمات' }
+        ]}
+        actions={
           <RBACGuard requiredPermission="PROVIDER_CREATE">
             <Button variant="contained" startIcon={<PlusOutlined />} onClick={handleCreate}>
               إضافة مقدم خدمة
             </Button>
           </RBACGuard>
         }
-      >
+      />
+      <MainCard content={false}>
         {/* Filters */}
         <Box sx={{ p: 2 }}>
           <Stack direction="row" spacing={2}>
@@ -404,17 +406,13 @@ export default function ProvidersList() {
 
         {/* Empty State */}
         {!loading && !error && (!Array.isArray(providers) || providers.length === 0) && (
-          <Box sx={{ p: 6, textAlign: 'center' }}>
-            <Stack spacing={2} alignItems="center">
-              <MedicineBoxOutlined style={{ fontSize: 48, color: '#d9d9d9' }} />
-              <Typography variant="h6" color="text.secondary">
-                لا يوجد مقدمو خدمة صحية مسجلون حاليًا
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                {searchTerm || typeFilter || statusFilter
-                  ? 'جرب تعديل معايير البحث أو التصفية'
-                  : 'اضغط على "إضافة مقدم خدمة" للبدء'}
-              </Typography>
+          <ModernEmptyState
+            icon={MedicineBoxOutlined}
+            title="لا يوجد مقدمو خدمة صحية"
+            description={searchTerm || typeFilter || statusFilter
+              ? 'جرب تعديل معايير البحث أو التصفية'
+              : 'اضغط على "إضافة مقدم خدمة" للبدء'}
+            action={
               <RBACGuard requiredPermission="PROVIDER_CREATE">
                 <Button
                   variant="outlined"
@@ -424,8 +422,8 @@ export default function ProvidersList() {
                   إضافة مقدم خدمة
                 </Button>
               </RBACGuard>
-            </Stack>
-          </Box>
+            }
+          />
         )}
 
         {/* Data Table */}
@@ -514,6 +512,7 @@ export default function ProvidersList() {
           </DialogActions>
         </Dialog>
       </MainCard>
+      </>
     </RBACGuard>
   );
 }

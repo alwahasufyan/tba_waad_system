@@ -15,8 +15,8 @@ import defaultLayout from 'assets/images/customization/default.svg';
 import rtlLayout from 'assets/images/customization/rtl.svg';
 
 const layouts = [
-  { value: 'ltr', label: 'LTR', img: defaultLayout },
-  { value: 'rtl', label: 'RTL', img: rtlLayout }
+  { value: 'ltr', label: 'يسار لليمين', img: defaultLayout },
+  { value: 'rtl', label: 'يمين لليسار', img: rtlLayout }
 ];
 
 // ==============================|| CUSTOMIZATION - MENU DIRECTION ||============================== //

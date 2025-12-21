@@ -137,7 +137,7 @@ const menuItem = [
   },
   {
     id: 'group-claims',
-    title: 'المطالبات والخدمات',
+    title: 'إدارة المطالبات',
     type: 'group',
     children: [
       {
@@ -154,7 +154,7 @@ const menuItem = [
         title: 'الزيارات',
         type: 'item',
         url: '/visits',
-        icon: AssignmentIcon,
+        icon: LocalHospitalIcon,
         breadcrumbs: true,
         search: 'visits appointments consultations الزيارات المواعيد'
       },
@@ -171,7 +171,7 @@ const menuItem = [
   },
   {
     id: 'group-medical',
-    title: 'الإعدادات الطبية',
+    title: 'الإدارة الطبية',
     type: 'group',
     children: [
       {
@@ -253,12 +253,12 @@ const menuItem = [
       },
       {
         id: 'audit',
-        title: 'سجل المراجعة',
+        title: 'سجل التدقيق',
         type: 'item',
         url: '/audit',
         icon: AssessmentIcon,
         breadcrumbs: true,
-        search: 'audit log history سجل المراجعة'
+        search: 'audit log history سجل التدقيق'
       }
     ]
   }

@@ -52,7 +52,7 @@ export default function ThemeModeLayout() {
               >
                 <Stack sx={{ gap: 1.25, alignItems: 'center' }}>
                   <CardMedia component="img" src={defaultLayout} alt="Vertical" sx={{ borderRadius: 1, width: 64, height: 64 }} />
-                  <Typography variant="caption">Light</Typography>
+                  <Typography variant="caption">فاتح</Typography>
                 </Stack>
               </MainCard>
             }
@@ -75,7 +75,7 @@ export default function ThemeModeLayout() {
               >
                 <Stack sx={{ gap: 1.25, alignItems: 'center' }}>
                   <CardMedia component="img" src={darkLayout} alt="Vertical" sx={{ borderRadius: 1, width: 64, height: 64 }} />
-                  <Typography variant="caption">Dark</Typography>
+                  <Typography variant="caption">داكن</Typography>
                 </Stack>
               </MainCard>
             }
@@ -98,7 +98,7 @@ export default function ThemeModeLayout() {
               >
                 <Stack sx={{ gap: 1.25, alignItems: 'center' }}>
                   <CardMedia component="img" src={systemLayout} alt="Vertical" sx={{ borderRadius: 1, width: 64, height: 64 }} />
-                  <Typography variant="caption">System</Typography>
+                  <Typography variant="caption">النظام</Typography>
                 </Stack>
               </MainCard>
             }

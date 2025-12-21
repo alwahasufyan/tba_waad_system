@@ -1,28 +1,30 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Box, Button, Grid, TextField, FormControl, InputLabel, Select, MenuItem, Stack, Alert, Autocomplete } from '@mui/material';
-import { Save as SaveIcon, ArrowBack } from '@mui/icons-material';
+import { Save as SaveIcon, ArrowBack, AssignmentTurnedIn as PreApprovalIcon } from '@mui/icons-material';
 import MainCard from 'components/MainCard';
+import { ModernPageHeader } from 'components/tba';
 import { useCreatePreApproval } from 'hooks/usePreApprovals';
-import { membersService, insuranceCompaniesService } from 'services/api';
+import { membersService } from 'services/api';
+import { FIXED_INSURANCE_COMPANY, getFixedInsuranceCompanyId } from 'constants/insuranceCompany';
 
 const PreApprovalCreate = () => {
   const navigate = useNavigate();
   const { create, creating, error } = useCreatePreApproval();
 
   const [members, setMembers] = useState([]);
-  const [companies, setCompanies] = useState([]);
+  // Insurance company is fixed in single-tenant mode - no dropdown needed
   const [policies, setPolicies] = useState([]);
   const [packages, setPackages] = useState([]);
 
   const [loadingMembers, setLoadingMembers] = useState(false);
-  const [loadingCompanies, setLoadingCompanies] = useState(false);
+  // No loading state for companies - fixed in single-tenant mode
   const [loadingPolicies, setLoadingPolicies] = useState(false);
   const [loadingPackages, setLoadingPackages] = useState(false);
 
   const [formData, setFormData] = useState({
     memberId: null,
-    insuranceCompanyId: '',
+    insuranceCompanyId: getFixedInsuranceCompanyId(), // Fixed single-tenant insurance company
     insurancePolicyId: '',
     benefitPackageId: '',
     providerName: '',
@@ -36,17 +38,12 @@ const PreApprovalCreate = () => {
 
   useEffect(() => {
     fetchMembers();
-    fetchCompanies();
+    // Fetch policies for fixed insurance company on mount
+    fetchPolicies(getFixedInsuranceCompanyId());
   }, []);
 
-  useEffect(() => {
-    if (formData.insuranceCompanyId) {
-      fetchPolicies(formData.insuranceCompanyId);
-    } else {
-      setPolicies([]);
-      setPackages([]);
-    }
-  }, [formData.insuranceCompanyId]);
+  // Insurance company is fixed - no need to watch for changes
+  // Policies are fetched once on mount
 
   useEffect(() => {
     if (formData.insurancePolicyId) {
@@ -68,17 +65,7 @@ const PreApprovalCreate = () => {
     }
   };
 
-  const fetchCompanies = async () => {
-    try {
-      setLoadingCompanies(true);
-      const result = await insuranceCompaniesService.getAll({ page: 1, size: 1000 });
-      setCompanies(result.items || []);
-    } catch (err) {
-      console.error('Error fetching companies:', err);
-    } finally {
-      setLoadingCompanies(false);
-    }
-  };
+  // Insurance company is fixed in single-tenant mode - no need to fetch companies
 
   const fetchPolicies = async (companyId) => {
     try {
@@ -179,7 +166,17 @@ const PreApprovalCreate = () => {
   };
 
   return (
-    <MainCard title="طلب موافقة مسبقة جديد">
+    <>
+    <ModernPageHeader
+      title="طلب موافقة مسبقة جديد"
+      icon={PreApprovalIcon}
+      breadcrumbs={[
+        { label: 'الرئيسية', href: '/' },
+        { label: 'الموافقات المسبقة', href: '/pre-approvals' },
+        { label: 'طلب جديد' }
+      ]}
+    />
+    <MainCard>
       <form onSubmit={handleSubmit}>
         <Grid container spacing={3}>
           {error && (
@@ -204,29 +201,15 @@ const PreApprovalCreate = () => {
           </Grid>
 
           <Grid item xs={12} md={6}>
-            <FormControl fullWidth error={!!formErrors.insuranceCompanyId} required>
-              <InputLabel>شركة التأمين</InputLabel>
-              <Select name="insuranceCompanyId" value={formData.insuranceCompanyId} onChange={handleChange} label="شركة التأمين">
-                {loadingCompanies && (
-                  <MenuItem disabled>
-                    <em>جاري التحميل...</em>
-                  </MenuItem>
-                )}
-                {!loadingCompanies && companies.length === 0 && (
-                  <MenuItem disabled>
-                    <em>لا توجد شركات تأمين</em>
-                  </MenuItem>
-                )}
-                {Array.isArray(companies) && companies.map((company) => (
-                  <MenuItem key={company.id} value={company.id}>
-                    {company.name} ({company.code})
-                  </MenuItem>
-                ))}
-              </Select>
-              {formErrors.insuranceCompanyId && (
-                <Box sx={{ color: 'error.main', fontSize: '0.75rem', mt: 0.5 }}>{formErrors.insuranceCompanyId}</Box>
-              )}
-            </FormControl>
+            {/* Fixed Insurance Company - Single Tenant Mode */}
+            <TextField
+              fullWidth
+              label="شركة التأمين"
+              value={FIXED_INSURANCE_COMPANY.name}
+              InputProps={{ readOnly: true }}
+              disabled
+              helperText="شركة التأمين ثابتة في النظام"
+            />
           </Grid>
 
           <Grid item xs={12} md={6}>
@@ -366,6 +349,7 @@ const PreApprovalCreate = () => {
         </Grid>
       </form>
     </MainCard>
+    </>
   );
 };
 

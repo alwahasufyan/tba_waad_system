@@ -3,19 +3,18 @@ import { useLocation, useNavigate } from 'react-router';
 
 // material-ui
 import List from '@mui/material/List';
-import Link from '@mui/material/Link';
 import ListItemButton from '@mui/material/ListItemButton';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
+import Typography from '@mui/material/Typography';
+import Box from '@mui/material/Box';
 
 // assets
-import CommentOutlined from '@ant-design/icons/CommentOutlined';
-import LockOutlined from '@ant-design/icons/LockOutlined';
-import QuestionCircleOutlined from '@ant-design/icons/QuestionCircleOutlined';
-import UserOutlined from '@ant-design/icons/UserOutlined';
-import UnorderedListOutlined from '@ant-design/icons/UnorderedListOutlined';
+import SettingOutlined from '@ant-design/icons/SettingOutlined';
+import SafetyOutlined from '@ant-design/icons/SafetyOutlined';
 
 // ==============================|| HEADER PROFILE - SETTING TAB ||============================== //
+// Phase D0: Simplified - removed demo links (Support, Privacy, Feedback, History)
 
 export default function SettingTab() {
   const navigate = useNavigate();
@@ -32,7 +31,7 @@ export default function SettingTab() {
 
   useEffect(() => {
     const pathToIndex = {
-      '/apps/profiles/account/settings': 1
+      '/settings': 0
     };
 
     setSelectedIndex(pathToIndex[location.pathname] ?? undefined);
@@ -40,40 +39,17 @@ export default function SettingTab() {
 
   return (
     <List component="nav" sx={{ p: 0, '& .MuiListItemIcon-root': { minWidth: 32 } }}>
-      <Link underline="none" sx={{ color: 'inherit' }} target="_blank" href="https://codedthemes.support-hub.io/">
-        <ListItemButton selected={selectedIndex === 0} onClick={(event) => handleListItemClick(event, 0)}>
-          <ListItemIcon>
-            <QuestionCircleOutlined />
-          </ListItemIcon>
-          <ListItemText primary="Support" />
-        </ListItemButton>
-      </Link>
-      <ListItemButton selected={selectedIndex === 1} onClick={(event) => handleListItemClick(event, 1, '/apps/profiles/account/settings')}>
+      <ListItemButton selected={selectedIndex === 0} onClick={(event) => handleListItemClick(event, 0, '/settings')}>
         <ListItemIcon>
-          <UserOutlined />
+          <SettingOutlined />
         </ListItemIcon>
-        <ListItemText primary="Account Settings" />
+        <ListItemText primary="إعدادات النظام" />
       </ListItemButton>
-      <ListItemButton selected={selectedIndex === 2} onClick={(event) => handleListItemClick(event, 2)}>
-        <ListItemIcon>
-          <LockOutlined />
-        </ListItemIcon>
-        <ListItemText primary="Privacy Center" />
-      </ListItemButton>
-      <Link underline="none" style={{ color: 'inherit' }} target="_blank" href="https://codedthemes.support-hub.io/">
-        <ListItemButton selected={selectedIndex === 3} onClick={(event) => handleListItemClick(event, 3)}>
-          <ListItemIcon>
-            <CommentOutlined />
-          </ListItemIcon>
-          <ListItemText primary="Feedback" />
-        </ListItemButton>
-      </Link>
-      <ListItemButton selected={selectedIndex === 4} onClick={(event) => handleListItemClick(event, 4)}>
-        <ListItemIcon>
-          <UnorderedListOutlined />
-        </ListItemIcon>
-        <ListItemText primary="History" />
-      </ListItemButton>
+      <Box sx={{ p: 2, pt: 1.5 }}>
+        <Typography variant="caption" color="text.secondary">
+          نظام وعد - إدارة مطالبات التأمين الصحي
+        </Typography>
+      </Box>
     </List>
   );
 }

@@ -14,10 +14,12 @@ import {
   Autocomplete,
   CircularProgress
 } from '@mui/material';
-import { Save as SaveIcon, ArrowBack } from '@mui/icons-material';
+import { Save as SaveIcon, ArrowBack, AssignmentTurnedIn as PreApprovalIcon } from '@mui/icons-material';
 import MainCard from 'components/MainCard';
+import { ModernPageHeader } from 'components/tba';
 import { usePreApprovalDetails, useUpdatePreApproval } from 'hooks/usePreApprovals';
-import { membersService, insuranceCompaniesService } from 'services/api';
+import { membersService } from 'services/api';
+import { FIXED_INSURANCE_COMPANY, getFixedInsuranceCompanyId } from 'constants/insuranceCompany';
 
 const PreApprovalEdit = () => {
   const { id } = useParams();
@@ -26,18 +28,18 @@ const PreApprovalEdit = () => {
   const { update, updating, error: updateError } = useUpdatePreApproval();
 
   const [members, setMembers] = useState([]);
-  const [companies, setCompanies] = useState([]);
+  // Insurance company is fixed in single-tenant mode - no dropdown needed
   const [policies, setPolicies] = useState([]);
   const [packages, setPackages] = useState([]);
 
   const [loadingMembers, setLoadingMembers] = useState(false);
-  const [loadingCompanies, setLoadingCompanies] = useState(false);
+  // No loading state for companies - fixed in single-tenant mode
   const [loadingPolicies, setLoadingPolicies] = useState(false);
   const [loadingPackages, setLoadingPackages] = useState(false);
 
   const [formData, setFormData] = useState({
     memberId: null,
-    insuranceCompanyId: '',
+    insuranceCompanyId: getFixedInsuranceCompanyId(), // Fixed single-tenant insurance company
     insurancePolicyId: '',
     benefitPackageId: '',
     providerName: '',
@@ -54,14 +56,15 @@ const PreApprovalEdit = () => {
 
   useEffect(() => {
     fetchMembers();
-    fetchCompanies();
+    // Fetch policies for fixed insurance company on mount
+    fetchPolicies(getFixedInsuranceCompanyId());
   }, []);
 
   useEffect(() => {
     if (preApproval) {
       setFormData({
         memberId: preApproval.member?.id || null,
-        insuranceCompanyId: preApproval.insuranceCompany?.id || '',
+        insuranceCompanyId: getFixedInsuranceCompanyId(), // Always use fixed insurance company
         insurancePolicyId: preApproval.insurancePolicy?.id || '',
         benefitPackageId: preApproval.benefitPackage?.id || '',
         providerName: preApproval.providerName || '',
@@ -75,23 +78,15 @@ const PreApprovalEdit = () => {
         attachmentsCount: preApproval.attachmentsCount || 0
       });
 
-      if (preApproval.insuranceCompany?.id) {
-        fetchPolicies(preApproval.insuranceCompany.id);
-      }
+      // Always use fixed insurance company for policies
+      fetchPolicies(getFixedInsuranceCompanyId());
       if (preApproval.insurancePolicy?.id) {
         fetchPackages(preApproval.insurancePolicy.id);
       }
     }
   }, [preApproval]);
 
-  useEffect(() => {
-    if (formData.insuranceCompanyId) {
-      fetchPolicies(formData.insuranceCompanyId);
-    } else {
-      setPolicies([]);
-      setPackages([]);
-    }
-  }, [formData.insuranceCompanyId]);
+  // Insurance company is fixed - no need to watch for changes
 
   useEffect(() => {
     if (formData.insurancePolicyId) {
@@ -113,17 +108,7 @@ const PreApprovalEdit = () => {
     }
   };
 
-  const fetchCompanies = async () => {
-    try {
-      setLoadingCompanies(true);
-      const result = await insuranceCompaniesService.getAll({ page: 1, size: 1000 });
-      setCompanies(result.items || []);
-    } catch (err) {
-      console.error('Error fetching companies:', err);
-    } finally {
-      setLoadingCompanies(false);
-    }
-  };
+  // Insurance company is fixed in single-tenant mode - no need to fetch companies
 
   const fetchPolicies = async (companyId) => {
     try {
@@ -247,7 +232,17 @@ const PreApprovalEdit = () => {
   }
 
   return (
-    <MainCard title="تعديل طلب الموافقة المسبقة">
+    <>
+    <ModernPageHeader
+      title="تعديل طلب الموافقة المسبقة"
+      icon={PreApprovalIcon}
+      breadcrumbs={[
+        { label: 'الرئيسية', href: '/' },
+        { label: 'الموافقات المسبقة', href: '/pre-approvals' },
+        { label: 'تعديل' }
+      ]}
+    />
+    <MainCard>
       <form onSubmit={handleSubmit}>
         <Grid container spacing={3}>
           {updateError && (
@@ -272,16 +267,15 @@ const PreApprovalEdit = () => {
           </Grid>
 
           <Grid item xs={12} md={6}>
-            <FormControl fullWidth disabled>
-              <InputLabel>شركة التأمين</InputLabel>
-              <Select name="insuranceCompanyId" value={formData.insuranceCompanyId} label="شركة التأمين">
-                {Array.isArray(companies) && companies.map((company) => (
-                  <MenuItem key={company.id} value={company.id}>
-                    {company.name} ({company.code})
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
+            {/* Fixed Insurance Company - Single Tenant Mode */}
+            <TextField
+              fullWidth
+              label="شركة التأمين"
+              value={FIXED_INSURANCE_COMPANY.name}
+              InputProps={{ readOnly: true }}
+              disabled
+              helperText="شركة التأمين ثابتة في النظام"
+            />
           </Grid>
 
           <Grid item xs={12} md={6}>
@@ -462,6 +456,7 @@ const PreApprovalEdit = () => {
         </Grid>
       </form>
     </MainCard>
+    </>
   );
 };
 

@@ -9,11 +9,12 @@ import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
 
 // assets
-import EditOutlined from '@ant-design/icons/EditOutlined';
+import UserOutlined from '@ant-design/icons/UserOutlined';
 import LogoutOutlined from '@ant-design/icons/LogoutOutlined';
 import SettingOutlined from '@ant-design/icons/SettingOutlined';
 
 // ==============================|| HEADER PROFILE - PROFILE TAB ||============================== //
+// Phase D0: Simplified profile menu - only Profile, Settings, Logout
 
 export default function ProfileTab({ handleLogout }) {
   const navigate = useNavigate();
@@ -30,8 +31,8 @@ export default function ProfileTab({ handleLogout }) {
 
   useEffect(() => {
     const pathToIndex = {
-      '/profile/account': 0,
-      '/profile/settings': 1
+      '/profile': 0,
+      '/settings': 1
     };
 
     setSelectedIndex(pathToIndex[location.pathname] ?? undefined);
@@ -39,23 +40,23 @@ export default function ProfileTab({ handleLogout }) {
 
   return (
     <List component="nav" sx={{ p: 0, '& .MuiListItemIcon-root': { minWidth: 32 } }}>
-      <ListItemButton selected={selectedIndex === 0} onClick={(event) => handleListItemClick(event, 0, '/profile/account')}>
+      <ListItemButton selected={selectedIndex === 0} onClick={(event) => handleListItemClick(event, 0, '/profile')}>
         <ListItemIcon>
-          <EditOutlined />
+          <UserOutlined />
         </ListItemIcon>
-        <ListItemText primary="Profile" />
+        <ListItemText primary="الملف الشخصي" />
       </ListItemButton>
-      <ListItemButton selected={selectedIndex === 1} onClick={(event) => handleListItemClick(event, 1, '/profile/settings')}>
+      <ListItemButton selected={selectedIndex === 1} onClick={(event) => handleListItemClick(event, 1, '/settings')}>
         <ListItemIcon>
           <SettingOutlined />
         </ListItemIcon>
-        <ListItemText primary="Settings" />
+        <ListItemText primary="الإعدادات" />
       </ListItemButton>
       <ListItemButton selected={selectedIndex === 2} onClick={handleLogout}>
         <ListItemIcon>
           <LogoutOutlined />
         </ListItemIcon>
-        <ListItemText primary="Logout" />
+        <ListItemText primary="تسجيل الخروج" />
       </ListItemButton>
     </List>
   );

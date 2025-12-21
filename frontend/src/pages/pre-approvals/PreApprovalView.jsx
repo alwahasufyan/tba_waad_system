@@ -21,6 +21,7 @@ import {
   Receipt as ClaimIcon
 } from '@mui/icons-material';
 import MainCard from 'components/MainCard';
+import { ModernPageHeader } from 'components/tba';
 import { usePreApprovalDetails } from 'hooks/usePreApprovals';
 
 // Insurance UX Components - Phase B2 Step 3
@@ -122,28 +123,24 @@ const PreApprovalView = () => {
   const timelineSteps = getWorkflowSteps('preapproval', preApproval?.status, 'ar');
 
   return (
-    <MainCard
-      title={
+    <>
+    <ModernPageHeader
+      title={`طلب موافقة مسبقة #${preApproval?.id ?? '-'}`}
+      subtitle={preApproval?.member?.fullNameArabic ?? preApproval?.memberFullNameArabic ?? '-'}
+      icon={PreApprovalIcon}
+      breadcrumbs={[
+        { label: 'الرئيسية', href: '/' },
+        { label: 'الموافقات المسبقة', href: '/pre-approvals' },
+        { label: `طلب #${preApproval?.id ?? '-'}` }
+      ]}
+      actions={
         <Stack direction="row" spacing={2} alignItems="center">
-          <PreApprovalIcon color="primary" />
-          <Box>
-            <Typography variant="h5">طلب موافقة مسبقة #{preApproval?.id ?? '-'}</Typography>
-            <Typography variant="caption" color="text.secondary">
-              {preApproval?.member?.fullNameArabic ?? preApproval?.memberFullNameArabic ?? '-'}
-            </Typography>
-          </Box>
-        </Stack>
-      }
-      secondary={
-        <Stack direction="row" spacing={2} alignItems="center">
-          {/* Insurance UX - CardStatusBadge */}
           <CardStatusBadge
             status={PREAPPROVAL_STATUS_MAP[preApproval?.status] ?? 'PENDING'}
             customLabel={STATUS_LABELS[preApproval?.status] ?? preApproval?.status}
             size="medium"
             variant="detailed"
           />
-          {/* Insurance UX - PriorityBadge */}
           <PriorityBadge
             priority={preApproval?.priority ?? 'ROUTINE'}
             size="medium"
@@ -159,7 +156,8 @@ const PreApprovalView = () => {
           </Button>
         </Stack>
       }
-    >
+    />
+    <MainCard>
       <Stack spacing={3}>
         {/* ===================== WORKFLOW TIMELINE ===================== */}
         <Card variant="outlined">
@@ -395,6 +393,7 @@ const PreApprovalView = () => {
         </Grid>
       </Stack>
     </MainCard>
+    </>
   );
 };
 

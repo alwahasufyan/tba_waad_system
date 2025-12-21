@@ -37,6 +37,7 @@ import ModernPageHeader from 'components/tba/ModernPageHeader';
 import { createMember } from 'services/api/members.service';
 import axiosClient from 'utils/axios';
 import { openSnackbar } from 'api/snackbar';
+import { FIXED_INSURANCE_COMPANY, getFixedInsuranceCompanyId } from 'constants/insuranceCompany';
 
 /**
  * Member Create Page
@@ -71,7 +72,7 @@ const MemberCreate = () => {
     // Insurance
     policyNumber: '',
     benefitPackageId: '',
-    insuranceCompanyId: '',
+    insuranceCompanyId: getFixedInsuranceCompanyId(), // Fixed single-tenant insurance company
 
     // Membership Period
     status: 'ACTIVE',
@@ -100,7 +101,7 @@ const MemberCreate = () => {
 
   // Selectors Data
   const [employers, setEmployers] = useState([]);
-  const [insuranceCompanies, setInsuranceCompanies] = useState([]);
+  // Insurance company is fixed - no dropdown needed (single-tenant mode)
   const [benefitPackages, setBenefitPackages] = useState([]);
 
   // Loading & Errors
@@ -118,9 +119,7 @@ const MemberCreate = () => {
       const employersRes = await axiosClient.get('/employers/selector');
       setEmployers(employersRes.data?.data || []);
 
-      // Load Insurance Companies
-      const insuranceRes = await axiosClient.get('/insurance-companies/selector');
-      setInsuranceCompanies(insuranceRes.data?.data || []);
+      // Insurance company is fixed in single-tenant mode - no API call needed
 
       // Load Benefit Packages
       const packagesRes = await axiosClient.get('/benefit-packages/selector');
@@ -249,7 +248,7 @@ const MemberCreate = () => {
         nationality: form.nationality || null,
         policyNumber: form.policyNumber || null,
         benefitPackageId: form.benefitPackageId || null,
-        insuranceCompanyId: form.insuranceCompanyId || null,
+        insuranceCompanyId: getFixedInsuranceCompanyId(), // Fixed single-tenant insurance company
         employerId: parseInt(form.employerId),
         employeeNumber: form.employeeNumber || null,
         joinDate: form.joinDate || null,
@@ -507,21 +506,15 @@ const MemberCreate = () => {
               </Grid>
 
               <Grid item xs={12} md={4}>
-                <FormControl fullWidth>
-                  <InputLabel>شركة التأمين</InputLabel>
-                  <Select
-                    value={form.insuranceCompanyId}
-                    onChange={handleChange('insuranceCompanyId')}
-                    label="شركة التأمين"
-                  >
-                    <MenuItem value="">-- اختر شركة التأمين --</MenuItem>
-                    {Array.isArray(insuranceCompanies) && insuranceCompanies.map((ins) => (
-                      <MenuItem key={ins.id} value={ins.id}>
-                        {ins.nameAr}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
+                {/* Fixed Insurance Company - Single Tenant Mode */}
+                <TextField
+                  fullWidth
+                  label="شركة التأمين"
+                  value={FIXED_INSURANCE_COMPANY.name}
+                  InputProps={{ readOnly: true }}
+                  disabled
+                  helperText="شركة التأمين ثابتة في النظام"
+                />
               </Grid>
 
               <Grid item xs={12} md={4}>

@@ -22,7 +22,10 @@ import * as Yup from 'yup';
 
 // project imports
 import MainCard from 'components/MainCard';
+import ModernPageHeader from 'components/tba/ModernPageHeader';
 import { useCreateInsuranceCompany } from 'hooks/useInsuranceCompanies';
+
+import { Business as BusinessIcon, ArrowBack } from '@mui/icons-material';
 
 // validation schema
 const validationSchema = Yup.object({
@@ -54,10 +57,23 @@ const InsuranceCompanyCreate = () => {
   };
 
   return (
+    <>
+      <ModernPageHeader
+        title="إضافة شركة تأمين جديدة"
+        subtitle="إنشاء سجل شركة تأمين جديدة"
+        icon={BusinessIcon}
+        breadcrumbs={[
+          { label: 'شركات التأمين', path: '/insurance-companies' },
+          { label: 'إضافة جديد' }
+        ]}
+        actions={
+          <Button startIcon={<ArrowBack />} onClick={() => navigate('/insurance-companies')}>
+            عودة
+          </Button>
+        }
+      />
+
     <MainCard>
-      <Typography variant="h4" sx={{ mb: 3 }}>
-        إضافة شركة تأمين جديدة
-      </Typography>
 
       <Formik
         initialValues={{
@@ -231,6 +247,7 @@ const InsuranceCompanyCreate = () => {
         )}
       </Formik>
     </MainCard>
+    </>
   );
 };
 

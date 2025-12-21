@@ -57,7 +57,7 @@ export default function Customization() {
   return (
     <>
       <Box sx={{ flexShrink: 0 }}>
-        <Tooltip title="Theme Customization">
+        <Tooltip title="تخصيص المظهر">
           <IconButton
             color="secondary"
             variant="light"
@@ -83,7 +83,7 @@ export default function Customization() {
       <Drawer sx={{ zIndex: 2001 }} anchor="right" onClose={handleToggle} open={open} slotProps={{ paper: { sx: { width: 340 } } }}>
         {open && (
           <MainCard
-            title="Theme Customization"
+            title="تخصيص المظهر"
             sx={{
               border: 'none',
               borderRadius: 0,
@@ -113,10 +113,10 @@ export default function Customization() {
                       </Avatar>
                       <Stack>
                         <Typography variant="subtitle1" color="text.primary">
-                          Theme Layout
+                          نوع التخطيط
                         </Typography>
                         <Typography variant="caption" color="text.secondary">
-                          Choose your layout
+                          اختر تخطيط الواجهة
                         </Typography>
                       </Stack>
                     </Stack>
@@ -131,10 +131,10 @@ export default function Customization() {
                       </Avatar>
                       <Stack>
                         <Typography variant="subtitle1" color="text.primary">
-                          Menu Direction
+                          اتجاه القائمة
                         </Typography>
                         <Typography variant="caption" color="text.secondary">
-                          Choose RTL or LTR menu direction
+                          اختر من اليمين لليسار أو اليسار لليمين
                         </Typography>
                       </Stack>
                     </Stack>
@@ -149,10 +149,10 @@ export default function Customization() {
                       </Avatar>
                       <Stack>
                         <Typography variant="subtitle1" color="text.primary">
-                          Theme Mode
+                          وضع السمة
                         </Typography>
                         <Typography variant="caption" color="text.secondary">
-                          Choose light, dark or system mode
+                          اختر الوضع الفاتح أو الداكن أو النظام
                         </Typography>
                       </Stack>
                     </Stack>
@@ -167,10 +167,10 @@ export default function Customization() {
                       </Avatar>
                       <Stack>
                         <Typography variant="subtitle1" color="text.primary">
-                          Color Scheme
+                          نظام الألوان
                         </Typography>
                         <Typography variant="caption" color="text.secondary">
-                          Choose your primary theme color
+                          اختر لون السمة الرئيسي
                         </Typography>
                       </Stack>
                     </Stack>
@@ -185,10 +185,10 @@ export default function Customization() {
                       </Avatar>
                       <Stack>
                         <Typography variant="subtitle1" color="text.primary">
-                          Layout Width
+                          عرض التخطيط
                         </Typography>
                         <Typography variant="caption" color="text.secondary">
-                          Choose fluid or container layout
+                          اختر العرض المرن أو المحدود
                         </Typography>
                       </Stack>
                     </Stack>
@@ -203,10 +203,10 @@ export default function Customization() {
                       </Avatar>
                       <Stack>
                         <Typography variant="subtitle1" color="text.primary">
-                          Font Family
+                          نوع الخط
                         </Typography>
                         <Typography variant="caption" color="text.secondary">
-                          Choose your font family.
+                          اختر نوع الخط المستخدم
                         </Typography>
                       </Stack>
                     </Stack>

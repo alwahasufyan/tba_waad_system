@@ -2,8 +2,9 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useSnackbar } from 'notistack';
 import { Box, Button, Grid, TextField, MenuItem, Typography, CircularProgress } from '@mui/material';
-import { ArrowBack, Save } from '@mui/icons-material';
+import { ArrowBack, Save, LocalHospital as ProviderIcon } from '@mui/icons-material';
 import MainCard from 'components/MainCard';
+import ModernPageHeader from 'components/tba/ModernPageHeader';
 import { useProviderDetails, useUpdateProvider } from 'hooks/useProviders';
 
 const PROVIDER_TYPES = [
@@ -107,14 +108,23 @@ const ProviderEdit = () => {
   }
 
   return (
-    <MainCard
-      title="تعديل بيانات مقدم الخدمة الصحية"
-      secondary={
-        <Button startIcon={<ArrowBack />} onClick={() => navigate('/providers')} disabled={updating}>
-          عودة
-        </Button>
-      }
-    >
+    <>
+      <ModernPageHeader
+        title="تعديل بيانات مقدم الخدمة الصحية"
+        subtitle="تحديث سجل مقدم الخدمة الصحية"
+        icon={ProviderIcon}
+        breadcrumbs={[
+          { label: 'مقدمو الخدمات', path: '/providers' },
+          { label: 'تعديل' }
+        ]}
+        actions={
+          <Button startIcon={<ArrowBack />} onClick={() => navigate('/providers')} disabled={updating}>
+            عودة
+          </Button>
+        }
+      />
+
+    <MainCard>
       <Box component="form" onSubmit={handleSubmit}>
         <Grid container spacing={3}>
           {/* Basic Information */}
@@ -281,6 +291,7 @@ const ProviderEdit = () => {
         </Grid>
       </Box>
     </MainCard>
+    </>
   );
 };
 

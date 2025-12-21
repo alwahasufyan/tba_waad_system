@@ -7,8 +7,9 @@ import {
   TextField,
   MenuItem
 } from '@mui/material';
-import { ArrowBack, Save } from '@mui/icons-material';
+import { ArrowBack, Save, Receipt as ClaimIcon } from '@mui/icons-material';
 import MainCard from 'components/MainCard';
+import ModernPageHeader from 'components/tba/ModernPageHeader';
 import { useClaimDetails, useUpdateClaim } from 'hooks/useClaims';
 
 const STATUS_OPTIONS = [
@@ -58,17 +59,23 @@ const ClaimEdit = () => {
   if (loading) return <div>جاري التحميل...</div>;
 
   return (
-    <MainCard
-      title="تعديل المطالبة"
-      secondary={
-        <Button
-          startIcon={<ArrowBack />}
-          onClick={() => navigate('/claims')}
-        >
-          عودة
-        </Button>
-      }
-    >
+    <>
+      <ModernPageHeader
+        title="تعديل المطالبة"
+        subtitle={`تعديل مطالبة #${id}`}
+        icon={ClaimIcon}
+        breadcrumbs={[
+          { label: 'المطالبات', path: '/claims' },
+          { label: 'تعديل' }
+        ]}
+        actions={
+          <Button startIcon={<ArrowBack />} onClick={() => navigate('/claims')}>
+            عودة
+          </Button>
+        }
+      />
+
+    <MainCard>
       <Box component="form" onSubmit={handleSubmit}>
         <Grid container spacing={3}>
           <Grid item xs={12} md={6}>
@@ -163,6 +170,7 @@ const ClaimEdit = () => {
         </Grid>
       </Box>
     </MainCard>
+    </>
   );
 };
 

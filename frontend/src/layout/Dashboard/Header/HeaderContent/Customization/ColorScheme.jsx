@@ -33,63 +33,63 @@ export default function ColorScheme() {
       id: 'default',
       primary: blue[5],
       lighter: blue[0],
-      label: 'Default',
+      label: 'افتراضي',
       shadow: `0 0 0 2px ${withAlpha(blue[5], 0.2)}`
     },
     {
       id: 'theme1',
       primary: colorScheme === ThemeMode.DARK ? '#305bdd' : '#3366FF',
       lighter: colorScheme === ThemeMode.DARK ? '#1c2134' : '#D6E4FF',
-      label: 'Theme 1',
+      label: 'سمة 1',
       shadow: `0 0 0 2px ${withAlpha(colorScheme === ThemeMode.DARK ? '#305bdd' : '#3366FF', 0.2)}`
     },
     {
       id: 'theme2',
       primary: colorScheme === ThemeMode.DARK ? '#655ac8' : '#7265E6',
       lighter: colorScheme === ThemeMode.DARK ? '#222130' : '#EEEDFC',
-      label: 'Theme 2',
+      label: 'سمة 2',
       shadow: `0 0 0 2px ${withAlpha(colorScheme === ThemeMode.DARK ? '#655ac8' : '#7265E6', 0.2)}`
     },
     {
       id: 'theme3',
       primary: colorScheme === ThemeMode.DARK ? '#0a7d3e' : '#068e44',
       lighter: colorScheme === ThemeMode.DARK ? '#1a231f' : '#E6F3EC',
-      label: 'Theme 3',
+      label: 'سمة 3',
       shadow: `0 0 0 2px ${withAlpha(colorScheme === ThemeMode.DARK ? '#0a7d3e' : '#068e44', 0.2)}`
     },
     {
       id: 'theme4',
       primary: colorScheme === ThemeMode.DARK ? '#5d7dcb' : '#3c64d0',
       lighter: colorScheme === ThemeMode.DARK ? '#1d212d' : '#f0f6ff',
-      label: 'Theme 4',
+      label: 'سمة 4',
       shadow: `0 0 0 2px ${withAlpha(colorScheme === ThemeMode.DARK ? '#5d7dcb' : '#3c64d0', 0.2)}`
     },
     {
       id: 'theme5',
       primary: colorScheme === ThemeMode.DARK ? '#d26415' : '#f27013',
       lighter: colorScheme === ThemeMode.DARK ? '#32221a' : '#fff4e6',
-      label: 'Theme 5',
+      label: 'سمة 5',
       shadow: `0 0 0 2px ${withAlpha(colorScheme === ThemeMode.DARK ? '#d26415' : '#f27013', 0.2)}`
     },
     {
       id: 'theme6',
       primary: colorScheme === ThemeMode.DARK ? '#288d99' : '#2aa1af',
       lighter: colorScheme === ThemeMode.DARK ? '#1c2628' : '#e1f0ef',
-      label: 'Theme 6',
+      label: 'سمة 6',
       shadow: `0 0 0 2px ${withAlpha(colorScheme === ThemeMode.DARK ? '#288d99' : '#2aa1af', 0.2)}`
     },
     {
       id: 'theme7',
       primary: colorScheme === ThemeMode.DARK ? '#05934c' : '#00a854',
       lighter: colorScheme === ThemeMode.DARK ? '#1a2721' : '#d1e8d99c',
-      label: 'Theme 7',
+      label: 'سمة 7',
       shadow: `0 0 0 2px ${withAlpha(colorScheme === ThemeMode.DARK ? '#05934c' : '#00a854', 0.2)}`
     },
     {
       id: 'theme8',
       primary: colorScheme === ThemeMode.DARK ? '#058478' : '#009688',
       lighter: colorScheme === ThemeMode.DARK ? '#1a2524' : '#c1d6d066',
-      label: 'Theme 8',
+      label: 'سمة 8',
       shadow: `0 0 0 2px ${withAlpha(colorScheme === ThemeMode.DARK ? '#058478' : '#009688', 0.2)}`
     }
   ];

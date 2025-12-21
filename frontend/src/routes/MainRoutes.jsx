@@ -69,12 +69,10 @@ const BenefitPackageCreate = Loadable(lazy(() => import('pages/benefit-packages/
 const BenefitPackageEdit = Loadable(lazy(() => import('pages/benefit-packages/BenefitPackageEdit')));
 const BenefitPackageView = Loadable(lazy(() => import('pages/benefit-packages/BenefitPackageView')));
 
-// ==============================|| LAZY LOADING - INSURANCE COMPANIES ||============================== //
+// ==============================|| LAZY LOADING - INSURANCE COMPANIES (LOCKED - SINGLE TENANT) ||============================== //
 
-const InsuranceCompaniesList = Loadable(lazy(() => import('pages/insurance-companies/InsuranceCompaniesList')));
-const InsuranceCompanyCreate = Loadable(lazy(() => import('pages/insurance-companies/InsuranceCompanyCreate')));
-const InsuranceCompanyEdit = Loadable(lazy(() => import('pages/insurance-companies/InsuranceCompanyEdit')));
-const InsuranceCompanyView = Loadable(lazy(() => import('pages/insurance-companies/InsuranceCompanyView')));
+// All insurance company routes now redirect to locked page - single tenant mode
+const InsuranceCompanyLocked = Loadable(lazy(() => import('pages/insurance-companies/InsuranceCompanyLocked')));
 
 // ==============================|| LAZY LOADING - INSURANCE POLICIES ||============================== //
 
@@ -423,41 +421,26 @@ const MainRoutes = {
       )
     },
 
-    // Insurance Companies Module
+    // Insurance Companies Module - LOCKED (Single Tenant Mode)
+    // All routes redirect to locked page explaining the fixed insurance company
     {
       path: 'insurance-companies',
       children: [
         {
           path: '',
-          element: (
-            <RouteGuard allowedRoles={['SUPER_ADMIN']}>
-              <InsuranceCompaniesList />
-            </RouteGuard>
-          )
+          element: <InsuranceCompanyLocked />
         },
         {
           path: 'add',
-          element: (
-            <RouteGuard allowedRoles={['SUPER_ADMIN']}>
-              <InsuranceCompanyCreate />
-            </RouteGuard>
-          )
+          element: <InsuranceCompanyLocked />
         },
         {
           path: 'edit/:id',
-          element: (
-            <RouteGuard allowedRoles={['SUPER_ADMIN']}>
-              <InsuranceCompanyEdit />
-            </RouteGuard>
-          )
+          element: <InsuranceCompanyLocked />
         },
         {
           path: ':id',
-          element: (
-            <RouteGuard allowedRoles={['SUPER_ADMIN']}>
-              <InsuranceCompanyView />
-            </RouteGuard>
-          )
+          element: <InsuranceCompanyLocked />
         }
       ]
     },

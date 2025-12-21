@@ -28,6 +28,9 @@ import {
   Warning as WarningIcon
 } from '@mui/icons-material';
 import MainCard from 'components/MainCard';
+import ModernPageHeader from 'components/tba/ModernPageHeader';
+import ModernEmptyState from 'components/tba/ModernEmptyState';
+import TableSkeleton from 'components/tba/LoadingSkeleton';
 import { usePoliciesList, useDeletePolicy } from 'hooks/usePolicies';
 import dayjs from 'dayjs';
 
@@ -110,24 +113,49 @@ const PoliciesList = () => {
     navigate('/policies/add');
   };
 
+  // Safe data extraction
+  const safeItems = Array.isArray(data?.items) ? data.items : [];
+
   return (
-    <MainCard title="إدارة وثائق التأمين (البوالص)">
-      <Box sx={{ mb: 3 }}>
-        <Stack direction="row" spacing={2} alignItems="center">
-          <TextField
-            placeholder="بحث بالاسم أو الكود أو الوصف..."
-            variant="outlined"
-            size="small"
-            value={searchTerm}
-            onChange={handleSearch}
-            sx={{ flexGrow: 1, maxWidth: 400 }}
-          />
+    <>
+      <ModernPageHeader
+        title="إدارة وثائق التأمين"
+        subtitle="إدارة ومتابعة وثائق التأمين (البوالص)"
+        icon={PolicyIcon}
+        breadcrumbs={[{ label: 'وثائق التأمين', path: '/policies' }]}
+        actions={
           <Button variant="contained" startIcon={<AddIcon />} onClick={handleCreate}>
             إضافة وثيقة جديدة
           </Button>
-        </Stack>
+        }
+      />
+
+    <MainCard>
+      <Box sx={{ mb: 3 }}>
+        <TextField
+          placeholder="بحث بالاسم أو الكود أو الوصف..."
+          variant="outlined"
+          size="small"
+          value={searchTerm}
+          onChange={handleSearch}
+          sx={{ width: { xs: '100%', sm: 400 } }}
+        />
       </Box>
 
+      {/* Loading State */}
+      {loading && <TableSkeleton rows={10} columns={7} />}
+
+      {/* Empty State */}
+      {!loading && safeItems.length === 0 && (
+        <ModernEmptyState
+          icon={PolicyIcon}
+          title="لا توجد وثائق تأمين"
+          description="لم يتم العثور على وثائق"
+        />
+      )}
+
+      {/* Data Table */}
+      {!loading && safeItems.length > 0 && (
       <TableContainer component={Paper}>
         <Table>
           <TableHead>
@@ -142,22 +170,7 @@ const PoliciesList = () => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {loading && (
-              <TableRow>
-                <TableCell colSpan={7} align="center">
-                  <Typography>جاري التحميل...</Typography>
-                </TableCell>
-              </TableRow>
-            )}
-            {!loading && (!Array.isArray(data?.items) || data.items.length === 0) && (
-              <TableRow>
-                <TableCell colSpan={7} align="center">
-                  <Typography>لا توجد بيانات</Typography>
-                </TableCell>
-              </TableRow>
-            )}
-            {!loading && Array.isArray(data?.items) &&
-              data.items.map((policy) => (
+            {safeItems.map((policy) => (
                 <TableRow key={policy?.id ?? Math.random()} hover>
                   <TableCell>
                     <Stack direction="row" spacing={1} alignItems="center">
@@ -276,7 +289,9 @@ const PoliciesList = () => {
           labelDisplayedRows={({ from, to, count }) => `${from}-${to} من ${count}`}
         />
       </TableContainer>
+      )}
     </MainCard>
+    </>
   );
 };
 

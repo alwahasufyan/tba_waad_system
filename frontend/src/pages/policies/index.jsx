@@ -35,6 +35,7 @@ import MainCard from 'components/MainCard';
 import RBACGuard from 'components/tba/RBACGuard';
 import TableSkeleton from 'components/tba/LoadingSkeleton';
 import ErrorFallback, { EmptyState } from 'components/tba/ErrorFallback';
+import { FIXED_INSURANCE_COMPANY } from 'constants/insuranceCompany';
 // TODO: Create policies.service.js in services/api folder
 const policiesService = {
   getAll: async () => [],
@@ -43,7 +44,7 @@ const policiesService = {
   update: async () => null,
   remove: async () => null
 };
-import { employersService, insuranceCompaniesService } from 'services/api';
+import { employersService } from 'services/api';
 import { useSnackbar } from 'notistack';
 
 // third-party
@@ -66,7 +67,7 @@ export default function PoliciesList() {
 
   const [policies, setPolicies] = useState([]);
   const [employers, setEmployers] = useState([]);
-  const [insuranceCompanies, setInsuranceCompanies] = useState([]);
+  // Insurance company is fixed in single-tenant mode
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -91,16 +92,11 @@ export default function PoliciesList() {
         cell: (info) => <Typography variant="body2">{info.getValue() || '-'}</Typography>
       }),
       columnHelper.accessor('insuranceCompanyName', {
-        header: 'Insurance Company',
-        cell: (info) => {
-          const value = info.getValue();
-          if (value) return <Typography variant="body2">{value}</Typography>;
-          
-          // Fallback: Try to find from loaded insurance companies
-          const policy = info.row.original;
-          const insuranceCompany = insuranceCompanies.find(ic => ic.id === policy.insuranceCompanyId);
-          return <Typography variant="body2">{insuranceCompany?.name || '-'}</Typography>;
-        }
+        header: 'شركة التأمين',
+        cell: () => (
+          // Fixed insurance company - single tenant mode
+          <Typography variant="body2">{FIXED_INSURANCE_COMPANY.name}</Typography>
+        )
       }),
       columnHelper.accessor('startDate', {
         header: 'Start Date',
@@ -154,7 +150,7 @@ export default function PoliciesList() {
         )
       })
     ],
-    [insuranceCompanies]
+    [] // No dependencies on insuranceCompanies anymore
   );
 
   // Load policies from API
@@ -179,16 +175,14 @@ export default function PoliciesList() {
     }
   };
 
-  // Load employers and insurance companies for filters
+  // Load employers for filters (insurance company is fixed in single-tenant mode)
   const loadReferenceData = async () => {
     try {
       // Load employers (using /api/employers/selectors endpoint)
       const employersResponse = await employersService.getEmployers();
       setEmployers(employersResponse || []);
 
-      // Load insurance companies (using /api/insurance-companies endpoint)
-      const insuranceResponse = await insuranceCompaniesService.getAll();
-      setInsuranceCompanies(insuranceResponse?.data || insuranceResponse || []);
+      // Insurance company is fixed in single-tenant mode - no API call needed
     } catch (err) {
       console.error('Failed to load reference data:', err);
       // Don't block the page if reference data fails

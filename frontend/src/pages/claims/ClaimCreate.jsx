@@ -7,8 +7,9 @@ import {
   TextField,
   MenuItem
 } from '@mui/material';
-import { ArrowBack, Save } from '@mui/icons-material';
+import { ArrowBack, Save, Receipt as ClaimIcon } from '@mui/icons-material';
 import MainCard from 'components/MainCard';
+import ModernPageHeader from 'components/tba/ModernPageHeader';
 import { useCreateClaim } from 'hooks/useClaims';
 
 const ClaimCreate = () => {
@@ -37,17 +38,23 @@ const ClaimCreate = () => {
   };
 
   return (
-    <MainCard
-      title="إضافة مطالبة جديدة"
-      secondary={
-        <Button
-          startIcon={<ArrowBack />}
-          onClick={() => navigate('/claims')}
-        >
-          عودة
-        </Button>
-      }
-    >
+    <>
+      <ModernPageHeader
+        title="إضافة مطالبة جديدة"
+        subtitle="إنشاء سجل مطالبة تأمين جديدة"
+        icon={ClaimIcon}
+        breadcrumbs={[
+          { label: 'المطالبات', path: '/claims' },
+          { label: 'إضافة جديد' }
+        ]}
+        actions={
+          <Button startIcon={<ArrowBack />} onClick={() => navigate('/claims')}>
+            عودة
+          </Button>
+        }
+      />
+
+    <MainCard>
       <Box component="form" onSubmit={handleSubmit}>
         <Grid container spacing={3}>
           <Grid item xs={12} md={6}>
@@ -131,6 +138,7 @@ const ClaimCreate = () => {
         </Grid>
       </Box>
     </MainCard>
+    </>
   );
 };
 

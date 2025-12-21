@@ -21,39 +21,24 @@ import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import dayjs from 'dayjs';
 import MainCard from 'components/MainCard';
 import { useCreatePolicy } from 'hooks/usePolicies';
-import { insuranceCompaniesService } from 'services/api';
+import { FIXED_INSURANCE_COMPANY, getFixedInsuranceCompanyId } from 'constants/insuranceCompany';
 
 const PolicyCreate = () => {
   const navigate = useNavigate();
   const { create, creating, error } = useCreatePolicy();
-  const [companies, setCompanies] = useState([]);
-  const [loadingCompanies, setLoadingCompanies] = useState(false);
+  // Insurance company is fixed in single-tenant mode - no dropdown needed
   const [formData, setFormData] = useState({
     name: '',
     code: '',
     description: '',
     startDate: null,
     endDate: null,
-    insuranceCompanyId: '',
+    insuranceCompanyId: getFixedInsuranceCompanyId(), // Fixed single-tenant insurance company
     active: true
   });
   const [formErrors, setFormErrors] = useState({});
 
-  useEffect(() => {
-    fetchCompanies();
-  }, []);
-
-  const fetchCompanies = async () => {
-    try {
-      setLoadingCompanies(true);
-      const result = await getInsuranceCompanies({ page: 1, size: 1000 });
-      setCompanies(result.items || []);
-    } catch (err) {
-      console.error('Error fetching companies:', err);
-    } finally {
-      setLoadingCompanies(false);
-    }
-  };
+  // No need to fetch companies - insurance company is fixed in single-tenant mode
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -167,29 +152,15 @@ const PolicyCreate = () => {
           </Grid>
 
           <Grid item xs={12}>
-            <FormControl fullWidth error={!!formErrors.insuranceCompanyId} required>
-              <InputLabel>شركة التأمين</InputLabel>
-              <Select name="insuranceCompanyId" value={formData.insuranceCompanyId} onChange={handleChange} label="شركة التأمين">
-                {loadingCompanies && (
-                  <MenuItem disabled>
-                    <em>جاري التحميل...</em>
-                  </MenuItem>
-                )}
-                {!loadingCompanies && companies.length === 0 && (
-                  <MenuItem disabled>
-                    <em>لا توجد شركات تأمين</em>
-                  </MenuItem>
-                )}
-                {companies.map((company) => (
-                  <MenuItem key={company.id} value={company.id}>
-                    {company.name} ({company.code})
-                  </MenuItem>
-                ))}
-              </Select>
-              {formErrors.insuranceCompanyId && (
-                <Box sx={{ color: 'error.main', fontSize: '0.75rem', mt: 0.5 }}>{formErrors.insuranceCompanyId}</Box>
-              )}
-            </FormControl>
+            {/* Fixed Insurance Company - Single Tenant Mode */}
+            <TextField
+              fullWidth
+              label="شركة التأمين"
+              value={FIXED_INSURANCE_COMPANY.name}
+              InputProps={{ readOnly: true }}
+              disabled
+              helperText="شركة التأمين ثابتة في النظام"
+            />
           </Grid>
 
           <Grid item xs={12}>

@@ -1,7 +1,7 @@
 import useMediaQuery from '@mui/material/useMediaQuery';
 
 // project imports
-import NavUser from './NavUser';
+// NavUser removed - Phase D0: Profile access only in header menu
 import NavCard from './NavCard';
 import Navigation from './Navigation';
 import SimpleBar from 'components/third-party/SimpleBar';
@@ -20,7 +20,7 @@ export default function DrawerContent() {
         <Navigation />
         {drawerOpen && !downLG && <NavCard />}
       </SimpleBar>
-      <NavUser />
+      {/* NavUser removed - Profile access only in header menu (Phase D0) */}
     </>
   );
 }

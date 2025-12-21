@@ -28,7 +28,10 @@ import {
 
 // project imports
 import MainCard from 'components/MainCard';
+import ModernPageHeader from 'components/tba/ModernPageHeader';
 import { useInsuranceCompanyDetails } from 'hooks/useInsuranceCompanies';
+
+import { Business as BusinessIcon } from '@mui/icons-material';
 
 // Insurance UX Components - Phase B2 Step 5
 import { CardStatusBadge } from 'components/insurance';
@@ -100,46 +103,49 @@ const InsuranceCompanyView = () => {
   const companyStatus = insuranceCompany?.active ? 'ACTIVE' : 'INACTIVE';
 
   return (
+    <>
+      <ModernPageHeader
+        title={`شركة التأمين: ${insuranceCompany?.name ?? '—'}`}
+        subtitle={`الرمز: ${insuranceCompany?.code ?? '—'}`}
+        icon={BusinessIcon}
+        breadcrumbs={[
+          { label: 'شركات التأمين', path: '/insurance-companies' },
+          { label: insuranceCompany?.name ?? 'عرض' }
+        ]}
+        actions={
+          <Stack direction="row" spacing={1}>
+            <Button
+              variant="outlined"
+              startIcon={<ArrowLeftOutlined />}
+              onClick={() => navigate('/insurance-companies')}
+            >
+              رجوع
+            </Button>
+            <Button
+              variant="contained"
+              startIcon={<EditOutlined />}
+              onClick={() => navigate(`/insurance-companies/edit/${id}`)}
+            >
+              تعديل
+            </Button>
+          </Stack>
+        }
+      />
+
     <MainCard>
-      <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 3 }}>
-        <Stack direction="row" spacing={2} alignItems="center">
-          <BankOutlined style={{ fontSize: 28, color: '#1890ff' }} />
-          <Box>
-            <Typography variant="h4">
-              شركة التأمين: {insuranceCompany?.name ?? '—'}
-            </Typography>
-            <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 0.5 }}>
-              <Chip 
-                label={insuranceCompany?.code ?? '—'} 
-                size="small" 
-                variant="outlined" 
-                color="primary"
-              />
-              <CardStatusBadge
-                status={companyStatus}
-                customLabel={STATUS_LABELS_AR[companyStatus] ?? 'غير محدد'}
-                size="small"
-                variant="chip"
-              />
-            </Stack>
-          </Box>
-        </Stack>
-        <Stack direction="row" spacing={1}>
-          <Button
-            variant="outlined"
-            startIcon={<ArrowLeftOutlined />}
-            onClick={() => navigate('/insurance-companies')}
-          >
-            رجوع
-          </Button>
-          <Button
-            variant="contained"
-            startIcon={<EditOutlined />}
-            onClick={() => navigate(`/insurance-companies/edit/${id}`)}
-          >
-            تعديل
-          </Button>
-        </Stack>
+      <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 3 }}>
+        <Chip 
+          label={insuranceCompany?.code ?? '—'} 
+          size="small" 
+          variant="outlined" 
+          color="primary"
+        />
+        <CardStatusBadge
+          status={companyStatus}
+          customLabel={STATUS_LABELS_AR[companyStatus] ?? 'غير محدد'}
+          size="small"
+          variant="chip"
+        />
       </Stack>
 
       <Divider sx={{ mb: 3 }} />
@@ -222,6 +228,7 @@ const InsuranceCompanyView = () => {
         />
       </Paper>
     </MainCard>
+    </>
   );
 };
 

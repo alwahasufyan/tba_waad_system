@@ -18,8 +18,9 @@ import {
   Divider,
   Tooltip
 } from '@mui/material';
-import { ArrowBack, Edit, Phone, Email, LocationOn, Business, Badge, VerifiedUser } from '@mui/icons-material';
+import { ArrowBack, Edit, Phone, Email, LocationOn, Business, Badge, VerifiedUser, LocalHospital as ProviderIcon } from '@mui/icons-material';
 import MainCard from 'components/MainCard';
+import ModernPageHeader from 'components/tba/ModernPageHeader';
 import { useProviderDetails } from 'hooks/useProviders';
 import { providersService } from 'services/api';
 
@@ -133,55 +134,54 @@ const ProviderView = () => {
   const networkTier = getNetworkTier(provider);
 
   return (
-    <MainCard
-      title={
-        <Stack direction="row" spacing={2} alignItems="center">
-          <Business sx={{ fontSize: 28, color: '#1890ff' }} />
-          <Box>
-            <Stack direction="row" spacing={1} alignItems="center">
-              <Typography variant="h4">
-                مقدم الخدمة: {providerName}
-              </Typography>
-            </Stack>
-            <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 0.5 }}>
-              {/* Provider Type Chip */}
-              <Chip
-                label={PROVIDER_TYPE_LABELS[provider?.providerType] ?? provider?.providerType ?? '—'}
-                color={PROVIDER_TYPE_COLORS[provider?.providerType] || 'default'}
-                size="small"
-                variant="outlined"
-              />
-              {/* Network Status Badge */}
-              {networkTier && (
-                <NetworkBadge
-                  networkTier={networkTier}
-                  showLabel={true}
-                  size="small"
-                  language="ar"
-                />
-              )}
-              {/* Status Badge */}
-              <CardStatusBadge
-                status={providerStatus}
-                customLabel={STATUS_LABELS_AR[providerStatus] ?? 'غير محدد'}
-                size="small"
-                variant="chip"
-              />
-            </Stack>
-          </Box>
-        </Stack>
-      }
-      secondary={
-        <Box sx={{ display: 'flex', gap: 1 }}>
-          <Button variant="contained" startIcon={<Edit />} onClick={() => navigate(`/providers/edit/${id}`)}>
-            تعديل
-          </Button>
-          <Button startIcon={<ArrowBack />} onClick={() => navigate('/providers')}>
-            عودة
-          </Button>
-        </Box>
-      }
-    >
+    <>
+      <ModernPageHeader
+        title={`مقدم الخدمة: ${providerName}`}
+        subtitle={`نوع مقدم الخدمة: ${PROVIDER_TYPE_LABELS[provider?.providerType] ?? provider?.providerType ?? '—'}`}
+        icon={ProviderIcon}
+        breadcrumbs={[
+          { label: 'مقدمو الخدمات', path: '/providers' },
+          { label: providerName }
+        ]}
+        actions={
+          <Stack direction="row" spacing={1}>
+            <Button variant="contained" startIcon={<Edit />} onClick={() => navigate(`/providers/edit/${id}`)}>
+              تعديل
+            </Button>
+            <Button startIcon={<ArrowBack />} onClick={() => navigate('/providers')}>
+              عودة
+            </Button>
+          </Stack>
+        }
+      />
+
+    <MainCard>
+      <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 3 }}>
+        {/* Provider Type Chip */}
+        <Chip
+          label={PROVIDER_TYPE_LABELS[provider?.providerType] ?? provider?.providerType ?? '—'}
+          color={PROVIDER_TYPE_COLORS[provider?.providerType] || 'default'}
+          size="small"
+          variant="outlined"
+        />
+        {/* Network Status Badge */}
+        {networkTier && (
+          <NetworkBadge
+            networkTier={networkTier}
+            showLabel={true}
+            size="small"
+            language="ar"
+          />
+        )}
+        {/* Status Badge */}
+        <CardStatusBadge
+          status={providerStatus}
+          customLabel={STATUS_LABELS_AR[providerStatus] ?? 'غير محدد'}
+          size="small"
+          variant="chip"
+        />
+      </Stack>
+
       <Grid container spacing={3}>
         {/* Basic Information */}
         <Grid item xs={12}>
@@ -440,6 +440,7 @@ const ProviderView = () => {
         </Grid>
       </Grid>
     </MainCard>
+    </>
   );
 };
 

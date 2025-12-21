@@ -27,6 +27,8 @@ import {
 } from '@mui/icons-material';
 
 import MainCard from 'components/MainCard';
+import ModernPageHeader from 'components/tba/ModernPageHeader';
+import ModernEmptyState from 'components/tba/ModernEmptyState';
 import TableSkeleton from 'components/tba/LoadingSkeleton';
 import { useClaimsList, useDeleteClaim } from 'hooks/useClaims';
 
@@ -83,10 +85,26 @@ const ClaimsList = () => {
   const content = data?.content || [];
   const totalElements = data?.totalElements || 0;
 
+  // Safely extract data
+  const safeContent = Array.isArray(content) ? content : [];
+
   return (
-    <MainCard title="إدارة المطالبات" content={false}>
-      <Box sx={{ p: 3 }}>
-        {/* Search & Actions */}
+    <>
+      <ModernPageHeader
+        title="إدارة المطالبات"
+        subtitle="إدارة ومتابعة مطالبات التأمين"
+        icon={ReceiptIcon}
+        breadcrumbs={[{ label: 'المطالبات', path: '/claims' }]}
+        actions={
+          <Button variant="contained" startIcon={<Add />} onClick={() => navigate('/claims/add')}>
+            إضافة مطالبة
+          </Button>
+        }
+      />
+
+      <MainCard content={false}>
+        <Box sx={{ p: 3 }}>
+        {/* Search */}
         <Stack
           direction={{ xs: 'column', sm: 'row' }}
           justifyContent="space-between"
@@ -94,10 +112,6 @@ const ClaimsList = () => {
           spacing={2}
           sx={{ mb: 3 }}
         >
-          <Typography variant="body2" color="text.secondary">
-            إدارة ومتابعة مطالبات التأمين
-          </Typography>
-
           <Stack direction="row" spacing={2}>
             <TextField
               size="small"
@@ -114,13 +128,6 @@ const ClaimsList = () => {
               }}
               sx={{ minWidth: 300 }}
             />
-            <Button
-              variant="contained"
-              startIcon={<Add />}
-              onClick={() => navigate('/claims/add')}
-            >
-              إضافة مطالبة
-            </Button>
           </Stack>
         </Stack>
 
@@ -144,16 +151,18 @@ const ClaimsList = () => {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {content.length === 0 ? (
+                {safeContent.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={9} align="center" sx={{ py: 5 }}>
-                      <Typography variant="subtitle1" color="text.secondary">
-                        لا توجد مطالبات
-                      </Typography>
+                      <ModernEmptyState
+                        icon={ReceiptIcon}
+                        title="لا توجد مطالبات"
+                        description="لم يتم العثور على مطالبات"
+                      />
                     </TableCell>
                   </TableRow>
                 ) : (
-                  Array.isArray(content) && content.map((claim) => (
+                  safeContent.map((claim) => (
                     <TableRow 
                       key={claim?.id ?? Math.random()} 
                       hover
@@ -274,6 +283,7 @@ const ClaimsList = () => {
         )}
       </Box>
     </MainCard>
+    </>
   );
 };
 

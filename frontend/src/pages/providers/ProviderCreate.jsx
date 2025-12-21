@@ -2,8 +2,9 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSnackbar } from 'notistack';
 import { Box, Button, Grid, TextField, MenuItem, Typography } from '@mui/material';
-import { ArrowBack, Save } from '@mui/icons-material';
+import { ArrowBack, Save, LocalHospital as ProviderIcon } from '@mui/icons-material';
 import MainCard from 'components/MainCard';
+import ModernPageHeader from 'components/tba/ModernPageHeader';
 import { useCreateProvider } from 'hooks/useProviders';
 
 const PROVIDER_TYPES = [
@@ -74,14 +75,23 @@ const ProviderCreate = () => {
   };
 
   return (
-    <MainCard
-      title="إضافة مقدم خدمة صحية جديد"
-      secondary={
-        <Button startIcon={<ArrowBack />} onClick={() => navigate('/providers')} disabled={creating}>
-          عودة
-        </Button>
-      }
-    >
+    <>
+      <ModernPageHeader
+        title="إضافة مقدم خدمة صحية جديد"
+        subtitle="إنشاء سجل جديد لمقدم خدمة صحية"
+        icon={ProviderIcon}
+        breadcrumbs={[
+          { label: 'مقدمو الخدمات', path: '/providers' },
+          { label: 'إضافة جديد' }
+        ]}
+        actions={
+          <Button startIcon={<ArrowBack />} onClick={() => navigate('/providers')} disabled={creating}>
+            عودة
+          </Button>
+        }
+      />
+
+    <MainCard>
       <Box component="form" onSubmit={handleSubmit}>
         <Grid container spacing={3}>
           {/* Basic Information */}
@@ -234,6 +244,7 @@ const ProviderCreate = () => {
         </Grid>
       </Box>
     </MainCard>
+    </>
   );
 };
 

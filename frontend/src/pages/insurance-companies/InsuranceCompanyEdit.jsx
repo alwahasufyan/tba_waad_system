@@ -23,7 +23,10 @@ import * as Yup from 'yup';
 
 // project imports
 import MainCard from 'components/MainCard';
+import ModernPageHeader from 'components/tba/ModernPageHeader';
 import { useInsuranceCompanyDetails, useUpdateInsuranceCompany } from 'hooks/useInsuranceCompanies';
+
+import { Business as BusinessIcon, ArrowBack as ArrowBackIcon } from '@mui/icons-material';
 
 // validation schema
 const validationSchema = Yup.object({
@@ -77,10 +80,23 @@ const InsuranceCompanyEdit = () => {
   }
 
   return (
+    <>
+      <ModernPageHeader
+        title="تعديل بيانات شركة التأمين"
+        subtitle={`تعديل شركة: ${insuranceCompany?.name || ''}`}
+        icon={BusinessIcon}
+        breadcrumbs={[
+          { label: 'شركات التأمين', path: '/insurance-companies' },
+          { label: 'تعديل' }
+        ]}
+        actions={
+          <Button startIcon={<ArrowBackIcon />} onClick={() => navigate('/insurance-companies')}>
+            عودة
+          </Button>
+        }
+      />
+
     <MainCard>
-      <Typography variant="h4" sx={{ mb: 3 }}>
-        تعديل بيانات شركة التأمين
-      </Typography>
 
       <Formik
         initialValues={{
@@ -255,6 +271,7 @@ const InsuranceCompanyEdit = () => {
         )}
       </Formik>
     </MainCard>
+    </>
   );
 };
 

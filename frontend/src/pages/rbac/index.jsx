@@ -30,6 +30,7 @@ const RBACPage = () => {
 
       <MainCard>
         <ModernEmptyState
+          icon={Security}
           title="صفحة إدارة الصلاحيات قيد التطوير"
           description="سيتم إضافة إدارة الأدوار والصلاحيات قريباً"
           height={300}
