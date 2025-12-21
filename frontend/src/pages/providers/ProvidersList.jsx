@@ -20,9 +20,20 @@ import {
   FormControl,
   InputLabel,
   Select,
-  MenuItem
+  MenuItem,
+  Paper
 } from '@mui/material';
-import { DeleteOutlined, EditOutlined, PlusOutlined, SearchOutlined, EyeOutlined } from '@ant-design/icons';
+import { 
+  DeleteOutlined, 
+  EditOutlined, 
+  PlusOutlined, 
+  SearchOutlined, 
+  EyeOutlined,
+  MedicineBoxOutlined,
+  BankOutlined,
+  ExperimentOutlined,
+  ShopOutlined
+} from '@ant-design/icons';
 
 // project imports
 import MainCard from 'components/MainCard';
@@ -32,20 +43,73 @@ import ErrorFallback, { EmptyState } from 'components/tba/ErrorFallback';
 import { providersService } from 'services/api';
 import { useSnackbar } from 'notistack';
 
+// Insurance UX Components - Phase B2 Step 6
+import { NetworkBadge, CardStatusBadge } from 'components/insurance';
+
 // third-party
 import { useReactTable, getCoreRowModel, flexRender, createColumnHelper } from '@tanstack/react-table';
+
+// ============ PROVIDER CONFIGURATION ============
+// Provider Type Labels (Arabic)
+const PROVIDER_TYPE_LABELS_AR = {
+  HOSPITAL: 'مستشفى',
+  CLINIC: 'عيادة',
+  LAB: 'مختبر',
+  LABORATORY: 'مختبر',
+  PHARMACY: 'صيدلية',
+  RADIOLOGY: 'مركز أشعة'
+};
+
+// Provider Type Icons
+const PROVIDER_TYPE_ICONS = {
+  HOSPITAL: BankOutlined,
+  CLINIC: MedicineBoxOutlined,
+  LAB: ExperimentOutlined,
+  LABORATORY: ExperimentOutlined,
+  PHARMACY: ShopOutlined,
+  RADIOLOGY: ExperimentOutlined
+};
+
+// Status Labels (Arabic)
+const STATUS_LABELS_AR = {
+  ACTIVE: 'نشط',
+  INACTIVE: 'غير نشط',
+  SUSPENDED: 'موقوف',
+  EXPIRED: 'منتهي'
+};
+
+// Network Status mapping
+const getNetworkTier = (provider) => {
+  // Check various possible field names for network status
+  if (provider?.networkStatus) return provider.networkStatus;
+  if (provider?.inNetwork === true) return 'IN_NETWORK';
+  if (provider?.inNetwork === false) return 'OUT_OF_NETWORK';
+  if (provider?.contracted === true) return 'IN_NETWORK';
+  if (provider?.contracted === false) return 'OUT_OF_NETWORK';
+  return null; // Unknown
+};
+
+// Get provider status
+const getProviderStatus = (provider) => {
+  if (provider?.status) return provider.status;
+  if (provider?.active === true) return 'ACTIVE';
+  if (provider?.active === false) return 'INACTIVE';
+  return 'ACTIVE'; // Default
+};
 
 // ==============================|| PROVIDERS LIST PAGE ||============================== //
 
 const columnHelper = createColumnHelper();
 
-// Provider Type Options
+// Provider Type Options (Arabic)
 const PROVIDER_TYPES = [
-  { value: '', label: 'All Types' },
-  { value: 'HOSPITAL', label: 'Hospital' },
-  { value: 'CLINIC', label: 'Clinic' },
-  { value: 'PHARMACY', label: 'Pharmacy' },
-  { value: 'LABORATORY', label: 'Laboratory' }
+  { value: '', label: 'جميع الأنواع' },
+  { value: 'HOSPITAL', label: 'مستشفى' },
+  { value: 'CLINIC', label: 'عيادة' },
+  { value: 'PHARMACY', label: 'صيدلية' },
+  { value: 'LAB', label: 'مختبر' },
+  { value: 'LABORATORY', label: 'مختبر' },
+  { value: 'RADIOLOGY', label: 'مركز أشعة' }
 ];
 
 export default function ProvidersList() {
@@ -65,74 +129,116 @@ export default function ProvidersList() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedProvider, setSelectedProvider] = useState(null);
 
-  // Column definitions
+  // Column definitions with Arabic labels and Insurance UX components
   const columns = useMemo(
     () => [
       columnHelper.accessor('name', {
-        header: 'Provider Name',
-        cell: (info) => (
-          <Typography variant="body2" fontWeight={500}>
-            {info.getValue()}
-          </Typography>
-        )
+        header: 'اسم مقدم الخدمة',
+        cell: (info) => {
+          const provider = info.row.original;
+          const name = provider?.name ?? provider?.nameArabic ?? provider?.nameEnglish ?? '—';
+          const TypeIcon = PROVIDER_TYPE_ICONS[provider?.providerType] || MedicineBoxOutlined;
+          return (
+            <Stack direction="row" spacing={1} alignItems="center">
+              <TypeIcon style={{ fontSize: 16, color: '#8c8c8c' }} />
+              <Typography variant="body2" fontWeight={500}>
+                {name}
+              </Typography>
+            </Stack>
+          );
+        }
       }),
       columnHelper.accessor('providerType', {
-        header: 'Type',
+        header: 'نوع مقدم الخدمة',
         cell: (info) => {
           const type = info.getValue();
           const colorMap = {
             HOSPITAL: 'error',
             CLINIC: 'primary',
             PHARMACY: 'success',
-            LABORATORY: 'warning'
+            LAB: 'warning',
+            LABORATORY: 'warning',
+            RADIOLOGY: 'info'
           };
-          return <Chip label={type || 'N/A'} color={colorMap[type] || 'default'} size="small" />;
+          return (
+            <Chip 
+              label={PROVIDER_TYPE_LABELS_AR[type] ?? type ?? '—'} 
+              color={colorMap[type] || 'default'} 
+              size="small" 
+              variant="outlined"
+            />
+          );
         }
       }),
       columnHelper.accessor('licenseNumber', {
-        header: 'License Number',
+        header: 'رقم الترخيص',
         cell: (info) => (
           <Typography variant="body2" color="text.secondary">
-            {info.getValue() || '-'}
+            {info.getValue() ?? '—'}
           </Typography>
         )
+      }),
+      columnHelper.accessor((row) => row, {
+        id: 'networkStatus',
+        header: 'حالة الشبكة',
+        cell: (info) => {
+          const provider = info.getValue();
+          const networkTier = getNetworkTier(provider);
+          if (!networkTier) {
+            return <Typography variant="body2" color="text.secondary">—</Typography>;
+          }
+          return (
+            <NetworkBadge
+              networkTier={networkTier}
+              showLabel={true}
+              size="small"
+              language="ar"
+            />
+          );
+        }
       }),
       columnHelper.accessor('phone', {
-        header: 'Phone',
-        cell: (info) => info.getValue() || '-'
-      }),
-      columnHelper.accessor('address', {
-        header: 'Address',
+        header: 'رقم الهاتف',
         cell: (info) => (
-          <Typography variant="body2" noWrap sx={{ maxWidth: 200 }}>
-            {info.getValue() || '-'}
+          <Typography variant="body2">
+            {info.getValue() ?? '—'}
           </Typography>
         )
       }),
-      columnHelper.accessor('active', {
-        header: 'Status',
-        cell: (info) => (
-          <Chip label={info.getValue() ? 'Active' : 'Inactive'} color={info.getValue() ? 'success' : 'default'} size="small" />
-        )
+      columnHelper.accessor((row) => row, {
+        id: 'status',
+        header: 'الحالة',
+        cell: (info) => {
+          const provider = info.getValue();
+          const status = getProviderStatus(provider);
+          return (
+            <CardStatusBadge
+              status={status}
+              customLabel={STATUS_LABELS_AR[status] ?? 'غير محدد'}
+              size="small"
+              variant="chip"
+            />
+          );
+        }
       }),
       columnHelper.accessor('id', {
-        header: 'Actions',
+        header: 'الإجراءات',
         cell: (info) => (
           <Stack direction="row" spacing={0.5}>
-            <Tooltip title="View">
+            <Tooltip title="عرض التفاصيل">
               <IconButton size="small" color="primary" onClick={() => handleView(info.getValue())}>
                 <EyeOutlined />
               </IconButton>
             </Tooltip>
             <RBACGuard requiredPermission="PROVIDER_UPDATE">
-              <Tooltip title="Edit">
+              <Tooltip title="تعديل">
                 <IconButton size="small" color="primary" onClick={() => handleEdit(info.getValue())}>
                   <EditOutlined />
                 </IconButton>
               </Tooltip>
             </RBACGuard>
             <RBACGuard requiredPermission="PROVIDER_DELETE">
-              <Tooltip title="Delete">
+              <Tooltip title="حذف">
                 <IconButton size="small" color="error" onClick={() => openDeleteDialog(info.row.original)}>
                   <DeleteOutlined />
                 </IconButton>
@@ -242,12 +348,17 @@ export default function ProvidersList() {
   return (
     <RBACGuard requiredPermission="PROVIDER_READ">
       <MainCard
-        title="Healthcare Providers"
+        title={
+          <Stack direction="row" spacing={1.5} alignItems="center">
+            <MedicineBoxOutlined style={{ fontSize: 24, color: '#1890ff' }} />
+            <Typography variant="h4">إدارة مقدمي الخدمات الصحية</Typography>
+          </Stack>
+        }
         content={false}
         secondary={
           <RBACGuard requiredPermission="PROVIDER_CREATE">
             <Button variant="contained" startIcon={<PlusOutlined />} onClick={handleCreate}>
-              Add Provider
+              إضافة مقدم خدمة
             </Button>
           </RBACGuard>
         }
@@ -257,16 +368,16 @@ export default function ProvidersList() {
           <Stack direction="row" spacing={2}>
             <TextField
               fullWidth
-              placeholder="Search providers by name, license, or phone..."
+              placeholder="بحث باسم مقدم الخدمة، رقم الترخيص، أو رقم الهاتف..."
               value={searchTerm}
               onChange={handleSearch}
               InputProps={{
-                startAdornment: <SearchOutlined style={{ marginRight: 8 }} />
+                startAdornment: <SearchOutlined style={{ marginLeft: 8, color: '#8c8c8c' }} />
               }}
             />
             <FormControl sx={{ minWidth: 180 }}>
-              <InputLabel>Provider Type</InputLabel>
-              <Select value={typeFilter} onChange={handleTypeChange} label="Provider Type">
+              <InputLabel>نوع مقدم الخدمة</InputLabel>
+              <Select value={typeFilter} onChange={handleTypeChange} label="نوع مقدم الخدمة">
                 {PROVIDER_TYPES.map((type) => (
                   <MenuItem key={type.value} value={type.value}>
                     {type.label}
@@ -275,11 +386,11 @@ export default function ProvidersList() {
               </Select>
             </FormControl>
             <FormControl sx={{ minWidth: 150 }}>
-              <InputLabel>Status</InputLabel>
-              <Select value={statusFilter} onChange={handleStatusChange} label="Status">
-                <MenuItem value="">All</MenuItem>
-                <MenuItem value="true">Active</MenuItem>
-                <MenuItem value="false">Inactive</MenuItem>
+              <InputLabel>الحالة</InputLabel>
+              <Select value={statusFilter} onChange={handleStatusChange} label="الحالة">
+                <MenuItem value="">الكل</MenuItem>
+                <MenuItem value="true">نشط</MenuItem>
+                <MenuItem value="false">غير نشط</MenuItem>
               </Select>
             </FormControl>
           </Stack>
@@ -292,17 +403,29 @@ export default function ProvidersList() {
         {!loading && error && <ErrorFallback error={error} onRetry={handleRetry} />}
 
         {/* Empty State */}
-        {!loading && !error && providers.length === 0 && (
-          <EmptyState
-            title="No providers found"
-            description={
-              searchTerm || typeFilter || statusFilter
-                ? 'Try adjusting your search or filter criteria'
-                : 'Get started by adding your first healthcare provider'
-            }
-            action={handleCreate}
-            actionLabel="Add Provider"
-          />
+        {!loading && !error && (!Array.isArray(providers) || providers.length === 0) && (
+          <Box sx={{ p: 6, textAlign: 'center' }}>
+            <Stack spacing={2} alignItems="center">
+              <MedicineBoxOutlined style={{ fontSize: 48, color: '#d9d9d9' }} />
+              <Typography variant="h6" color="text.secondary">
+                لا يوجد مقدمو خدمة صحية مسجلون حاليًا
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                {searchTerm || typeFilter || statusFilter
+                  ? 'جرب تعديل معايير البحث أو التصفية'
+                  : 'اضغط على "إضافة مقدم خدمة" للبدء'}
+              </Typography>
+              <RBACGuard requiredPermission="PROVIDER_CREATE">
+                <Button
+                  variant="outlined"
+                  startIcon={<PlusOutlined />}
+                  onClick={handleCreate}
+                >
+                  إضافة مقدم خدمة
+                </Button>
+              </RBACGuard>
+            </Stack>
+          </Box>
         )}
 
         {/* Data Table */}
@@ -376,16 +499,17 @@ export default function ProvidersList() {
 
         {/* Delete Confirmation Dialog */}
         <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
-          <DialogTitle>Confirm Delete</DialogTitle>
+          <DialogTitle>تأكيد الحذف</DialogTitle>
           <DialogContent>
             <DialogContentText>
-              Are you sure you want to delete provider "{selectedProvider?.name}"? This action cannot be undone.
+              هل أنت متأكد من حذف مقدم الخدمة "{selectedProvider?.name ?? selectedProvider?.nameArabic ?? '—'}"?
+              هذا الإجراء لا يمكن التراجع عنه.
             </DialogContentText>
           </DialogContent>
           <DialogActions>
-            <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
+            <Button onClick={() => setDeleteDialogOpen(false)}>إلغاء</Button>
             <Button onClick={handleDelete} color="error" variant="contained">
-              Delete
+              حذف
             </Button>
           </DialogActions>
         </Dialog>

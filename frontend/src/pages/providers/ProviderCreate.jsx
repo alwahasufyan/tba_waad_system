@@ -75,7 +75,7 @@ const ProviderCreate = () => {
 
   return (
     <MainCard
-      title="إضافة مزود جديد"
+      title="إضافة مقدم خدمة صحية جديد"
       secondary={
         <Button startIcon={<ArrowBack />} onClick={() => navigate('/providers')} disabled={creating}>
           عودة
@@ -87,7 +87,7 @@ const ProviderCreate = () => {
           {/* Basic Information */}
           <Grid item xs={12}>
             <Typography variant="h5" gutterBottom>
-              المعلومات الأساسية
+              البيانات الأساسية لمقدم الخدمة
             </Typography>
           </Grid>
 
@@ -136,7 +136,7 @@ const ProviderCreate = () => {
               fullWidth
               required
               select
-              label="نوع المزود"
+              label="نوع مقدم الخدمة"
               value={formData.providerType}
               onChange={handleChange('providerType')}
               error={!!errors.providerType}

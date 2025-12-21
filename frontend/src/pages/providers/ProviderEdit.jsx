@@ -108,7 +108,7 @@ const ProviderEdit = () => {
 
   return (
     <MainCard
-      title="تعديل بيانات المزود"
+      title="تعديل بيانات مقدم الخدمة الصحية"
       secondary={
         <Button startIcon={<ArrowBack />} onClick={() => navigate('/providers')} disabled={updating}>
           عودة
@@ -120,7 +120,7 @@ const ProviderEdit = () => {
           {/* Basic Information */}
           <Grid item xs={12}>
             <Typography variant="h5" gutterBottom>
-              المعلومات الأساسية
+              البيانات الأساسية لمقدم الخدمة
             </Typography>
           </Grid>
 
@@ -170,7 +170,7 @@ const ProviderEdit = () => {
               fullWidth
               required
               select
-              label="نوع المزود"
+              label="نوع مقدم الخدمة"
               value={formData.providerType}
               onChange={handleChange('providerType')}
               error={!!errors.providerType}
@@ -188,7 +188,7 @@ const ProviderEdit = () => {
             <TextField
               fullWidth
               select
-              label="الحالة"
+              label="الحالة التشغيلية"
               value={formData.active}
               onChange={(e) => setFormData({ ...formData, active: e.target.value === 'true' })}
             >

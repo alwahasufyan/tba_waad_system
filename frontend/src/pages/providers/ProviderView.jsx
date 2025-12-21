@@ -13,17 +13,25 @@ import {
   TableCell,
   TableContainer,
   TableHead,
-  TableRow
+  TableRow,
+  Stack,
+  Divider,
+  Tooltip
 } from '@mui/material';
-import { ArrowBack, Edit } from '@mui/icons-material';
+import { ArrowBack, Edit, Phone, Email, LocationOn, Business, Badge, VerifiedUser } from '@mui/icons-material';
 import MainCard from 'components/MainCard';
 import { useProviderDetails } from 'hooks/useProviders';
 import { providersService } from 'services/api';
 
+// Insurance UX Components - Phase B2 Step 6
+import { NetworkBadge, CardStatusBadge } from 'components/insurance';
+
+// ============ PROVIDER CONFIGURATION ============
 const PROVIDER_TYPE_LABELS = {
   HOSPITAL: 'مستشفى',
   CLINIC: 'عيادة',
   LAB: 'مختبر',
+  LABORATORY: 'مختبر',
   PHARMACY: 'صيدلية',
   RADIOLOGY: 'مركز أشعة'
 };
@@ -32,8 +40,35 @@ const PROVIDER_TYPE_COLORS = {
   HOSPITAL: 'error',
   CLINIC: 'primary',
   LAB: 'warning',
+  LABORATORY: 'warning',
   PHARMACY: 'success',
   RADIOLOGY: 'info'
+};
+
+// Status Labels (Arabic)
+const STATUS_LABELS_AR = {
+  ACTIVE: 'نشط',
+  INACTIVE: 'غير نشط',
+  SUSPENDED: 'موقوف',
+  EXPIRED: 'منتهي'
+};
+
+// Network Status mapping
+const getNetworkTier = (provider) => {
+  if (provider?.networkStatus) return provider.networkStatus;
+  if (provider?.inNetwork === true) return 'IN_NETWORK';
+  if (provider?.inNetwork === false) return 'OUT_OF_NETWORK';
+  if (provider?.contracted === true) return 'IN_NETWORK';
+  if (provider?.contracted === false) return 'OUT_OF_NETWORK';
+  return null;
+};
+
+// Get provider status
+const getProviderStatus = (provider) => {
+  if (provider?.status) return provider.status;
+  if (provider?.active === true) return 'ACTIVE';
+  if (provider?.active === false) return 'INACTIVE';
+  return 'ACTIVE';
 };
 
 const ProviderView = () => {
@@ -76,14 +111,66 @@ const ProviderView = () => {
   if (!provider) {
     return (
       <MainCard>
-        <Typography>المزود غير موجود</Typography>
+        <Stack spacing={3} alignItems="center" sx={{ py: 4 }}>
+          <Business sx={{ fontSize: 48, color: '#ff4d4f' }} />
+          <Typography variant="h5" color="error">
+            مقدم الخدمة غير موجود
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            تأكد من صحة الرابط أو أن مقدم الخدمة لم يتم حذفه
+          </Typography>
+          <Button variant="contained" startIcon={<ArrowBack />} onClick={() => navigate('/providers')}>
+            العودة إلى القائمة
+          </Button>
+        </Stack>
       </MainCard>
     );
   }
 
+  // Derive values defensively
+  const providerName = provider?.nameArabic ?? provider?.nameEnglish ?? provider?.name ?? '—';
+  const providerStatus = getProviderStatus(provider);
+  const networkTier = getNetworkTier(provider);
+
   return (
     <MainCard
-      title="تفاصيل المزود"
+      title={
+        <Stack direction="row" spacing={2} alignItems="center">
+          <Business sx={{ fontSize: 28, color: '#1890ff' }} />
+          <Box>
+            <Stack direction="row" spacing={1} alignItems="center">
+              <Typography variant="h4">
+                مقدم الخدمة: {providerName}
+              </Typography>
+            </Stack>
+            <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 0.5 }}>
+              {/* Provider Type Chip */}
+              <Chip
+                label={PROVIDER_TYPE_LABELS[provider?.providerType] ?? provider?.providerType ?? '—'}
+                color={PROVIDER_TYPE_COLORS[provider?.providerType] || 'default'}
+                size="small"
+                variant="outlined"
+              />
+              {/* Network Status Badge */}
+              {networkTier && (
+                <NetworkBadge
+                  networkTier={networkTier}
+                  showLabel={true}
+                  size="small"
+                  language="ar"
+                />
+              )}
+              {/* Status Badge */}
+              <CardStatusBadge
+                status={providerStatus}
+                customLabel={STATUS_LABELS_AR[providerStatus] ?? 'غير محدد'}
+                size="small"
+                variant="chip"
+              />
+            </Stack>
+          </Box>
+        </Stack>
+      }
       secondary={
         <Box sx={{ display: 'flex', gap: 1 }}>
           <Button variant="contained" startIcon={<Edit />} onClick={() => navigate(`/providers/edit/${id}`)}>
@@ -99,16 +186,18 @@ const ProviderView = () => {
         {/* Basic Information */}
         <Grid item xs={12}>
           <Paper sx={{ p: 3 }}>
-            <Typography variant="h5" gutterBottom sx={{ mb: 2 }}>
-              المعلومات الأساسية
-            </Typography>
+            <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2 }}>
+              <Badge sx={{ color: '#1890ff' }} />
+              <Typography variant="h5">البيانات الأساسية</Typography>
+            </Stack>
+            <Divider sx={{ mb: 2 }} />
             <Grid container spacing={2}>
               <Grid item xs={12} md={6}>
                 <Typography variant="body2" color="text.secondary">
-                  رقم المزود
+                  رقم مقدم الخدمة
                 </Typography>
                 <Typography variant="body1" fontWeight={500}>
-                  {provider.id}
+                  {provider?.id ?? '—'}
                 </Typography>
               </Grid>
               <Grid item xs={12} md={6}>
@@ -116,7 +205,7 @@ const ProviderView = () => {
                   الاسم بالعربية
                 </Typography>
                 <Typography variant="body1" fontWeight={500}>
-                  {provider.nameArabic}
+                  {provider?.nameArabic ?? '—'}
                 </Typography>
               </Grid>
               <Grid item xs={12} md={6}>
@@ -124,7 +213,7 @@ const ProviderView = () => {
                   الاسم بالإنجليزية
                 </Typography>
                 <Typography variant="body1" fontWeight={500}>
-                  {provider.nameEnglish}
+                  {provider?.nameEnglish ?? '—'}
                 </Typography>
               </Grid>
               <Grid item xs={12} md={6}>
@@ -132,7 +221,7 @@ const ProviderView = () => {
                   رقم الترخيص
                 </Typography>
                 <Typography variant="body1" fontWeight={500}>
-                  {provider.licenseNumber}
+                  {provider?.licenseNumber ?? '—'}
                 </Typography>
               </Grid>
               <Grid item xs={12} md={6}>
@@ -140,27 +229,49 @@ const ProviderView = () => {
                   الرقم الضريبي
                 </Typography>
                 <Typography variant="body1" fontWeight={500}>
-                  {provider.taxNumber || '-'}
+                  {provider?.taxNumber ?? '—'}
                 </Typography>
               </Grid>
               <Grid item xs={12} md={6}>
                 <Typography variant="body2" color="text.secondary">
-                  نوع المزود
+                  نوع مقدم الخدمة
                 </Typography>
                 <Box sx={{ mt: 0.5 }}>
                   <Chip
-                    label={PROVIDER_TYPE_LABELS[provider.providerType] || provider.providerType}
-                    color={PROVIDER_TYPE_COLORS[provider.providerType] || 'default'}
+                    label={PROVIDER_TYPE_LABELS[provider?.providerType] ?? provider?.providerType ?? '—'}
+                    color={PROVIDER_TYPE_COLORS[provider?.providerType] || 'default'}
                     size="small"
                   />
                 </Box>
               </Grid>
               <Grid item xs={12} md={6}>
                 <Typography variant="body2" color="text.secondary">
-                  الحالة
+                  حالة الشبكة
                 </Typography>
                 <Box sx={{ mt: 0.5 }}>
-                  <Chip label={provider.active ? 'نشط' : 'غير نشط'} color={provider.active ? 'success' : 'default'} size="small" />
+                  {networkTier ? (
+                    <NetworkBadge
+                      networkTier={networkTier}
+                      showLabel={true}
+                      size="small"
+                      language="ar"
+                    />
+                  ) : (
+                    <Typography variant="body1" fontWeight={500}>—</Typography>
+                  )}
+                </Box>
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <Typography variant="body2" color="text.secondary">
+                  الحالة التشغيلية
+                </Typography>
+                <Box sx={{ mt: 0.5 }}>
+                  <CardStatusBadge
+                    status={providerStatus}
+                    customLabel={STATUS_LABELS_AR[providerStatus] ?? 'غير محدد'}
+                    size="small"
+                    variant="chip"
+                  />
                 </Box>
               </Grid>
             </Grid>
@@ -170,40 +281,54 @@ const ProviderView = () => {
         {/* Location & Contact Information */}
         <Grid item xs={12} md={6}>
           <Paper sx={{ p: 3, height: '100%' }}>
-            <Typography variant="h5" gutterBottom sx={{ mb: 2 }}>
-              معلومات الموقع والاتصال
-            </Typography>
+            <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2 }}>
+              <Phone sx={{ color: '#52c41a' }} />
+              <Typography variant="h5">بيانات التواصل</Typography>
+            </Stack>
+            <Divider sx={{ mb: 2 }} />
             <Grid container spacing={2}>
               <Grid item xs={12}>
-                <Typography variant="body2" color="text.secondary">
-                  المدينة
-                </Typography>
-                <Typography variant="body1" fontWeight={500}>
-                  {provider.city || '-'}
-                </Typography>
-              </Grid>
-              <Grid item xs={12}>
-                <Typography variant="body2" color="text.secondary">
-                  العنوان
-                </Typography>
-                <Typography variant="body1" fontWeight={500}>
-                  {provider.address || '-'}
+                <Stack direction="row" spacing={1} alignItems="center">
+                  <LocationOn sx={{ fontSize: 18, color: '#8c8c8c' }} />
+                  <Typography variant="body2" color="text.secondary">
+                    المدينة
+                  </Typography>
+                </Stack>
+                <Typography variant="body1" fontWeight={500} sx={{ mt: 0.5, mr: 3 }}>
+                  {provider?.city ?? '—'}
                 </Typography>
               </Grid>
               <Grid item xs={12}>
-                <Typography variant="body2" color="text.secondary">
-                  رقم الهاتف
-                </Typography>
-                <Typography variant="body1" fontWeight={500}>
-                  {provider.phone || '-'}
+                <Stack direction="row" spacing={1} alignItems="center">
+                  <LocationOn sx={{ fontSize: 18, color: '#8c8c8c' }} />
+                  <Typography variant="body2" color="text.secondary">
+                    العنوان
+                  </Typography>
+                </Stack>
+                <Typography variant="body1" fontWeight={500} sx={{ mt: 0.5, mr: 3 }}>
+                  {provider?.address ?? '—'}
                 </Typography>
               </Grid>
               <Grid item xs={12}>
-                <Typography variant="body2" color="text.secondary">
-                  البريد الإلكتروني
+                <Stack direction="row" spacing={1} alignItems="center">
+                  <Phone sx={{ fontSize: 18, color: '#8c8c8c' }} />
+                  <Typography variant="body2" color="text.secondary">
+                    رقم الهاتف
+                  </Typography>
+                </Stack>
+                <Typography variant="body1" fontWeight={500} sx={{ mt: 0.5, mr: 3 }}>
+                  {provider?.phone ?? '—'}
                 </Typography>
-                <Typography variant="body1" fontWeight={500}>
-                  {provider.email || '-'}
+              </Grid>
+              <Grid item xs={12}>
+                <Stack direction="row" spacing={1} alignItems="center">
+                  <Email sx={{ fontSize: 18, color: '#8c8c8c' }} />
+                  <Typography variant="body2" color="text.secondary">
+                    البريد الإلكتروني
+                  </Typography>
+                </Stack>
+                <Typography variant="body1" fontWeight={500} sx={{ mt: 0.5, mr: 3 }}>
+                  {provider?.email ?? '—'}
                 </Typography>
               </Grid>
             </Grid>
@@ -213,16 +338,18 @@ const ProviderView = () => {
         {/* Contract Information */}
         <Grid item xs={12} md={6}>
           <Paper sx={{ p: 3, height: '100%' }}>
-            <Typography variant="h5" gutterBottom sx={{ mb: 2 }}>
-              معلومات العقد
-            </Typography>
+            <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2 }}>
+              <VerifiedUser sx={{ color: '#faad14' }} />
+              <Typography variant="h5">معلومات العقد والتشغيل</Typography>
+            </Stack>
+            <Divider sx={{ mb: 2 }} />
             <Grid container spacing={2}>
               <Grid item xs={12}>
                 <Typography variant="body2" color="text.secondary">
                   تاريخ بداية العقد
                 </Typography>
                 <Typography variant="body1" fontWeight={500}>
-                  {provider.contractStartDate || '-'}
+                  {provider?.contractStartDate ?? '—'}
                 </Typography>
               </Grid>
               <Grid item xs={12}>
@@ -230,7 +357,7 @@ const ProviderView = () => {
                   تاريخ نهاية العقد
                 </Typography>
                 <Typography variant="body1" fontWeight={500}>
-                  {provider.contractEndDate || '-'}
+                  {provider?.contractEndDate ?? '—'}
                 </Typography>
               </Grid>
               <Grid item xs={12}>
@@ -238,7 +365,7 @@ const ProviderView = () => {
                   نسبة الخصم الافتراضية
                 </Typography>
                 <Typography variant="body1" fontWeight={500}>
-                  {provider.defaultDiscountRate ? `${provider.defaultDiscountRate}%` : '-'}
+                  {provider?.defaultDiscountRate ? `${provider.defaultDiscountRate}%` : '—'}
                 </Typography>
               </Grid>
               <Grid item xs={12}>
@@ -246,7 +373,7 @@ const ProviderView = () => {
                   تاريخ الإنشاء
                 </Typography>
                 <Typography variant="body1" fontWeight={500}>
-                  {provider.createdAt ? new Date(provider.createdAt).toLocaleDateString('ar-SA') : '-'}
+                  {provider?.createdAt ? new Date(provider.createdAt).toLocaleDateString('ar-SA') : '—'}
                 </Typography>
               </Grid>
               <Grid item xs={12}>
@@ -254,7 +381,7 @@ const ProviderView = () => {
                   آخر تحديث
                 </Typography>
                 <Typography variant="body1" fontWeight={500}>
-                  {provider.updatedAt ? new Date(provider.updatedAt).toLocaleDateString('ar-SA') : '-'}
+                  {provider?.updatedAt ? new Date(provider.updatedAt).toLocaleDateString('ar-SA') : '—'}
                 </Typography>
               </Grid>
             </Grid>
@@ -264,9 +391,11 @@ const ProviderView = () => {
         {/* Provider Contracts */}
         <Grid item xs={12}>
           <Paper sx={{ p: 3 }}>
-            <Typography variant="h5" gutterBottom sx={{ mb: 2 }}>
-              عقود المزود
-            </Typography>
+            <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2 }}>
+              <VerifiedUser sx={{ color: '#1890ff' }} />
+              <Typography variant="h5">عقود مقدم الخدمة</Typography>
+            </Stack>
+            <Divider sx={{ mb: 2 }} />
             {loadingContracts ? (
               <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
                 <CircularProgress />
