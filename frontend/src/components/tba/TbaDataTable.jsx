@@ -14,7 +14,7 @@
  * - Empty state
  */
 
-import { useState, useCallback, useMemo, useEffect } from 'react';
+import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { MaterialReactTable, useMaterialReactTable } from 'material-react-table';
 import { MRT_Localization_AR } from 'material-react-table/locales/ar';
 
@@ -215,6 +215,19 @@ const TbaDataTable = ({
   initialFilters = {}
 }) => {
   // ========================================
+  // REFS - Stable references to prevent re-renders
+  // ========================================
+  
+  const fetcherRef = useRef(fetcher);
+  const initialFiltersRef = useRef(initialFilters);
+  const isFetchingRef = useRef(false);
+  
+  // Update refs when props change (but don't trigger re-render)
+  useEffect(() => {
+    fetcherRef.current = fetcher;
+  }, [fetcher]);
+  
+  // ========================================
   // STATE
   // ========================================
   
@@ -236,7 +249,16 @@ const TbaDataTable = ({
   // DATA FETCHING
   // ========================================
   
+  // Serialize column filters for stable dependency
+  const columnFiltersKey = useMemo(() => JSON.stringify(columnFilters), [columnFilters]);
+  
   const fetchData = useCallback(async () => {
+    // Prevent duplicate fetches
+    if (isFetchingRef.current) {
+      return;
+    }
+    
+    isFetchingRef.current = true;
     setLoading(true);
     setError(null);
     
@@ -248,11 +270,12 @@ const TbaDataTable = ({
         sortBy: sorting[0]?.id || 'createdAt',
         sortDir: sorting[0]?.desc ? 'desc' : 'asc',
         search: globalFilter || undefined,
-        ...initialFilters
+        ...initialFiltersRef.current
       };
       
       // Add column filters
-      columnFilters.forEach(filter => {
+      const parsedFilters = JSON.parse(columnFiltersKey || '[]');
+      parsedFilters.forEach(filter => {
         if (filter.value !== undefined && filter.value !== '') {
           apiParams[filter.id] = filter.value;
         }
@@ -267,7 +290,7 @@ const TbaDataTable = ({
       
       console.log(`[TbaDataTable:${queryKey}] Fetching with params:`, apiParams);
       
-      const response = await fetcher(apiParams);
+      const response = await fetcherRef.current(apiParams);
       
       // Handle response - defensive
       const items = Array.isArray(response?.items) 
@@ -278,8 +301,18 @@ const TbaDataTable = ({
       
       const total = response?.total ?? response?.totalElements ?? items.length;
       
-      setData(items);
-      setTotalRows(total);
+      // Only update state if data actually changed
+      setData(prev => {
+        const newDataStr = JSON.stringify(items);
+        const prevDataStr = JSON.stringify(prev);
+        if (newDataStr === prevDataStr) return prev;
+        return items;
+      });
+      
+      setTotalRows(prev => {
+        if (prev === total) return prev;
+        return total;
+      });
       
       console.log(`[TbaDataTable:${queryKey}] Loaded ${items.length} items, total: ${total}`);
       
@@ -290,10 +323,18 @@ const TbaDataTable = ({
       setTotalRows(0);
     } finally {
       setLoading(false);
+      isFetchingRef.current = false;
     }
-  }, [fetcher, pagination, sorting, globalFilter, columnFilters, queryKey, initialFilters]);
+  }, [
+    pagination.pageIndex,
+    pagination.pageSize,
+    sorting,
+    globalFilter,
+    columnFiltersKey,
+    queryKey
+  ]);
   
-  // Fetch on state change
+  // Fetch on state change - stable dependency
   useEffect(() => {
     fetchData();
   }, [fetchData]);
@@ -394,11 +435,17 @@ const TbaDataTable = ({
     manualFiltering: true,
     rowCount: totalRows,
     
-    // State handlers
-    onPaginationChange: setPagination,
-    onSortingChange: setSorting,
+    // State handlers - with updater function support
+    onPaginationChange: (updater) => {
+      setPagination(prev => typeof updater === 'function' ? updater(prev) : updater);
+    },
+    onSortingChange: (updater) => {
+      setSorting(prev => typeof updater === 'function' ? updater(prev) : updater);
+    },
     onGlobalFilterChange: setGlobalFilter,
-    onColumnFiltersChange: setColumnFilters,
+    onColumnFiltersChange: (updater) => {
+      setColumnFilters(prev => typeof updater === 'function' ? updater(prev) : updater);
+    },
     
     // Features
     enableColumnFilters: enableFilters,
