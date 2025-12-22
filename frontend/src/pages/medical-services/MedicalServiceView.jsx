@@ -1,22 +1,23 @@
 /**
  * Medical Service View Page - GOLDEN REFERENCE MODULE
- * Phase D2 - Reference Module Pattern
+ * Phase D3 - TbaForm System + Reference Module Pattern
  *
  * ⚠️ This is the REFERENCE implementation for all CRUD view pages.
- * Pattern: ModernPageHeader → MainCard → Detail Sections (Paper boxes)
+ * Pattern: ModernPageHeader → MainCard → TbaFormSection → TbaDetailField (read-only)
  *
  * Rules Applied:
  * 1. icon={Component} - NEVER JSX
  * 2. Arabic only - No English labels
  * 3. Defensive optional chaining
  * 4. Proper error states (403 صلاحيات, 500 خطأ تقني)
+ * 5. TbaForm System components for consistent UI (Phase D3)
  */
 
 import { useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
 // MUI Components
-import { Box, Button, Grid, Paper, Stack, Typography, Chip, Divider, Skeleton } from '@mui/material';
+import { Box, Button, Grid, Stack, Chip, Skeleton } from '@mui/material';
 
 // MUI Icons - Always as Component, NEVER as JSX
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
@@ -26,11 +27,17 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
 import LockIcon from '@mui/icons-material/Lock';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
+import InfoIcon from '@mui/icons-material/Info';
+import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
+import DescriptionIcon from '@mui/icons-material/Description';
+import HistoryIcon from '@mui/icons-material/History';
+import VerifiedUserIcon from '@mui/icons-material/VerifiedUser';
 
 // Project Components
 import MainCard from 'components/MainCard';
 import ModernPageHeader from 'components/tba/ModernPageHeader';
 import ModernEmptyState from 'components/tba/ModernEmptyState';
+import { TbaFormSection, TbaDetailField } from 'components/tba/form';
 
 // Hooks & Services
 import { useMedicalServiceDetails } from 'hooks/useMedicalServices';
@@ -99,22 +106,6 @@ const formatDate = (date) => {
     return '-';
   }
 };
-
-// ============================================================================
-// SUB-COMPONENTS
-// ============================================================================
-
-/**
- * DetailField - Reusable field display component
- */
-const DetailField = ({ label, children }) => (
-  <Paper variant="outlined" sx={{ p: 2 }}>
-    <Typography variant="caption" color="text.secondary" gutterBottom display="block">
-      {label}
-    </Typography>
-    {children}
-  </Paper>
-);
 
 // ============================================================================
 // MAIN COMPONENT
@@ -202,10 +193,6 @@ const MedicalServiceView = () => {
   // RENDER - MAIN VIEW
   // ========================================
 
-  // ========================================
-  // RENDER - MAIN VIEW
-  // ========================================
-
   return (
     <Box>
       {/* ====== PAGE HEADER ====== */}
@@ -232,197 +219,132 @@ const MedicalServiceView = () => {
 
       {/* ====== MAIN CARD ====== */}
       <MainCard>
-        <Grid container spacing={3}>
-          {/* ====== BASIC INFORMATION SECTION ====== */}
-          <Grid item xs={12}>
-            <Typography variant="h6" gutterBottom>
-              المعلومات الأساسية
-            </Typography>
-            <Divider sx={{ mb: 2 }} />
-          </Grid>
-
-          {/* Code */}
-          <Grid item xs={12} md={6}>
-            <DetailField label="الرمز">
-              <Typography variant="body1" fontWeight="medium">
-                {service?.code || '-'}
-              </Typography>
-            </DetailField>
-          </Grid>
-
-          {/* Category */}
-          <Grid item xs={12} md={6}>
-            <DetailField label="التصنيف الطبي">
-              <Typography variant="body1" fontWeight="medium">
-                {service?.category?.nameAr || service?.category?.nameEn || '-'}
-              </Typography>
-            </DetailField>
-          </Grid>
-
-          {/* Name Arabic */}
-          <Grid item xs={12} md={6}>
-            <DetailField label="الاسم (عربي)">
-              <Typography variant="body1" fontWeight="medium">
-                {service?.nameAr || '-'}
-              </Typography>
-            </DetailField>
-          </Grid>
-
-          {/* Name English */}
-          <Grid item xs={12} md={6}>
-            <DetailField label="الاسم (إنجليزي)">
-              <Typography variant="body1" fontWeight="medium">
-                {service?.nameEn || '-'}
-              </Typography>
-            </DetailField>
-          </Grid>
-
-          {/* Description */}
-          {service?.description && (
-            <Grid item xs={12}>
-              <DetailField label="الوصف">
-                <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap' }}>
-                  {service.description}
-                </Typography>
-              </DetailField>
-            </Grid>
-          )}
-
-          {/* ====== PRICING SECTION ====== */}
-          <Grid item xs={12}>
-            <Typography variant="h6" gutterBottom sx={{ mt: 2 }}>
-              التسعير والتغطية
-            </Typography>
-            <Divider sx={{ mb: 2 }} />
-          </Grid>
-
-          {/* Price */}
-          <Grid item xs={12} md={4}>
-            <DetailField label="السعر (د.ل)">
-              <Typography variant="body1" fontWeight="medium">
-                {formatPrice(service?.priceLyd)}
-              </Typography>
-            </DetailField>
-          </Grid>
-
-          {/* Cost */}
-          <Grid item xs={12} md={4}>
-            <DetailField label="التكلفة (د.ل)">
-              <Typography variant="body1" fontWeight="medium">
-                {formatPrice(service?.costLyd)}
-              </Typography>
-            </DetailField>
-          </Grid>
-
-          {/* Coverage Limit */}
-          <Grid item xs={12} md={4}>
-            <DetailField label="حد التغطية (د.ل)">
-              <Typography variant="body1" fontWeight="medium">
-                {formatPrice(service?.coverageLimit)}
-              </Typography>
-            </DetailField>
-          </Grid>
-
-          {/* ====== DETAILS SECTION ====== */}
-          <Grid item xs={12}>
-            <Typography variant="h6" gutterBottom sx={{ mt: 2 }}>
-              تفاصيل الخدمة
-            </Typography>
-            <Divider sx={{ mb: 2 }} />
-          </Grid>
-
-          {/* Duration */}
-          <Grid item xs={12} md={6}>
-            <DetailField label="المدة المتوقعة">
-              <Typography variant="body1" fontWeight="medium">
-                {service?.duration ? `${service.duration} دقيقة` : '-'}
-              </Typography>
-            </DetailField>
-          </Grid>
-
-          {/* Requires Approval */}
-          <Grid item xs={12} md={6}>
-            <DetailField label="يتطلب موافقة مسبقة">
-              <Stack direction="row" spacing={1} alignItems="center">
-                {service?.requiresApproval ? (
-                  <>
-                    <CheckCircleIcon color="success" fontSize="small" />
-                    <Typography variant="body1" fontWeight="medium">
-                      نعم
-                    </Typography>
-                  </>
-                ) : (
-                  <>
-                    <CancelIcon color="disabled" fontSize="small" />
-                    <Typography variant="body1" fontWeight="medium">
-                      لا
-                    </Typography>
-                  </>
-                )}
-              </Stack>
-            </DetailField>
-          </Grid>
-
-          {/* ====== STATUS SECTION ====== */}
-          <Grid item xs={12}>
-            <Typography variant="h6" gutterBottom sx={{ mt: 2 }}>
-              الحالة
-            </Typography>
-            <Divider sx={{ mb: 2 }} />
-          </Grid>
-
-          {/* Active Status */}
-          <Grid item xs={12} md={6}>
-            <DetailField label="حالة الخدمة">
-              <Chip
-                label={service?.active ? 'نشط' : 'غير نشط'}
-                color={service?.active ? 'success' : 'default'}
-                size="medium"
-                variant="light"
-              />
-            </DetailField>
-          </Grid>
-
-          {/* ====== METADATA SECTION ====== */}
-          <Grid item xs={12}>
-            <Typography variant="h6" gutterBottom sx={{ mt: 2 }}>
-              معلومات النظام
-            </Typography>
-            <Divider sx={{ mb: 2 }} />
-          </Grid>
-
-          {/* Created At */}
-          <Grid item xs={12} md={6}>
-            <DetailField label="تاريخ الإنشاء">
-              <Typography variant="body1">{formatDate(service?.createdAt)}</Typography>
-            </DetailField>
-          </Grid>
-
-          {/* Updated At */}
-          <Grid item xs={12} md={6}>
-            <DetailField label="آخر تحديث">
-              <Typography variant="body1">{formatDate(service?.updatedAt)}</Typography>
-            </DetailField>
-          </Grid>
-
-          {/* Created By */}
-          {service?.createdBy && (
+        {/* ====== BASIC INFORMATION SECTION ====== */}
+        <TbaFormSection title="المعلومات الأساسية" icon={InfoIcon}>
+          <Grid container spacing={2}>
+            {/* Code */}
             <Grid item xs={12} md={6}>
-              <DetailField label="أنشئ بواسطة">
-                <Typography variant="body1">{service.createdBy}</Typography>
-              </DetailField>
+              <TbaDetailField label="الرمز" value={service?.code} />
             </Grid>
-          )}
 
-          {/* Updated By */}
-          {service?.updatedBy && (
+            {/* Category */}
             <Grid item xs={12} md={6}>
-              <DetailField label="آخر تحديث بواسطة">
-                <Typography variant="body1">{service.updatedBy}</Typography>
-              </DetailField>
+              <TbaDetailField label="التصنيف الطبي" value={service?.category?.nameAr || service?.category?.nameEn} />
             </Grid>
-          )}
-        </Grid>
+
+            {/* Name Arabic */}
+            <Grid item xs={12} md={6}>
+              <TbaDetailField label="الاسم (عربي)" value={service?.nameAr} />
+            </Grid>
+
+            {/* Name English */}
+            <Grid item xs={12} md={6}>
+              <TbaDetailField label="الاسم (إنجليزي)" value={service?.nameEn} />
+            </Grid>
+
+            {/* Description */}
+            {service?.description && (
+              <Grid item xs={12}>
+                <TbaDetailField label="الوصف" value={service.description} multiline />
+              </Grid>
+            )}
+          </Grid>
+        </TbaFormSection>
+
+        {/* ====== PRICING SECTION ====== */}
+        <TbaFormSection title="التسعير والتغطية" icon={AttachMoneyIcon}>
+          <Grid container spacing={2}>
+            {/* Price */}
+            <Grid item xs={12} md={4}>
+              <TbaDetailField label="السعر (د.ل)" value={formatPrice(service?.priceLyd)} />
+            </Grid>
+
+            {/* Cost */}
+            <Grid item xs={12} md={4}>
+              <TbaDetailField label="التكلفة (د.ل)" value={formatPrice(service?.costLyd)} />
+            </Grid>
+
+            {/* Coverage Limit */}
+            <Grid item xs={12} md={4}>
+              <TbaDetailField label="حد التغطية (د.ل)" value={formatPrice(service?.coverageLimit)} />
+            </Grid>
+          </Grid>
+        </TbaFormSection>
+
+        {/* ====== DETAILS SECTION ====== */}
+        <TbaFormSection title="تفاصيل الخدمة" icon={DescriptionIcon}>
+          <Grid container spacing={2}>
+            {/* Duration */}
+            <Grid item xs={12} md={6}>
+              <TbaDetailField label="المدة المتوقعة" value={service?.duration ? `${service.duration} دقيقة` : null} />
+            </Grid>
+
+            {/* Requires Approval */}
+            <Grid item xs={12} md={6}>
+              <TbaDetailField label="يتطلب موافقة مسبقة">
+                <Stack direction="row" spacing={1} alignItems="center">
+                  {service?.requiresApproval ? (
+                    <>
+                      <CheckCircleIcon color="success" fontSize="small" />
+                      <span>نعم</span>
+                    </>
+                  ) : (
+                    <>
+                      <CancelIcon color="disabled" fontSize="small" />
+                      <span>لا</span>
+                    </>
+                  )}
+                </Stack>
+              </TbaDetailField>
+            </Grid>
+          </Grid>
+        </TbaFormSection>
+
+        {/* ====== STATUS SECTION ====== */}
+        <TbaFormSection title="الحالة" icon={VerifiedUserIcon}>
+          <Grid container spacing={2}>
+            {/* Active Status */}
+            <Grid item xs={12} md={6}>
+              <TbaDetailField label="حالة الخدمة">
+                <Chip
+                  label={service?.active ? 'نشط' : 'غير نشط'}
+                  color={service?.active ? 'success' : 'default'}
+                  size="medium"
+                  variant="light"
+                />
+              </TbaDetailField>
+            </Grid>
+          </Grid>
+        </TbaFormSection>
+
+        {/* ====== METADATA SECTION ====== */}
+        <TbaFormSection title="معلومات النظام" icon={HistoryIcon}>
+          <Grid container spacing={2}>
+            {/* Created At */}
+            <Grid item xs={12} md={6}>
+              <TbaDetailField label="تاريخ الإنشاء" value={formatDate(service?.createdAt)} />
+            </Grid>
+
+            {/* Updated At */}
+            <Grid item xs={12} md={6}>
+              <TbaDetailField label="آخر تحديث" value={formatDate(service?.updatedAt)} />
+            </Grid>
+
+            {/* Created By */}
+            {service?.createdBy && (
+              <Grid item xs={12} md={6}>
+                <TbaDetailField label="أنشئ بواسطة" value={service.createdBy} />
+              </Grid>
+            )}
+
+            {/* Updated By */}
+            {service?.updatedBy && (
+              <Grid item xs={12} md={6}>
+                <TbaDetailField label="آخر تحديث بواسطة" value={service.updatedBy} />
+              </Grid>
+            )}
+          </Grid>
+        </TbaFormSection>
       </MainCard>
     </Box>
   );
