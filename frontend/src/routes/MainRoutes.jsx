@@ -5,6 +5,9 @@ import Loadable from 'components/Loadable';
 import MainLayout from 'layout/Dashboard';
 import RouteGuard from './RouteGuard';
 
+// Contexts - Phase D2.3 Table Refresh
+import { TableRefreshLayout } from 'contexts/TableRefreshContext';
+
 // ==============================|| LAZY LOADING - DASHBOARD ||============================== //
 
 const Dashboard = Loadable(lazy(() => import('pages/dashboard')));
@@ -484,9 +487,10 @@ const MainRoutes = {
       ]
     },
 
-    // Medical Services Module
+    // Medical Services Module - Wrapped with TableRefreshLayout (Phase D2.3)
     {
       path: 'medical-services',
+      element: <TableRefreshLayout />,
       children: [
         {
           path: '',

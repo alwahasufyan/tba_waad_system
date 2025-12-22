@@ -201,6 +201,13 @@ const printTable = (data, columns, title = 'تقرير') => {
  * @param {string} props.printTitle - Title for print view
  * @param {Function} props.onRowClick - Optional row click handler
  * @param {Object} props.initialFilters - Initial filter values
+ * @param {number} props.refreshKey - External refresh trigger (from TableRefreshContext)
+ * 
+ * ⚠️ REFRESH CONTRACT (Phase D2.3):
+ * - refreshKey is controlled by TableRefreshContext
+ * - When refreshKey changes, table fetches exactly ONCE
+ * - Use triggerRefresh() from Create/Edit pages after successful save
+ * - Do NOT pass a new refreshKey on every render
  */
 const TbaDataTable = ({
   columns,
@@ -212,7 +219,8 @@ const TbaDataTable = ({
   exportFilename,
   printTitle,
   onRowClick,
-  initialFilters = {}
+  initialFilters = {},
+  refreshKey = 0
 }) => {
   // ========================================
   // REFS - Stable references to prevent re-renders
@@ -331,10 +339,11 @@ const TbaDataTable = ({
     sorting,
     globalFilter,
     columnFiltersKey,
-    queryKey
+    queryKey,
+    refreshKey // External refresh trigger from TableRefreshContext
   ]);
   
-  // Fetch on state change - stable dependency
+  // Fetch on state change or external refresh - stable dependency
   useEffect(() => {
     fetchData();
   }, [fetchData]);

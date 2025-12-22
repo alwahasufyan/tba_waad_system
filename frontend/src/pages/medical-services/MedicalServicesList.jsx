@@ -1,6 +1,6 @@
 /**
  * Medical Services List Page - GOLDEN REFERENCE MODULE (TbaDataTable)
- * Phase D2.2 - Material React Table Integration
+ * Phase D2.2/D2.3 - Material React Table + Refresh Contract
  * 
  * ⚠️ This is the REFERENCE implementation for all CRUD list pages using TbaDataTable.
  * Pattern: ModernPageHeader → MainCard → TbaDataTable
@@ -10,6 +10,7 @@
  * 2. Arabic only - No English labels
  * 3. Defensive optional chaining
  * 4. TbaDataTable for server-side pagination/sorting/filtering
+ * 5. TableRefreshContext for post-create/edit refresh (Phase D2.3)
  */
 
 import { useMemo, useCallback } from 'react';
@@ -40,6 +41,9 @@ import MainCard from 'components/MainCard';
 import ModernPageHeader from 'components/tba/ModernPageHeader';
 import TbaDataTable from 'components/tba/TbaDataTable';
 
+// Contexts
+import { useTableRefresh } from 'contexts/TableRefreshContext';
+
 // Services
 import { getMedicalServices, deleteMedicalService } from 'services/api/medical-services.service';
 
@@ -69,6 +73,12 @@ const MedicalServicesList = () => {
   const navigate = useNavigate();
   
   // ========================================
+  // TABLE REFRESH CONTEXT (Phase D2.3)
+  // ========================================
+  
+  const { refreshKey, triggerRefresh } = useTableRefresh();
+  
+  // ========================================
   // NAVIGATION HANDLERS
   // ========================================
   
@@ -90,13 +100,13 @@ const MedicalServicesList = () => {
     
     try {
       await deleteMedicalService(id);
-      // Refresh will happen via TbaDataTable re-fetch
-      window.location.reload(); // Simple refresh, can be improved with React Query later
+      // Trigger refresh via context - no page reload needed
+      triggerRefresh();
     } catch (err) {
       console.error('[MedicalServices] Delete failed:', err);
       alert('فشل حذف الخدمة. يرجى المحاولة لاحقاً');
     }
-  }, []);
+  }, [triggerRefresh]);
   
   // ========================================
   // FETCHER FUNCTION
@@ -293,6 +303,7 @@ const MedicalServicesList = () => {
           columns={columns}
           fetcher={fetcher}
           queryKey={QUERY_KEY}
+          refreshKey={refreshKey}
           enableExport={true}
           enablePrint={true}
           enableFilters={true}

@@ -1,6 +1,6 @@
 /**
  * Medical Service Create Page - GOLDEN REFERENCE MODULE
- * Phase D2 - Reference Module Pattern
+ * Phase D2/D2.3 - Reference Module Pattern + Refresh Contract
  * 
  * ⚠️ This is the REFERENCE implementation for all CRUD create pages.
  * Pattern: ModernPageHeader → MainCard → Form Sections → Actions
@@ -11,6 +11,7 @@
  * 3. Array.isArray() for all lists
  * 4. Defensive optional chaining
  * 5. Form validation with Arabic messages
+ * 6. TableRefreshContext for post-create refresh (Phase D2.3)
  */
 
 import { useState, useMemo, useCallback } from 'react';
@@ -46,6 +47,9 @@ import MedicalServicesIcon from '@mui/icons-material/MedicalServices';
 import MainCard from 'components/MainCard';
 import ModernPageHeader from 'components/tba/ModernPageHeader';
 
+// Contexts
+import { useTableRefresh } from 'contexts/TableRefreshContext';
+
 // Hooks & Services
 import { createMedicalService } from 'services/api/medical-services.service';
 import { useAllMedicalCategories } from 'hooks/useMedicalCategories';
@@ -74,6 +78,12 @@ const INITIAL_FORM_STATE = {
 
 const MedicalServiceCreate = () => {
   const navigate = useNavigate();
+
+  // ========================================
+  // TABLE REFRESH CONTEXT (Phase D2.3)
+  // ========================================
+  
+  const { triggerRefresh } = useTableRefresh();
 
   // ========================================
   // DATA FETCHING
@@ -159,6 +169,10 @@ const MedicalServiceCreate = () => {
       };
 
       await createMedicalService(payload);
+      
+      // Trigger table refresh before navigating (Phase D2.3 Contract)
+      triggerRefresh();
+      
       navigate('/medical-services');
     } catch (err) {
       console.error('[MedicalServiceCreate] Submit failed:', err);

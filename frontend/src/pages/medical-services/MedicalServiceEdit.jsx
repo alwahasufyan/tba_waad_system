@@ -1,6 +1,6 @@
 /**
  * Medical Service Edit Page - GOLDEN REFERENCE MODULE
- * Phase D2 - Reference Module Pattern
+ * Phase D2/D2.3 - Reference Module Pattern + Refresh Contract
  * 
  * ⚠️ This is the REFERENCE implementation for all CRUD edit pages.
  * Pattern: ModernPageHeader → MainCard → Form Sections → Actions
@@ -11,6 +11,7 @@
  * 3. Array.isArray() for all lists
  * 4. Defensive optional chaining
  * 5. Proper error states (403 صلاحيات, 500 خطأ تقني)
+ * 6. TableRefreshContext for post-edit refresh (Phase D2.3)
  */
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
@@ -49,6 +50,9 @@ import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import MainCard from 'components/MainCard';
 import ModernPageHeader from 'components/tba/ModernPageHeader';
 import ModernEmptyState from 'components/tba/ModernEmptyState';
+
+// Contexts
+import { useTableRefresh } from 'contexts/TableRefreshContext';
 
 // Hooks & Services
 import { useMedicalServiceDetails } from 'hooks/useMedicalServices';
@@ -125,6 +129,12 @@ const getErrorInfo = (error) => {
 const MedicalServiceEdit = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+
+  // ========================================
+  // TABLE REFRESH CONTEXT (Phase D2.3)
+  // ========================================
+  
+  const { triggerRefresh } = useTableRefresh();
 
   // ========================================
   // DATA FETCHING
@@ -233,6 +243,10 @@ const MedicalServiceEdit = () => {
       };
 
       await updateMedicalService(id, payload);
+      
+      // Trigger table refresh before navigating (Phase D2.3 Contract)
+      triggerRefresh();
+      
       navigate('/medical-services');
     } catch (err) {
       console.error('[MedicalServiceEdit] Submit failed:', err);
