@@ -16,7 +16,7 @@ import { useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 // MUI Components
-import { Box, Chip, IconButton, Stack, Tooltip, Typography, Avatar, Button } from '@mui/material';
+import { Box, Chip, IconButton, Stack, Tooltip, Typography, Avatar } from '@mui/material';
 
 // MUI Icons - Always as Component, NEVER as JSX
 import VisibilityIcon from '@mui/icons-material/Visibility';
@@ -24,7 +24,6 @@ import EditIcon from '@mui/icons-material/Edit';
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import SecurityIcon from '@mui/icons-material/Security';
 import PeopleIcon from '@mui/icons-material/People';
-import AddIcon from '@mui/icons-material/Add';
 import LockIcon from '@mui/icons-material/Lock';
 
 // Project Components
@@ -282,11 +281,6 @@ const RolesList = () => {
           { label: 'الصلاحيات', path: '/rbac' },
           { label: 'الأدوار' }
         ]}
-        actions={
-          <Button variant="contained" startIcon={<AddIcon />} onClick={() => navigate('/rbac/roles/add')}>
-            إضافة دور جديد
-          </Button>
-        }
       />
 
       {/* ====== MAIN CARD WITH TABLE ====== */}

@@ -275,6 +275,13 @@ const RoleDetails = () => {
   const navigate = useNavigate();
   const { user: currentUser } = useAuth();
 
+  // ========================================
+  // VALIDATE ID - Must be numeric
+  // ========================================
+
+  const numericId = Number(id);
+  const isValidId = id && !isNaN(numericId) && numericId > 0;
+
   // State
   const [role, setRole] = useState(null);
   const [allPermissions, setAllPermissions] = useState([]);
@@ -298,12 +305,15 @@ const RoleDetails = () => {
   // ========================================
 
   const loadData = useCallback(async () => {
+    // Guard: Don't load if ID is invalid
+    if (!isValidId) return;
+
     try {
       setLoading(true);
       setError(null);
 
       const [roleRes, permsRes] = await Promise.all([
-        rolesService.getRoleById(id),
+        rolesService.getRoleById(numericId),
         permissionsService.getAllPermissions()
       ]);
 
@@ -315,11 +325,17 @@ const RoleDetails = () => {
     } finally {
       setLoading(false);
     }
-  }, [id]);
+  }, [numericId, isValidId]);
 
   useEffect(() => {
+    // Redirect to roles list if ID is invalid (e.g., "add" instead of number)
+    if (!isValidId) {
+      console.warn('[RoleDetails] Invalid role ID:', id);
+      navigate('/rbac/roles', { replace: true });
+      return;
+    }
     loadData();
-  }, [loadData]);
+  }, [loadData, isValidId, id, navigate]);
 
   // ========================================
   // PERMISSION TOGGLE HANDLER
@@ -327,7 +343,7 @@ const RoleDetails = () => {
 
   const handleTogglePermission = useCallback(
     async (permissionId, shouldAssign) => {
-      if (isProtected) return;
+      if (isProtected || !isValidId) return;
 
       try {
         setSaving(true);
@@ -352,9 +368,9 @@ const RoleDetails = () => {
 
         // API call
         if (shouldAssign) {
-          await rolesService.assignPermissions(id, [permissionId]);
+          await rolesService.assignPermissions(numericId, [permissionId]);
         } else {
-          await rolesService.removePermissions(id, [permissionId]);
+          await rolesService.removePermissions(numericId, [permissionId]);
         }
       } catch (err) {
         console.error('[RoleDetails] Toggle permission error:', err);
@@ -365,7 +381,7 @@ const RoleDetails = () => {
         setSaving(false);
       }
     },
-    [id, isProtected, allPermissions, loadData]
+    [numericId, isValidId, isProtected, allPermissions, loadData]
   );
 
   // ========================================

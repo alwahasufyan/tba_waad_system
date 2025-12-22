@@ -95,12 +95,24 @@ export const usersService = {
   /**
    * Get users paginated with sorting - TbaDataTable format
    * GET /api/admin/users/paginate?page={page}&size={size}&sortBy={field}&sortDir={dir}
+   * 
+   * ⚠️ Backend returns Spring Page format: { content: [], totalElements: N }
+   * TbaDataTable expects: { items: [], total: N }
    */
-  getUsersTable: (params) => {
-    const { page = 0, size = 20, sortBy = 'id', sortDir = 'asc', search = '' } = params || {};
-    return axiosServices.get(`${BASE_URL}/paginate`, {
-      params: { page, size, sortBy, sortDir, search }
+  getUsersTable: async (params) => {
+    const { page = 1, size = 20, sortBy = 'id', sortDir = 'asc', search = '' } = params || {};
+    // Backend paginate uses 0-based page, frontend sends 1-based
+    const response = await axiosServices.get(`${BASE_URL}/paginate`, {
+      params: { page: Math.max(0, page - 1), size, sortBy, sortDir, search }
     });
+    // Unwrap ApiResponse and transform Spring Page to TbaDataTable format
+    const pageData = response?.data?.data || response?.data || {};
+    return {
+      items: pageData?.content || [],
+      total: pageData?.totalElements || 0,
+      page: (pageData?.number || 0) + 1,
+      size: pageData?.size || size
+    };
   }
 };
 

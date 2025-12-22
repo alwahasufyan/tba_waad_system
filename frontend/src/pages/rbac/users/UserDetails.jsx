@@ -370,6 +370,13 @@ const UserDetails = () => {
   const navigate = useNavigate();
   const { user: currentUser } = useAuth();
 
+  // ========================================
+  // VALIDATE ID - Must be numeric
+  // ========================================
+
+  const numericId = Number(id);
+  const isValidId = id && !isNaN(numericId) && numericId > 0;
+
   // State
   const [user, setUser] = useState(null);
   const [allRoles, setAllRoles] = useState([]);
@@ -399,12 +406,15 @@ const UserDetails = () => {
   // ========================================
 
   const loadData = useCallback(async () => {
+    // Guard: Don't load if ID is invalid
+    if (!isValidId) return;
+
     try {
       setLoading(true);
       setError(null);
 
       const [userRes, rolesRes, permsRes] = await Promise.all([
-        usersService.getUserById(id),
+        usersService.getUserById(numericId),
         rolesService.getAllRoles(),
         permissionsService.getAllPermissions()
       ]);
@@ -418,11 +428,17 @@ const UserDetails = () => {
     } finally {
       setLoading(false);
     }
-  }, [id]);
+  }, [numericId, isValidId]);
 
   useEffect(() => {
+    // Redirect to users list if ID is invalid
+    if (!isValidId) {
+      console.warn('[UserDetails] Invalid user ID:', id);
+      navigate('/rbac/users', { replace: true });
+      return;
+    }
     loadData();
-  }, [loadData]);
+  }, [loadData, isValidId, id, navigate]);
 
   // ========================================
   // ROLE TOGGLE HANDLER
@@ -430,6 +446,8 @@ const UserDetails = () => {
 
   const handleToggleRole = useCallback(
     async (roleId, shouldAssign) => {
+      if (!isValidId) return;
+
       try {
         setSaving(true);
 
@@ -453,9 +471,9 @@ const UserDetails = () => {
 
         // API call
         if (shouldAssign) {
-          await usersService.assignRoles(id, [roleId]);
+          await usersService.assignRoles(numericId, [roleId]);
         } else {
-          await usersService.removeRoles(id, [roleId]);
+          await usersService.removeRoles(numericId, [roleId]);
         }
       } catch (err) {
         console.error('[UserDetails] Toggle role error:', err);
@@ -466,7 +484,7 @@ const UserDetails = () => {
         setSaving(false);
       }
     },
-    [id, allRoles, loadData]
+    [numericId, isValidId, allRoles, loadData]
   );
 
   // ========================================
