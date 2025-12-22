@@ -16,13 +16,14 @@ import { useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 // MUI Components
-import { Box, Chip, IconButton, Stack, Tooltip, Typography, Avatar } from '@mui/material';
+import { Box, Button, Chip, IconButton, Stack, Tooltip, Typography, Avatar } from '@mui/material';
 
 // MUI Icons - Always as Component, NEVER as JSX
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import EditIcon from '@mui/icons-material/Edit';
 import PeopleAltIcon from '@mui/icons-material/PeopleAlt';
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
+import PersonAddIcon from '@mui/icons-material/PersonAdd';
 
 // Project Components
 import MainCard from 'components/MainCard';
@@ -267,6 +268,11 @@ const UsersList = () => {
           { label: 'الصلاحيات', path: '/rbac' },
           { label: 'المستخدمين' }
         ]}
+        actions={
+          <Button variant="contained" startIcon={<PersonAddIcon />} onClick={() => navigate('/rbac/users/create')}>
+            إضافة مستخدم
+          </Button>
+        }
       />
 
       {/* ====== MAIN CARD WITH TABLE ====== */}

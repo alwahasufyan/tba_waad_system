@@ -114,6 +114,8 @@ const CompaniesList = Loadable(lazy(() => import('pages/companies')));
 const RbacDashboard = Loadable(lazy(() => import('pages/rbac')));
 const RbacUsersList = Loadable(lazy(() => import('pages/rbac/users')));
 const RbacUserDetails = Loadable(lazy(() => import('pages/rbac/users/UserDetails')));
+const RbacUserCreate = Loadable(lazy(() => import('pages/rbac/users/UserCreate')));
+const RbacUserEdit = Loadable(lazy(() => import('pages/rbac/users/UserEdit')));
 const RbacRolesList = Loadable(lazy(() => import('pages/rbac/roles')));
 const RbacRoleDetails = Loadable(lazy(() => import('pages/rbac/roles/RoleDetails')));
 
@@ -763,10 +765,26 @@ const MainRoutes = {
               )
             },
             {
+              path: 'create',
+              element: (
+                <RouteGuard allowedRoles={['SUPER_ADMIN']}>
+                  <RbacUserCreate />
+                </RouteGuard>
+              )
+            },
+            {
               path: ':id',
               element: (
                 <RouteGuard allowedRoles={['SUPER_ADMIN', 'ADMIN']}>
                   <RbacUserDetails />
+                </RouteGuard>
+              )
+            },
+            {
+              path: ':id/edit',
+              element: (
+                <RouteGuard allowedRoles={['SUPER_ADMIN']}>
+                  <RbacUserEdit />
                 </RouteGuard>
               )
             }
