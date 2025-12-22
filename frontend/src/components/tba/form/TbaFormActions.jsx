@@ -47,8 +47,8 @@ const TbaFormActions = ({
   return (
     <Box
       sx={{
-        pt: 3,
-        mt: 2,
+        pt: 2.5,
+        mt: 1,
         borderTop: '1px solid',
         borderColor: 'divider',
         ...(sticky && {
@@ -61,7 +61,7 @@ const TbaFormActions = ({
         ...sx
       }}
     >
-      <Stack direction="row" spacing={2} justifyContent="flex-end">
+      <Stack direction="row" spacing={1.5} justifyContent="flex-end">
         {/* Cancel Button */}
         {showCancel && (
           <Button
@@ -69,8 +69,18 @@ const TbaFormActions = ({
             color="inherit"
             onClick={onCancel}
             disabled={loading}
-            startIcon={CancelIcon && <CancelIcon />}
+            startIcon={CancelIcon && <CancelIcon sx={{ fontSize: 18 }} />}
             fullWidth={fullWidth}
+            sx={{
+              px: 2.5,
+              py: 0.75,
+              borderRadius: 1.5,
+              borderColor: 'grey.300',
+              '&:hover': {
+                borderColor: 'grey.400',
+                bgcolor: 'grey.50'
+              }
+            }}
           >
             {cancelLabel}
           </Button>
@@ -83,8 +93,19 @@ const TbaFormActions = ({
           color="primary"
           onClick={onSubmit}
           disabled={loading || disabled}
-          startIcon={loading ? <CircularProgress size={18} color="inherit" /> : SubmitIcon ? <SubmitIcon /> : undefined}
+          startIcon={
+            loading ? <CircularProgress size={16} color="inherit" /> : SubmitIcon ? <SubmitIcon sx={{ fontSize: 18 }} /> : undefined
+          }
           fullWidth={fullWidth}
+          sx={{
+            px: 3,
+            py: 0.75,
+            borderRadius: 1.5,
+            boxShadow: 'none',
+            '&:hover': {
+              boxShadow: '0 2px 8px rgba(24, 144, 255, 0.25)'
+            }
+          }}
         >
           {loading ? 'جاري الحفظ...' : submitLabel}
         </Button>

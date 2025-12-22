@@ -20,7 +20,7 @@
 import PropTypes from 'prop-types';
 
 // MUI Components
-import { Box, FormControlLabel, Switch, Typography, Paper, Stack } from '@mui/material';
+import { Box, Switch, Typography, Paper, Stack } from '@mui/material';
 
 // ============================================================================
 // COMPONENT
@@ -41,22 +41,26 @@ const TbaSwitchField = ({
   const displayHelperText = checked ? helperText : helperTextOff || helperText;
 
   const switchControl = (
-    <FormControlLabel
-      control={<Switch checked={checked} onChange={onChange} disabled={disabled || readOnly} color="primary" />}
-      label={
-        <Stack spacing={0}>
-          <Typography variant="body1" fontWeight={500}>
-            {label}
+    <Box
+      sx={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        width: '100%'
+      }}
+    >
+      <Stack spacing={0.25} sx={{ flex: 1 }}>
+        <Typography variant="body2" fontWeight={500} color="text.primary">
+          {label}
+        </Typography>
+        {displayHelperText && (
+          <Typography variant="caption" color="text.secondary" sx={{ lineHeight: 1.4 }}>
+            {displayHelperText}
           </Typography>
-          {displayHelperText && (
-            <Typography variant="caption" color="text.secondary">
-              {displayHelperText}
-            </Typography>
-          )}
-        </Stack>
-      }
-      sx={{ m: 0, alignItems: 'flex-start' }}
-    />
+        )}
+      </Stack>
+      <Switch checked={checked} onChange={onChange} disabled={disabled || readOnly} color="primary" sx={{ ml: 2 }} />
+    </Box>
   );
 
   if (variant === 'standard') {
@@ -68,7 +72,14 @@ const TbaSwitchField = ({
       variant="outlined"
       sx={{
         p: 2,
+        borderRadius: 2,
         bgcolor: readOnly ? 'action.hover' : 'background.paper',
+        borderColor: 'grey.200',
+        transition: 'all 0.2s ease-in-out',
+        '&:hover': {
+          borderColor: 'primary.light',
+          bgcolor: 'grey.50'
+        },
         ...sx
       }}
     >

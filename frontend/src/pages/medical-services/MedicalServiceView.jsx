@@ -220,7 +220,7 @@ const MedicalServiceView = () => {
       {/* ====== MAIN CARD ====== */}
       <MainCard>
         {/* ====== BASIC INFORMATION SECTION ====== */}
-        <TbaFormSection title="المعلومات الأساسية" icon={InfoIcon}>
+        <TbaFormSection title="المعلومات الأساسية" subtitle="البيانات الأساسية للخدمة الطبية" icon={InfoIcon}>
           <Grid container spacing={2}>
             {/* Code */}
             <Grid item xs={12} md={6}>
@@ -252,7 +252,7 @@ const MedicalServiceView = () => {
         </TbaFormSection>
 
         {/* ====== PRICING SECTION ====== */}
-        <TbaFormSection title="التسعير والتغطية" icon={AttachMoneyIcon}>
+        <TbaFormSection title="التسعير والتغطية" subtitle="أسعار وتكاليف الخدمة" icon={AttachMoneyIcon}>
           <Grid container spacing={2}>
             {/* Price */}
             <Grid item xs={12} md={4}>
@@ -272,7 +272,7 @@ const MedicalServiceView = () => {
         </TbaFormSection>
 
         {/* ====== DETAILS SECTION ====== */}
-        <TbaFormSection title="تفاصيل الخدمة" icon={DescriptionIcon}>
+        <TbaFormSection title="تفاصيل الخدمة" subtitle="معلومات إضافية عن الخدمة" icon={DescriptionIcon}>
           <Grid container spacing={2}>
             {/* Duration */}
             <Grid item xs={12} md={6}>
@@ -301,7 +301,7 @@ const MedicalServiceView = () => {
         </TbaFormSection>
 
         {/* ====== STATUS SECTION ====== */}
-        <TbaFormSection title="الحالة" icon={VerifiedUserIcon}>
+        <TbaFormSection title="الحالة" subtitle="حالة تفعيل الخدمة" icon={VerifiedUserIcon}>
           <Grid container spacing={2}>
             {/* Active Status */}
             <Grid item xs={12} md={6}>
@@ -318,7 +318,7 @@ const MedicalServiceView = () => {
         </TbaFormSection>
 
         {/* ====== METADATA SECTION ====== */}
-        <TbaFormSection title="معلومات النظام" icon={HistoryIcon}>
+        <TbaFormSection title="معلومات النظام" subtitle="بيانات التسجيل والتحديث" icon={HistoryIcon}>
           <Grid container spacing={2}>
             {/* Created At */}
             <Grid item xs={12} md={6}>

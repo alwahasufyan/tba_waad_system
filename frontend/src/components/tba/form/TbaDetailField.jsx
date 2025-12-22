@@ -27,10 +27,12 @@ import { Box, Paper, Typography, Chip, Stack } from '@mui/material';
 const TbaDetailField = ({
   label,
   value,
+  children,
   fallback = '-',
   variant = 'outlined', // 'outlined' | 'standard' | 'filled'
   chip = false,
   chipColor = 'default',
+  multiline = false,
   icon: Icon,
   sx = {}
 }) => {
@@ -38,27 +40,41 @@ const TbaDetailField = ({
   const displayValue = value !== null && value !== undefined && value !== '' ? value : fallback;
 
   // Determine if value is empty
-  const isEmpty = displayValue === fallback;
+  const isEmpty = displayValue === fallback && !children;
 
   const content = (
     <Box>
       {/* Label */}
-      <Typography variant="caption" color="text.secondary" gutterBottom display="block" sx={{ mb: 0.5 }}>
+      <Typography
+        variant="caption"
+        color="text.secondary"
+        display="block"
+        sx={{ mb: 0.75, fontWeight: 500, textTransform: 'uppercase', letterSpacing: 0.5, fontSize: '0.7rem' }}
+      >
         {label}
       </Typography>
 
       {/* Value */}
-      <Stack direction="row" alignItems="center" spacing={1}>
-        {Icon && <Icon fontSize="small" color={isEmpty ? 'disabled' : 'action'} />}
+      {children ? (
+        children
+      ) : (
+        <Stack direction="row" alignItems="center" spacing={1}>
+          {Icon && <Icon sx={{ fontSize: 18 }} color={isEmpty ? 'disabled' : 'action'} />}
 
-        {chip ? (
-          <Chip label={displayValue} color={chipColor} size="small" variant="light" />
-        ) : (
-          <Typography variant="body1" fontWeight={isEmpty ? 400 : 500} color={isEmpty ? 'text.disabled' : 'text.primary'}>
-            {displayValue}
-          </Typography>
-        )}
-      </Stack>
+          {chip ? (
+            <Chip label={displayValue} color={chipColor} size="small" variant="light" />
+          ) : (
+            <Typography
+              variant="body2"
+              fontWeight={isEmpty ? 400 : 500}
+              color={isEmpty ? 'text.disabled' : 'text.primary'}
+              sx={{ whiteSpace: multiline ? 'pre-wrap' : 'normal', lineHeight: 1.6 }}
+            >
+              {displayValue}
+            </Typography>
+          )}
+        </Stack>
+      )}
     </Box>
   );
 
@@ -71,9 +87,9 @@ const TbaDetailField = ({
       <Paper
         elevation={0}
         sx={{
-          p: 2,
+          p: 1.75,
           bgcolor: 'grey.50',
-          borderRadius: 1,
+          borderRadius: 1.5,
           ...sx
         }}
       >
@@ -84,7 +100,15 @@ const TbaDetailField = ({
 
   // Default: outlined
   return (
-    <Paper variant="outlined" sx={{ p: 2, ...sx }}>
+    <Paper
+      variant="outlined"
+      sx={{
+        p: 1.75,
+        borderRadius: 1.5,
+        borderColor: 'grey.200',
+        ...sx
+      }}
+    >
       {content}
     </Paper>
   );
@@ -95,8 +119,12 @@ TbaDetailField.propTypes = {
   label: PropTypes.string.isRequired,
   /** Field value */
   value: PropTypes.oneOfType([PropTypes.string, PropTypes.number, PropTypes.bool]),
+  /** Custom children content (overrides value) */
+  children: PropTypes.node,
   /** Fallback for empty values */
   fallback: PropTypes.string,
+  /** Enable multiline display */
+  multiline: PropTypes.bool,
   /** Visual variant */
   variant: PropTypes.oneOf(['outlined', 'standard', 'filled']),
   /** Display as chip */

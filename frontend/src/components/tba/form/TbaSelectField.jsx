@@ -78,6 +78,17 @@ const TbaSelectField = ({
         label={label}
         sx={{
           bgcolor: readOnly ? 'action.hover' : 'background.paper',
+          borderRadius: 1.5,
+          '&:hover:not(.Mui-disabled)': {
+            bgcolor: 'grey.50'
+          },
+          '&.Mui-focused': {
+            bgcolor: 'background.paper',
+            boxShadow: '0 0 0 2px rgba(24, 144, 255, 0.1)'
+          },
+          '& .MuiOutlinedInput-notchedOutline': {
+            borderColor: 'grey.300'
+          },
           ...sx
         }}
         {...rest}

@@ -217,7 +217,7 @@ const MedicalServiceCreate = () => {
           )}
 
           {/* ====== BASIC INFORMATION SECTION ====== */}
-          <TbaFormSection title="المعلومات الأساسية" icon={InfoIcon}>
+          <TbaFormSection title="المعلومات الأساسية" subtitle="أدخل البيانات الأساسية للخدمة الطبية" icon={InfoIcon}>
             <Grid container spacing={2}>
               {/* Code */}
               <Grid item xs={12} md={6}>
@@ -231,6 +231,7 @@ const MedicalServiceCreate = () => {
                   helperText={errors.code || 'رمز فريد للخدمة'}
                   required
                   disabled={submitting}
+                  sx={{ '& .MuiOutlinedInput-input': { fontWeight: 500 } }}
                 />
               </Grid>
 
@@ -262,6 +263,7 @@ const MedicalServiceCreate = () => {
                   error={errors.nameAr}
                   required
                   disabled={submitting}
+                  sx={{ '& .MuiOutlinedInput-input': { fontWeight: 500 } }}
                 />
               </Grid>
 
@@ -296,7 +298,7 @@ const MedicalServiceCreate = () => {
           </TbaFormSection>
 
           {/* ====== PRICING SECTION ====== */}
-          <TbaFormSection title="التسعير والتغطية" icon={AttachMoneyIcon}>
+          <TbaFormSection title="التسعير والتغطية" subtitle="حدد أسعار وتكاليف الخدمة" icon={AttachMoneyIcon}>
             <Grid container spacing={2}>
               {/* Price */}
               <Grid item xs={12} md={4}>
@@ -312,6 +314,7 @@ const MedicalServiceCreate = () => {
                   }}
                   inputProps={{ step: '0.01', min: '0' }}
                   disabled={submitting}
+                  sx={{ '& .MuiOutlinedInput-input': { fontWeight: 500 } }}
                 />
               </Grid>
 
@@ -352,7 +355,7 @@ const MedicalServiceCreate = () => {
           </TbaFormSection>
 
           {/* ====== DETAILS SECTION ====== */}
-          <TbaFormSection title="تفاصيل الخدمة" icon={DescriptionIcon}>
+          <TbaFormSection title="تفاصيل الخدمة" subtitle="معلومات إضافية عن الخدمة" icon={DescriptionIcon}>
             <Grid container spacing={2}>
               {/* Duration */}
               <Grid item xs={12} md={6}>
@@ -375,7 +378,7 @@ const MedicalServiceCreate = () => {
           </TbaFormSection>
 
           {/* ====== SETTINGS SECTION ====== */}
-          <TbaFormSection title="الإعدادات" icon={SettingsIcon}>
+          <TbaFormSection title="الإعدادات" subtitle="خيارات تكوين الخدمة" icon={SettingsIcon}>
             <Grid container spacing={2}>
               {/* Requires Approval */}
               <Grid item xs={12} md={6}>

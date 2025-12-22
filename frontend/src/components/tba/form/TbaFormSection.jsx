@@ -29,29 +29,31 @@ const TbaFormSection = ({ title, subtitle, icon: Icon, children, noPaper = false
     <Box sx={{ p: noPaper ? 0 : 2.5, ...sx }}>
       {/* Section Header */}
       {title && (
-        <Stack direction="row" alignItems="center" spacing={1.5} sx={{ mb: 2 }}>
+        <Stack direction="row" alignItems="flex-start" spacing={1.5} sx={{ mb: 1.5 }}>
           {Icon && (
             <Box
               sx={{
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                width: 36,
-                height: 36,
-                borderRadius: 1,
+                width: 32,
+                height: 32,
+                borderRadius: 1.5,
                 bgcolor: 'primary.lighter',
-                color: 'primary.main'
+                color: 'primary.main',
+                flexShrink: 0,
+                mt: 0.25
               }}
             >
-              <Icon fontSize="small" />
+              <Icon sx={{ fontSize: 18 }} />
             </Box>
           )}
-          <Box>
-            <Typography variant="subtitle1" fontWeight={600} color="text.primary">
+          <Box sx={{ flex: 1 }}>
+            <Typography variant="subtitle1" fontWeight={600} color="text.primary" sx={{ mb: 0.25, lineHeight: 1.4 }}>
               {title}
             </Typography>
             {subtitle && (
-              <Typography variant="caption" color="text.secondary">
+              <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.4 }}>
                 {subtitle}
               </Typography>
             )}
@@ -60,7 +62,7 @@ const TbaFormSection = ({ title, subtitle, icon: Icon, children, noPaper = false
       )}
 
       {/* Divider after header */}
-      {title && <Divider sx={{ mb: 2.5 }} />}
+      {title && <Divider sx={{ mb: 2 }} />}
 
       {/* Section Content */}
       {children}
@@ -72,7 +74,15 @@ const TbaFormSection = ({ title, subtitle, icon: Icon, children, noPaper = false
   }
 
   return (
-    <Paper variant="outlined" sx={{ mb: 3, overflow: 'hidden' }}>
+    <Paper
+      variant="outlined"
+      sx={{
+        mb: 2,
+        borderRadius: 2,
+        overflow: 'hidden',
+        borderColor: 'divider'
+      }}
+    >
       {content}
     </Paper>
   );

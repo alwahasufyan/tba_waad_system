@@ -78,7 +78,19 @@ const TbaTextField = ({
       InputProps={Object.keys(inputProps).length > 0 ? inputProps : undefined}
       sx={{
         '& .MuiOutlinedInput-root': {
-          bgcolor: readOnly ? 'action.hover' : 'background.paper'
+          bgcolor: readOnly ? 'action.hover' : 'background.paper',
+          borderRadius: 1.5,
+          transition: 'all 0.2s ease-in-out',
+          '&:hover:not(.Mui-disabled):not(.Mui-error)': {
+            bgcolor: 'grey.50'
+          },
+          '&.Mui-focused': {
+            bgcolor: 'background.paper',
+            boxShadow: '0 0 0 2px rgba(24, 144, 255, 0.1)'
+          }
+        },
+        '& .MuiOutlinedInput-notchedOutline': {
+          borderColor: 'grey.300'
         },
         ...sx
       }}
