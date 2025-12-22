@@ -1,9 +1,9 @@
 /**
  * Medical Service Edit Page - GOLDEN REFERENCE MODULE
- * Phase D3 - TbaForm System + Reference Module Pattern
+ * Original Mantis Form Architecture - NO custom form abstractions
  *
  * ⚠️ This is the REFERENCE implementation for all CRUD edit pages.
- * Pattern: ModernPageHeader → MainCard → TbaFormSection → TbaForm Components → TbaFormActions
+ * Pattern: ModernPageHeader → MainCard → Typography(h6) + Divider sections → MUI inputs
  *
  * Rules Applied:
  * 1. icon={Component} - NEVER JSX
@@ -11,31 +11,43 @@
  * 3. Array.isArray() for all lists
  * 4. Defensive optional chaining
  * 5. Proper error states (403 صلاحيات, 500 خطأ تقني)
- * 6. TableRefreshContext for post-edit refresh (Phase D2.3)
- * 7. TbaForm System components for consistent UI (Phase D3)
+ * 6. TableRefreshContext for post-edit refresh
  */
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
 // MUI Components
-import { Box, Button, Grid, Stack, Alert, Skeleton, InputAdornment } from '@mui/material';
+import {
+  Box,
+  Button,
+  Grid,
+  Stack,
+  Alert,
+  Skeleton,
+  TextField,
+  Typography,
+  Divider,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  FormHelperText,
+  Switch,
+  InputAdornment
+} from '@mui/material';
 
-// MUI Icons - Always as Component, NEVER as JSX
+// MUI Icons
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import SaveIcon from '@mui/icons-material/Save';
 import MedicalServicesIcon from '@mui/icons-material/MedicalServices';
 import LockIcon from '@mui/icons-material/Lock';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
-import InfoIcon from '@mui/icons-material/Info';
-import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
-import DescriptionIcon from '@mui/icons-material/Description';
-import SettingsIcon from '@mui/icons-material/Settings';
 
 // Project Components
 import MainCard from 'components/MainCard';
 import ModernPageHeader from 'components/tba/ModernPageHeader';
 import ModernEmptyState from 'components/tba/ModernEmptyState';
-import { TbaFormSection, TbaTextField, TbaSelectField, TbaSwitchField, TbaFormActions } from 'components/tba/form';
 
 // Contexts
 import { useTableRefresh } from 'contexts/TableRefreshContext';
@@ -67,9 +79,6 @@ const INITIAL_FORM_STATE = {
 // HELPER FUNCTIONS
 // ============================================================================
 
-/**
- * Parse error response and return appropriate Arabic message
- */
 const getErrorInfo = (error) => {
   const status = error?.response?.status || error?.status;
 
@@ -115,11 +124,6 @@ const getErrorInfo = (error) => {
 const MedicalServiceEdit = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-
-  // ========================================
-  // TABLE REFRESH CONTEXT (Phase D2.3)
-  // ========================================
-
   const { triggerRefresh } = useTableRefresh();
 
   // ========================================
@@ -128,10 +132,6 @@ const MedicalServiceEdit = () => {
 
   const { data: service, loading: loadingService, error: loadError } = useMedicalServiceDetails(id);
   const { data: categories, loading: categoriesLoading } = useAllMedicalCategories();
-
-  // ========================================
-  // DERIVED DATA - Defensive
-  // ========================================
 
   const categoryList = useMemo(() => {
     if (!categories) return [];
@@ -148,7 +148,7 @@ const MedicalServiceEdit = () => {
   const [apiError, setApiError] = useState(null);
 
   // ========================================
-  // EFFECTS - Populate form when service loads
+  // EFFECTS
   // ========================================
 
   useEffect(() => {
@@ -217,7 +217,6 @@ const MedicalServiceEdit = () => {
       setApiError(null);
 
       try {
-        // Prepare payload - defensive parsing
         const payload = {
           code: form.code?.trim() || '',
           nameAr: form.nameAr?.trim() || '',
@@ -233,10 +232,7 @@ const MedicalServiceEdit = () => {
         };
 
         await updateMedicalService(id, payload);
-
-        // Trigger table refresh before navigating (Phase D2.3 Contract)
         triggerRefresh();
-
         navigate('/medical-services');
       } catch (err) {
         console.error('[MedicalServiceEdit] Submit failed:', err);
@@ -347,197 +343,244 @@ const MedicalServiceEdit = () => {
           )}
 
           {/* ====== BASIC INFORMATION SECTION ====== */}
-          <TbaFormSection title="المعلومات الأساسية" subtitle="أدخل البيانات الأساسية للخدمة الطبية" icon={InfoIcon}>
-            <Grid container spacing={2}>
-              {/* Code */}
-              <Grid item xs={12} md={6}>
-                <TbaTextField
-                  name="code"
-                  label="الرمز"
-                  placeholder="SRV001"
-                  value={form.code}
-                  onChange={handleChange('code')}
-                  error={errors.code}
-                  helperText={errors.code || 'رمز فريد للخدمة'}
-                  required
-                  disabled={submitting}
-                  sx={{ '& .MuiOutlinedInput-input': { fontWeight: 500 } }}
-                />
-              </Grid>
+          <Typography variant="h6" gutterBottom>
+            المعلومات الأساسية
+          </Typography>
+          <Divider sx={{ mb: 3 }} />
 
-              {/* Category */}
-              <Grid item xs={12} md={6}>
-                <TbaSelectField
-                  name="categoryId"
-                  label="التصنيف الطبي"
-                  value={form.categoryId}
-                  onChange={handleChange('categoryId')}
-                  error={errors.categoryId}
-                  required
-                  disabled={submitting || categoriesLoading}
-                  options={categoryList.map((cat) => ({
-                    value: cat?.id,
-                    label: cat?.nameAr || cat?.nameEn || '-'
-                  }))}
-                />
-              </Grid>
-
-              {/* Name Arabic */}
-              <Grid item xs={12} md={6}>
-                <TbaTextField
-                  name="nameAr"
-                  label="الاسم (عربي)"
-                  placeholder="أدخل الاسم بالعربية"
-                  value={form.nameAr}
-                  onChange={handleChange('nameAr')}
-                  error={errors.nameAr}
-                  required
-                  disabled={submitting}
-                  sx={{ '& .MuiOutlinedInput-input': { fontWeight: 500 } }}
-                />
-              </Grid>
-
-              {/* Name English */}
-              <Grid item xs={12} md={6}>
-                <TbaTextField
-                  name="nameEn"
-                  label="الاسم (إنجليزي)"
-                  placeholder="Enter name in English"
-                  value={form.nameEn}
-                  onChange={handleChange('nameEn')}
-                  error={errors.nameEn}
-                  required
-                  disabled={submitting}
-                />
-              </Grid>
-
-              {/* Description */}
-              <Grid item xs={12}>
-                <TbaTextField
-                  name="description"
-                  label="الوصف"
-                  placeholder="أدخل وصف الخدمة (اختياري)"
-                  value={form.description}
-                  onChange={handleChange('description')}
-                  multiline
-                  rows={3}
-                  disabled={submitting}
-                />
-              </Grid>
+          <Grid container spacing={3}>
+            {/* Code */}
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                size="small"
+                label="الرمز"
+                placeholder="SRV001"
+                value={form.code}
+                onChange={handleChange('code')}
+                error={!!errors.code}
+                helperText={errors.code || 'رمز فريد للخدمة'}
+                required
+                disabled={submitting}
+              />
             </Grid>
-          </TbaFormSection>
+
+            {/* Category */}
+            <Grid item xs={12} md={6}>
+              <FormControl fullWidth size="small" error={!!errors.categoryId} required disabled={submitting || categoriesLoading}>
+                <InputLabel>التصنيف الطبي</InputLabel>
+                <Select value={form.categoryId} onChange={handleChange('categoryId')} label="التصنيف الطبي">
+                  <MenuItem value="">-- اختر التصنيف --</MenuItem>
+                  {categoryList.map((cat) => (
+                    <MenuItem key={cat?.id} value={cat?.id}>
+                      {cat?.nameAr || cat?.nameEn || '-'}
+                    </MenuItem>
+                  ))}
+                </Select>
+                {errors.categoryId && <FormHelperText>{errors.categoryId}</FormHelperText>}
+              </FormControl>
+            </Grid>
+
+            {/* Name Arabic */}
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                size="small"
+                label="الاسم (عربي)"
+                placeholder="أدخل الاسم بالعربية"
+                value={form.nameAr}
+                onChange={handleChange('nameAr')}
+                error={!!errors.nameAr}
+                helperText={errors.nameAr}
+                required
+                disabled={submitting}
+              />
+            </Grid>
+
+            {/* Name English */}
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                size="small"
+                label="الاسم (إنجليزي)"
+                placeholder="Enter name in English"
+                value={form.nameEn}
+                onChange={handleChange('nameEn')}
+                error={!!errors.nameEn}
+                helperText={errors.nameEn}
+                required
+                disabled={submitting}
+              />
+            </Grid>
+
+            {/* Description */}
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                size="small"
+                label="الوصف"
+                placeholder="أدخل وصف الخدمة (اختياري)"
+                value={form.description}
+                onChange={handleChange('description')}
+                multiline
+                rows={3}
+                disabled={submitting}
+              />
+            </Grid>
+          </Grid>
 
           {/* ====== PRICING SECTION ====== */}
-          <TbaFormSection title="التسعير والتغطية" subtitle="حدد أسعار وتكاليف الخدمة" icon={AttachMoneyIcon}>
-            <Grid container spacing={2}>
-              {/* Price */}
-              <Grid item xs={12} md={4}>
-                <TbaTextField
-                  name="priceLyd"
-                  label="السعر (د.ل)"
-                  placeholder="0.00"
-                  type="number"
-                  value={form.priceLyd}
-                  onChange={handleChange('priceLyd')}
-                  InputProps={{
-                    startAdornment: <InputAdornment position="start">د.ل</InputAdornment>
-                  }}
-                  inputProps={{ step: '0.01', min: '0' }}
-                  disabled={submitting}
-                  sx={{ '& .MuiOutlinedInput-input': { fontWeight: 500 } }}
-                />
-              </Grid>
+          <Typography variant="h6" gutterBottom sx={{ mt: 4 }}>
+            التسعير والتغطية
+          </Typography>
+          <Divider sx={{ mb: 3 }} />
 
-              {/* Cost */}
-              <Grid item xs={12} md={4}>
-                <TbaTextField
-                  name="costLyd"
-                  label="التكلفة (د.ل)"
-                  placeholder="0.00"
-                  type="number"
-                  value={form.costLyd}
-                  onChange={handleChange('costLyd')}
-                  InputProps={{
-                    startAdornment: <InputAdornment position="start">د.ل</InputAdornment>
-                  }}
-                  inputProps={{ step: '0.01', min: '0' }}
-                  disabled={submitting}
-                />
-              </Grid>
-
-              {/* Coverage Limit */}
-              <Grid item xs={12} md={4}>
-                <TbaTextField
-                  name="coverageLimit"
-                  label="حد التغطية (د.ل)"
-                  placeholder="0.00"
-                  type="number"
-                  value={form.coverageLimit}
-                  onChange={handleChange('coverageLimit')}
-                  InputProps={{
-                    startAdornment: <InputAdornment position="start">د.ل</InputAdornment>
-                  }}
-                  inputProps={{ step: '0.01', min: '0' }}
-                  disabled={submitting}
-                />
-              </Grid>
+          <Grid container spacing={3}>
+            {/* Price */}
+            <Grid item xs={12} md={4}>
+              <TextField
+                fullWidth
+                size="small"
+                label="السعر (د.ل)"
+                placeholder="0.00"
+                type="number"
+                value={form.priceLyd}
+                onChange={handleChange('priceLyd')}
+                InputProps={{
+                  startAdornment: <InputAdornment position="start">د.ل</InputAdornment>
+                }}
+                inputProps={{ step: '0.01', min: '0' }}
+                disabled={submitting}
+              />
             </Grid>
-          </TbaFormSection>
+
+            {/* Cost */}
+            <Grid item xs={12} md={4}>
+              <TextField
+                fullWidth
+                size="small"
+                label="التكلفة (د.ل)"
+                placeholder="0.00"
+                type="number"
+                value={form.costLyd}
+                onChange={handleChange('costLyd')}
+                InputProps={{
+                  startAdornment: <InputAdornment position="start">د.ل</InputAdornment>
+                }}
+                inputProps={{ step: '0.01', min: '0' }}
+                disabled={submitting}
+              />
+            </Grid>
+
+            {/* Coverage Limit */}
+            <Grid item xs={12} md={4}>
+              <TextField
+                fullWidth
+                size="small"
+                label="حد التغطية (د.ل)"
+                placeholder="0.00"
+                type="number"
+                value={form.coverageLimit}
+                onChange={handleChange('coverageLimit')}
+                InputProps={{
+                  startAdornment: <InputAdornment position="start">د.ل</InputAdornment>
+                }}
+                inputProps={{ step: '0.01', min: '0' }}
+                disabled={submitting}
+              />
+            </Grid>
+          </Grid>
 
           {/* ====== DETAILS SECTION ====== */}
-          <TbaFormSection title="تفاصيل الخدمة" subtitle="معلومات إضافية عن الخدمة" icon={DescriptionIcon}>
-            <Grid container spacing={2}>
-              {/* Duration */}
-              <Grid item xs={12} md={6}>
-                <TbaTextField
-                  name="duration"
-                  label="المدة (دقائق)"
-                  placeholder="0"
-                  type="number"
-                  value={form.duration}
-                  onChange={handleChange('duration')}
-                  InputProps={{
-                    endAdornment: <InputAdornment position="end">دقيقة</InputAdornment>
-                  }}
-                  inputProps={{ min: '0' }}
-                  helperText="المدة المتوقعة لتقديم الخدمة"
-                  disabled={submitting}
-                />
-              </Grid>
+          <Typography variant="h6" gutterBottom sx={{ mt: 4 }}>
+            تفاصيل الخدمة
+          </Typography>
+          <Divider sx={{ mb: 3 }} />
+
+          <Grid container spacing={3}>
+            {/* Duration */}
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                size="small"
+                label="المدة (دقائق)"
+                placeholder="0"
+                type="number"
+                value={form.duration}
+                onChange={handleChange('duration')}
+                InputProps={{
+                  endAdornment: <InputAdornment position="end">دقيقة</InputAdornment>
+                }}
+                inputProps={{ min: '0' }}
+                helperText="المدة المتوقعة لتقديم الخدمة"
+                disabled={submitting}
+              />
             </Grid>
-          </TbaFormSection>
+          </Grid>
 
           {/* ====== SETTINGS SECTION ====== */}
-          <TbaFormSection title="الإعدادات" subtitle="خيارات تكوين الخدمة" icon={SettingsIcon}>
-            <Grid container spacing={2}>
-              {/* Requires Approval */}
-              <Grid item xs={12} md={6}>
-                <TbaSwitchField
-                  name="requiresApproval"
-                  label="يتطلب موافقة مسبقة"
-                  checked={form.requiresApproval}
-                  onChange={handleChange('requiresApproval')}
-                  helperText={form.requiresApproval ? 'الخدمة تتطلب موافقة قبل التنفيذ' : 'لا تتطلب موافقة مسبقة'}
-                  disabled={submitting}
-                />
-              </Grid>
+          <Typography variant="h6" gutterBottom sx={{ mt: 4 }}>
+            الإعدادات
+          </Typography>
+          <Divider sx={{ mb: 3 }} />
 
-              {/* Active Switch */}
-              <Grid item xs={12} md={6}>
-                <TbaSwitchField
-                  name="active"
-                  label="تفعيل الخدمة"
-                  checked={form.active}
-                  onChange={handleChange('active')}
-                  helperText={form.active ? 'الخدمة نشطة وظاهرة في النظام' : 'الخدمة غير نشطة ولن تظهر في النظام'}
-                  disabled={submitting}
-                />
-              </Grid>
+          <Grid container spacing={3}>
+            {/* Requires Approval */}
+            <Grid item xs={12} md={6}>
+              <Box
+                sx={{
+                  border: '1px solid',
+                  borderColor: 'divider',
+                  borderRadius: 1,
+                  p: 2,
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center'
+                }}
+              >
+                <Box>
+                  <Typography variant="body1">يتطلب موافقة مسبقة</Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    {form.requiresApproval ? 'الخدمة تتطلب موافقة قبل التنفيذ' : 'لا تتطلب موافقة مسبقة'}
+                  </Typography>
+                </Box>
+                <Switch checked={form.requiresApproval} onChange={handleChange('requiresApproval')} disabled={submitting} />
+              </Box>
             </Grid>
-          </TbaFormSection>
+
+            {/* Active Switch */}
+            <Grid item xs={12} md={6}>
+              <Box
+                sx={{
+                  border: '1px solid',
+                  borderColor: 'divider',
+                  borderRadius: 1,
+                  p: 2,
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center'
+                }}
+              >
+                <Box>
+                  <Typography variant="body1">تفعيل الخدمة</Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    {form.active ? 'الخدمة نشطة وظاهرة في النظام' : 'الخدمة غير نشطة ولن تظهر في النظام'}
+                  </Typography>
+                </Box>
+                <Switch checked={form.active} onChange={handleChange('active')} disabled={submitting} />
+              </Box>
+            </Grid>
+          </Grid>
 
           {/* ====== ACTION BUTTONS ====== */}
-          <TbaFormActions onCancel={handleBack} loading={submitting} saveLabel="حفظ التعديلات" loadingLabel="جاري الحفظ..." />
+          <Box sx={{ mt: 4, display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
+            <Button variant="outlined" onClick={handleBack} disabled={submitting}>
+              إلغاء
+            </Button>
+            <Button type="submit" variant="contained" startIcon={<SaveIcon />} disabled={submitting}>
+              {submitting ? 'جاري الحفظ...' : 'حفظ التعديلات'}
+            </Button>
+          </Box>
         </Box>
       </MainCard>
     </Box>

@@ -1,54 +1,70 @@
 /**
  * Medical Service View Page - GOLDEN REFERENCE MODULE
- * Phase D3 - TbaForm System + Reference Module Pattern
+ * Original Mantis Form Architecture - NO custom form abstractions
  *
- * ⚠️ This is the REFERENCE implementation for all CRUD view pages.
- * Pattern: ModernPageHeader → MainCard → TbaFormSection → TbaDetailField (read-only)
+ * ⚠️ This is the REFERENCE implementation for all CRUD view/detail pages.
+ * Pattern: ModernPageHeader → MainCard → Typography(h6) + Divider sections → Read-only display
  *
  * Rules Applied:
  * 1. icon={Component} - NEVER JSX
  * 2. Arabic only - No English labels
- * 3. Defensive optional chaining
- * 4. Proper error states (403 صلاحيات, 500 خطأ تقني)
- * 5. TbaForm System components for consistent UI (Phase D3)
+ * 3. Array.isArray() for all lists
+ * 4. Defensive optional chaining
+ * 5. Proper error states (403 صلاحيات, 500 خطأ تقني)
+ * 6. Read-only display using Typography
  */
 
-import { useCallback } from 'react';
+import { useMemo, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
 // MUI Components
-import { Box, Button, Grid, Stack, Chip, Skeleton } from '@mui/material';
+import { Box, Button, Grid, Stack, Skeleton, Typography, Divider, Chip } from '@mui/material';
 
-// MUI Icons - Always as Component, NEVER as JSX
+// MUI Icons
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import EditIcon from '@mui/icons-material/Edit';
 import MedicalServicesIcon from '@mui/icons-material/MedicalServices';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import CancelIcon from '@mui/icons-material/Cancel';
 import LockIcon from '@mui/icons-material/Lock';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
-import InfoIcon from '@mui/icons-material/Info';
-import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
-import DescriptionIcon from '@mui/icons-material/Description';
-import HistoryIcon from '@mui/icons-material/History';
-import VerifiedUserIcon from '@mui/icons-material/VerifiedUser';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import CancelIcon from '@mui/icons-material/Cancel';
 
 // Project Components
 import MainCard from 'components/MainCard';
 import ModernPageHeader from 'components/tba/ModernPageHeader';
 import ModernEmptyState from 'components/tba/ModernEmptyState';
-import { TbaFormSection, TbaDetailField } from 'components/tba/form';
 
-// Hooks & Services
+// Hooks
 import { useMedicalServiceDetails } from 'hooks/useMedicalServices';
 
 // ============================================================================
 // HELPER FUNCTIONS
 // ============================================================================
 
-/**
- * Parse error response and return appropriate Arabic message
- */
+const formatPrice = (value) => {
+  if (value == null || value === '') return '-';
+  const num = parseFloat(value);
+  if (isNaN(num)) return '-';
+  return num.toLocaleString('ar-LY', { style: 'currency', currency: 'LYD' });
+};
+
+const formatDate = (value) => {
+  if (!value) return '-';
+  try {
+    const date = new Date(value);
+    if (isNaN(date.getTime())) return '-';
+    return date.toLocaleDateString('ar-LY', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  } catch {
+    return '-';
+  }
+};
+
 const getErrorInfo = (error) => {
   const status = error?.response?.status || error?.status;
 
@@ -87,25 +103,24 @@ const getErrorInfo = (error) => {
   };
 };
 
-/**
- * Format price with LYD currency
- */
-const formatPrice = (value) => {
-  if (value === null || value === undefined) return '-';
-  return `${Number(value).toFixed(2)} د.ل`;
-};
+// ============================================================================
+// DETAIL ROW COMPONENT
+// ============================================================================
 
 /**
- * Format date in Arabic locale
+ * Simple inline detail row - NOT a reusable abstraction, just code organization.
+ * Follows Mantis pattern: Typography label + Typography value
  */
-const formatDate = (date) => {
-  if (!date) return '-';
-  try {
-    return new Date(date).toLocaleString('ar-LY');
-  } catch {
-    return '-';
-  }
-};
+const DetailRow = ({ label, value, fullWidth = false }) => (
+  <Grid item xs={12} md={fullWidth ? 12 : 6}>
+    <Box sx={{ mb: 1 }}>
+      <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+        {label}
+      </Typography>
+      <Typography variant="body1">{value ?? '-'}</Typography>
+    </Box>
+  </Grid>
+);
 
 // ============================================================================
 // MAIN COMPONENT
@@ -119,7 +134,15 @@ const MedicalServiceView = () => {
   // DATA FETCHING
   // ========================================
 
-  const { data: service, loading, error } = useMedicalServiceDetails(id);
+  const { data: service, loading, error: loadError } = useMedicalServiceDetails(id);
+
+  // ========================================
+  // COMPUTED VALUES
+  // ========================================
+
+  const categoryName = useMemo(() => {
+    return service?.category?.nameAr || service?.category?.nameEn || '-';
+  }, [service]);
 
   // ========================================
   // HANDLERS
@@ -141,15 +164,16 @@ const MedicalServiceView = () => {
     return (
       <Box>
         <ModernPageHeader
-          title="عرض الخدمة الطبية"
-          subtitle="تفاصيل الخدمة الطبية"
+          title="عرض خدمة طبية"
+          subtitle="عرض تفاصيل الخدمة الطبية"
           icon={MedicalServicesIcon}
           breadcrumbs={[{ label: 'الرئيسية', path: '/' }, { label: 'الخدمات الطبية', path: '/medical-services' }, { label: 'عرض' }]}
         />
         <MainCard>
-          <Stack spacing={3}>
-            <Skeleton variant="rectangular" height={80} />
-            <Skeleton variant="rectangular" height={80} />
+          <Stack spacing={2}>
+            <Skeleton variant="rectangular" height={40} />
+            <Skeleton variant="rectangular" height={40} />
+            <Skeleton variant="rectangular" height={40} />
             <Skeleton variant="rectangular" height={80} />
           </Stack>
         </MainCard>
@@ -161,15 +185,15 @@ const MedicalServiceView = () => {
   // RENDER - ERROR STATE
   // ========================================
 
-  if (error || !service) {
-    const errorInfo = getErrorInfo(error);
+  if (loadError || !service) {
+    const errorInfo = getErrorInfo(loadError);
     const ErrorIcon = errorInfo.icon;
 
     return (
       <Box>
         <ModernPageHeader
-          title="عرض الخدمة الطبية"
-          subtitle="تفاصيل الخدمة الطبية"
+          title="عرض خدمة طبية"
+          subtitle="عرض تفاصيل الخدمة الطبية"
           icon={MedicalServicesIcon}
           breadcrumbs={[{ label: 'الرئيسية', path: '/' }, { label: 'الخدمات الطبية', path: '/medical-services' }, { label: 'عرض' }]}
         />
@@ -197,14 +221,10 @@ const MedicalServiceView = () => {
     <Box>
       {/* ====== PAGE HEADER ====== */}
       <ModernPageHeader
-        title="عرض الخدمة الطبية"
-        subtitle={service?.nameAr || ''}
+        title={service?.nameAr || 'عرض خدمة طبية'}
+        subtitle={`رمز الخدمة: ${service?.code || '-'}`}
         icon={MedicalServicesIcon}
-        breadcrumbs={[
-          { label: 'الرئيسية', path: '/' },
-          { label: 'الخدمات الطبية', path: '/medical-services' },
-          { label: service?.code || 'عرض' }
-        ]}
+        breadcrumbs={[{ label: 'الرئيسية', path: '/' }, { label: 'الخدمات الطبية', path: '/medical-services' }, { label: 'عرض' }]}
         actions={
           <Stack direction="row" spacing={1}>
             <Button variant="outlined" startIcon={<ArrowBackIcon />} onClick={handleBack}>
@@ -220,131 +240,101 @@ const MedicalServiceView = () => {
       {/* ====== MAIN CARD ====== */}
       <MainCard>
         {/* ====== BASIC INFORMATION SECTION ====== */}
-        <TbaFormSection title="المعلومات الأساسية" subtitle="البيانات الأساسية للخدمة الطبية" icon={InfoIcon}>
-          <Grid container spacing={2}>
-            {/* Code */}
-            <Grid item xs={12} md={6}>
-              <TbaDetailField label="الرمز" value={service?.code} />
-            </Grid>
+        <Typography variant="h6" gutterBottom>
+          المعلومات الأساسية
+        </Typography>
+        <Divider sx={{ mb: 3 }} />
 
-            {/* Category */}
-            <Grid item xs={12} md={6}>
-              <TbaDetailField label="التصنيف الطبي" value={service?.category?.nameAr || service?.category?.nameEn} />
-            </Grid>
-
-            {/* Name Arabic */}
-            <Grid item xs={12} md={6}>
-              <TbaDetailField label="الاسم (عربي)" value={service?.nameAr} />
-            </Grid>
-
-            {/* Name English */}
-            <Grid item xs={12} md={6}>
-              <TbaDetailField label="الاسم (إنجليزي)" value={service?.nameEn} />
-            </Grid>
-
-            {/* Description */}
-            {service?.description && (
-              <Grid item xs={12}>
-                <TbaDetailField label="الوصف" value={service.description} multiline />
-              </Grid>
-            )}
-          </Grid>
-        </TbaFormSection>
+        <Grid container spacing={3}>
+          <DetailRow label="الرمز" value={service?.code} />
+          <DetailRow label="التصنيف الطبي" value={categoryName} />
+          <DetailRow label="الاسم (عربي)" value={service?.nameAr} />
+          <DetailRow label="الاسم (إنجليزي)" value={service?.nameEn} />
+          <DetailRow label="الوصف" value={service?.description} fullWidth />
+        </Grid>
 
         {/* ====== PRICING SECTION ====== */}
-        <TbaFormSection title="التسعير والتغطية" subtitle="أسعار وتكاليف الخدمة" icon={AttachMoneyIcon}>
-          <Grid container spacing={2}>
-            {/* Price */}
-            <Grid item xs={12} md={4}>
-              <TbaDetailField label="السعر (د.ل)" value={formatPrice(service?.priceLyd)} />
-            </Grid>
+        <Typography variant="h6" gutterBottom sx={{ mt: 4 }}>
+          التسعير والتغطية
+        </Typography>
+        <Divider sx={{ mb: 3 }} />
 
-            {/* Cost */}
-            <Grid item xs={12} md={4}>
-              <TbaDetailField label="التكلفة (د.ل)" value={formatPrice(service?.costLyd)} />
-            </Grid>
-
-            {/* Coverage Limit */}
-            <Grid item xs={12} md={4}>
-              <TbaDetailField label="حد التغطية (د.ل)" value={formatPrice(service?.coverageLimit)} />
-            </Grid>
-          </Grid>
-        </TbaFormSection>
+        <Grid container spacing={3}>
+          <DetailRow label="السعر" value={formatPrice(service?.priceLyd)} />
+          <DetailRow label="التكلفة" value={formatPrice(service?.costLyd)} />
+          <DetailRow label="حد التغطية" value={formatPrice(service?.coverageLimit)} />
+        </Grid>
 
         {/* ====== DETAILS SECTION ====== */}
-        <TbaFormSection title="تفاصيل الخدمة" subtitle="معلومات إضافية عن الخدمة" icon={DescriptionIcon}>
-          <Grid container spacing={2}>
-            {/* Duration */}
-            <Grid item xs={12} md={6}>
-              <TbaDetailField label="المدة المتوقعة" value={service?.duration ? `${service.duration} دقيقة` : null} />
-            </Grid>
+        <Typography variant="h6" gutterBottom sx={{ mt: 4 }}>
+          تفاصيل الخدمة
+        </Typography>
+        <Divider sx={{ mb: 3 }} />
 
-            {/* Requires Approval */}
-            <Grid item xs={12} md={6}>
-              <TbaDetailField label="يتطلب موافقة مسبقة">
-                <Stack direction="row" spacing={1} alignItems="center">
-                  {service?.requiresApproval ? (
-                    <>
-                      <CheckCircleIcon color="success" fontSize="small" />
-                      <span>نعم</span>
-                    </>
-                  ) : (
-                    <>
-                      <CancelIcon color="disabled" fontSize="small" />
-                      <span>لا</span>
-                    </>
-                  )}
-                </Stack>
-              </TbaDetailField>
-            </Grid>
-          </Grid>
-        </TbaFormSection>
+        <Grid container spacing={3}>
+          <DetailRow label="المدة (دقائق)" value={service?.duration ? `${service.duration} دقيقة` : '-'} />
+        </Grid>
 
         {/* ====== STATUS SECTION ====== */}
-        <TbaFormSection title="الحالة" subtitle="حالة تفعيل الخدمة" icon={VerifiedUserIcon}>
-          <Grid container spacing={2}>
-            {/* Active Status */}
-            <Grid item xs={12} md={6}>
-              <TbaDetailField label="حالة الخدمة">
-                <Chip
-                  label={service?.active ? 'نشط' : 'غير نشط'}
-                  color={service?.active ? 'success' : 'default'}
-                  size="medium"
-                  variant="light"
-                />
-              </TbaDetailField>
-            </Grid>
+        <Typography variant="h6" gutterBottom sx={{ mt: 4 }}>
+          الحالة
+        </Typography>
+        <Divider sx={{ mb: 3 }} />
+
+        <Grid container spacing={3}>
+          {/* Requires Approval */}
+          <Grid item xs={12} md={6}>
+            <Box sx={{ mb: 1 }}>
+              <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                يتطلب موافقة مسبقة
+              </Typography>
+              <Chip
+                icon={service?.requiresApproval ? <CheckCircleIcon /> : <CancelIcon />}
+                label={service?.requiresApproval ? 'نعم' : 'لا'}
+                color={service?.requiresApproval ? 'warning' : 'default'}
+                variant="outlined"
+                size="small"
+              />
+            </Box>
           </Grid>
-        </TbaFormSection>
 
-        {/* ====== METADATA SECTION ====== */}
-        <TbaFormSection title="معلومات النظام" subtitle="بيانات التسجيل والتحديث" icon={HistoryIcon}>
-          <Grid container spacing={2}>
-            {/* Created At */}
-            <Grid item xs={12} md={6}>
-              <TbaDetailField label="تاريخ الإنشاء" value={formatDate(service?.createdAt)} />
-            </Grid>
-
-            {/* Updated At */}
-            <Grid item xs={12} md={6}>
-              <TbaDetailField label="آخر تحديث" value={formatDate(service?.updatedAt)} />
-            </Grid>
-
-            {/* Created By */}
-            {service?.createdBy && (
-              <Grid item xs={12} md={6}>
-                <TbaDetailField label="أنشئ بواسطة" value={service.createdBy} />
-              </Grid>
-            )}
-
-            {/* Updated By */}
-            {service?.updatedBy && (
-              <Grid item xs={12} md={6}>
-                <TbaDetailField label="آخر تحديث بواسطة" value={service.updatedBy} />
-              </Grid>
-            )}
+          {/* Active Status */}
+          <Grid item xs={12} md={6}>
+            <Box sx={{ mb: 1 }}>
+              <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                حالة التفعيل
+              </Typography>
+              <Chip
+                icon={service?.active ? <CheckCircleIcon /> : <CancelIcon />}
+                label={service?.active ? 'نشطة' : 'غير نشطة'}
+                color={service?.active ? 'success' : 'error'}
+                variant="filled"
+                size="small"
+              />
+            </Box>
           </Grid>
-        </TbaFormSection>
+        </Grid>
+
+        {/* ====== TIMESTAMPS SECTION ====== */}
+        <Typography variant="h6" gutterBottom sx={{ mt: 4 }}>
+          معلومات السجل
+        </Typography>
+        <Divider sx={{ mb: 3 }} />
+
+        <Grid container spacing={3}>
+          <DetailRow label="تاريخ الإنشاء" value={formatDate(service?.createdAt)} />
+          <DetailRow label="آخر تعديل" value={formatDate(service?.updatedAt)} />
+        </Grid>
+
+        {/* ====== ACTION BUTTONS ====== */}
+        <Box sx={{ mt: 4, display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
+          <Button variant="outlined" startIcon={<ArrowBackIcon />} onClick={handleBack}>
+            رجوع للقائمة
+          </Button>
+          <Button variant="contained" startIcon={<EditIcon />} onClick={handleEdit}>
+            تعديل الخدمة
+          </Button>
+        </Box>
       </MainCard>
     </Box>
   );
