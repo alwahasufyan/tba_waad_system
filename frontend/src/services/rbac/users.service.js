@@ -70,6 +70,37 @@ export const usersService = {
     return axiosServices.get(`${BASE_URL}/paginate`, {
       params: { page, size }
     });
+  },
+
+  /**
+   * Assign roles to user (RBAC operation)
+   * POST /api/admin/users/{id}/assign-roles
+   */
+  assignRoles: (id, roleIds) => {
+    return axiosServices.post(`${BASE_URL}/${id}/assign-roles`, {
+      roleIds
+    });
+  },
+
+  /**
+   * Remove roles from user (RBAC operation)
+   * POST /api/admin/users/{id}/remove-roles
+   */
+  removeRoles: (id, roleIds) => {
+    return axiosServices.post(`${BASE_URL}/${id}/remove-roles`, {
+      roleIds
+    });
+  },
+
+  /**
+   * Get users paginated with sorting - TbaDataTable format
+   * GET /api/admin/users/paginate?page={page}&size={size}&sortBy={field}&sortDir={dir}
+   */
+  getUsersTable: (params) => {
+    const { page = 0, size = 20, sortBy = 'id', sortDir = 'asc', search = '' } = params || {};
+    return axiosServices.get(`${BASE_URL}/paginate`, {
+      params: { page, size, sortBy, sortDir, search }
+    });
   }
 };
 

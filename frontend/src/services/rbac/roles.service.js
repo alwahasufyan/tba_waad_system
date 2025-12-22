@@ -90,6 +90,17 @@ export const rolesService = {
     return axiosServices.post(`${BASE_URL}/${id}/remove-permissions`, {
       permissionIds
     });
+  },
+
+  /**
+   * Get roles paginated with sorting - TbaDataTable format
+   * GET /api/admin/roles/paginate?page={page}&size={size}&sortBy={field}&sortDir={dir}
+   */
+  getRolesTable: (params) => {
+    const { page = 0, size = 20, sortBy = 'id', sortDir = 'asc', search = '' } = params || {};
+    return axiosServices.get(`${BASE_URL}/paginate`, {
+      params: { page, size, sortBy, sortDir, search }
+    });
   }
 };
 

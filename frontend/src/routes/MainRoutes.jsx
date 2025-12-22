@@ -112,6 +112,10 @@ const CompaniesList = Loadable(lazy(() => import('pages/companies')));
 // ==============================|| LAZY LOADING - RBAC ||============================== //
 
 const RbacDashboard = Loadable(lazy(() => import('pages/rbac')));
+const RbacUsersList = Loadable(lazy(() => import('pages/rbac/users')));
+const RbacUserDetails = Loadable(lazy(() => import('pages/rbac/users/UserDetails')));
+const RbacRolesList = Loadable(lazy(() => import('pages/rbac/roles')));
+const RbacRoleDetails = Loadable(lazy(() => import('pages/rbac/roles/RoleDetails')));
 
 // ==============================|| LAZY LOADING - REVIEWER COMPANIES ||============================== //
 
@@ -738,11 +742,58 @@ const MainRoutes = {
     // RBAC Module
     {
       path: 'rbac',
-      element: (
-        <RouteGuard allowedRoles={['ADMIN', 'INSURANCE_COMPANY', 'REVIEWER']}>
-          <RbacDashboard />
-        </RouteGuard>
-      )
+      children: [
+        {
+          path: '',
+          element: (
+            <RouteGuard allowedRoles={['SUPER_ADMIN', 'ADMIN']}>
+              <RbacDashboard />
+            </RouteGuard>
+          )
+        },
+        {
+          path: 'users',
+          children: [
+            {
+              path: '',
+              element: (
+                <RouteGuard allowedRoles={['SUPER_ADMIN', 'ADMIN']}>
+                  <RbacUsersList />
+                </RouteGuard>
+              )
+            },
+            {
+              path: ':id',
+              element: (
+                <RouteGuard allowedRoles={['SUPER_ADMIN', 'ADMIN']}>
+                  <RbacUserDetails />
+                </RouteGuard>
+              )
+            }
+          ]
+        },
+        {
+          path: 'roles',
+          children: [
+            {
+              path: '',
+              element: (
+                <RouteGuard allowedRoles={['SUPER_ADMIN', 'ADMIN']}>
+                  <RbacRolesList />
+                </RouteGuard>
+              )
+            },
+            {
+              path: ':id',
+              element: (
+                <RouteGuard allowedRoles={['SUPER_ADMIN', 'ADMIN']}>
+                  <RbacRoleDetails />
+                </RouteGuard>
+              )
+            }
+          ]
+        }
+      ]
     },
 
     // Settings
