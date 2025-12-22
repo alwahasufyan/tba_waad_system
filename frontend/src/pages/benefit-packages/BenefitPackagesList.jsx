@@ -1,277 +1,289 @@
-import { useState, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
-import {
-  Button,
-  Chip,
-  IconButton,
-  Stack,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  TextField,
-  Typography,
-  TablePagination,
-  InputAdornment,
-  Tooltip,
-  Paper,
-  TableSortLabel,
-  Alert
-} from '@mui/material';
-import {
-  Add as AddIcon,
-  Search as SearchIcon,
-  Visibility as VisibilityIcon,
-  Edit as EditIcon,
-  Delete as DeleteIcon,
-  CardGiftcard as CardGiftcardIcon,
-  Refresh as RefreshIcon
-} from '@mui/icons-material';
+/**
+ * Benefit Packages List Page - Phase D2.4 (TbaDataTable Pattern)
+ * Cloned from Medical Services Golden Reference
+ *
+ * ⚠️ Pattern: ModernPageHeader → MainCard → TbaDataTable
+ *
+ * Rules Applied:
+ * 1. icon={Component} - NEVER JSX
+ * 2. Arabic only - No English labels
+ * 3. Defensive optional chaining
+ * 4. TbaDataTable for server-side pagination/sorting/filtering
+ * 5. TableRefreshContext for post-create/edit refresh (Phase D2.3)
+ */
 
+import { useMemo, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
+
+// MUI Components
+import { Box, Button, Chip, IconButton, Stack, Tooltip, Typography } from '@mui/material';
+
+// MUI Icons - Always as Component, NEVER as JSX
+import AddIcon from '@mui/icons-material/Add';
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
+import CardGiftcardIcon from '@mui/icons-material/CardGiftcard';
+
+// Project Components
 import MainCard from 'components/MainCard';
 import ModernPageHeader from 'components/tba/ModernPageHeader';
-import ModernEmptyState from 'components/tba/ModernEmptyState';
-import TableSkeleton from 'components/tba/LoadingSkeleton';
-import { useBenefitPackagesList } from 'hooks/useBenefitPackages';
-import { deleteBenefitPackage } from 'services/api/benefit-packages.service';
+import TbaDataTable from 'components/tba/TbaDataTable';
+
+// Contexts
+import { useTableRefresh } from 'contexts/TableRefreshContext';
+
+// Services
+import { getBenefitPackages, deleteBenefitPackage } from 'services/api/benefit-packages.service';
+
+// ============================================================================
+// CONSTANTS
+// ============================================================================
+
+const QUERY_KEY = 'benefit-packages';
+
+// ============================================================================
+// HELPER FUNCTIONS
+// ============================================================================
 
 /**
- * Benefit Packages List Page
- * Displays paginated list of benefit packages with search, sort, and CRUD operations
+ * Format currency with LYD
  */
+const formatCurrency = (value) => {
+  if (value === null || value === undefined) return '-';
+  return `${Number(value).toLocaleString('ar-LY')} د.ل`;
+};
+
+// ============================================================================
+// MAIN COMPONENT
+// ============================================================================
+
 const BenefitPackagesList = () => {
   const navigate = useNavigate();
-  const [searchInput, setSearchInput] = useState('');
-  const [orderBy, setOrderBy] = useState('createdAt');
-  const [order, setOrder] = useState('desc');
-  const [apiError, setApiError] = useState(null);
 
-  const { data, loading, error, params, setParams, refresh } = useBenefitPackagesList({
-    sortBy: orderBy,
-    sortDir: order
-  });
+  // ========================================
+  // TABLE REFRESH CONTEXT (Phase D2.3)
+  // ========================================
 
-  const handleSearch = useCallback(() => {
-    setParams((prev) => ({ ...prev, search: searchInput, page: 1 }));
-  }, [searchInput, setParams]);
+  const { refreshKey, triggerRefresh } = useTableRefresh();
 
-  const handleSearchKeyPress = (e) => {
-    if (e.key === 'Enter') handleSearch();
-  };
+  // ========================================
+  // NAVIGATION HANDLERS
+  // ========================================
 
-  const handleSort = (column) => {
-    const isAsc = orderBy === column && order === 'asc';
-    const newOrder = isAsc ? 'desc' : 'asc';
-    setOrder(newOrder);
-    setOrderBy(column);
-    setParams((prev) => ({ ...prev, sortBy: column, sortDir: newOrder, page: 1 }));
-  };
+  const handleNavigateAdd = useCallback(() => {
+    navigate('/benefit-packages/create');
+  }, [navigate]);
 
-  const handlePageChange = (event, newPage) => {
-    setParams((prev) => ({ ...prev, page: newPage + 1 }));
-  };
+  const handleNavigateView = useCallback(
+    (id) => {
+      navigate(`/benefit-packages/${id}`);
+    },
+    [navigate]
+  );
 
-  const handleRowsPerPageChange = (event) => {
-    const newSize = parseInt(event.target.value, 10);
-    setParams((prev) => ({ ...prev, size: newSize, page: 1 }));
-  };
+  const handleNavigateEdit = useCallback(
+    (id) => {
+      navigate(`/benefit-packages/edit/${id}`);
+    },
+    [navigate]
+  );
 
-  const handleView = (id) => {
-    navigate(`/benefit-packages/${id}`);
-  };
+  const handleDelete = useCallback(
+    async (id, name) => {
+      const confirmMessage = `هل أنت متأكد من حذف الباقة "${name}"؟`;
+      if (!window.confirm(confirmMessage)) return;
 
-  const handleEdit = (id) => {
-    navigate(`/benefit-packages/edit/${id}`);
-  };
-
-  const handleDelete = async (id, packageName) => {
-    if (window.confirm(`هل أنت متأكد من حذف الباقة "${packageName}"؟`)) {
       try {
         await deleteBenefitPackage(id);
-        setApiError(null);
-        refresh();
+        // Trigger refresh via context - no page reload needed
+        triggerRefresh();
       } catch (err) {
-        console.error('Failed to delete benefit package:', err);
-        setApiError(err.message || 'فشل حذف الباقة');
+        console.error('[BenefitPackages] Delete failed:', err);
+        alert('فشل حذف الباقة. يرجى المحاولة لاحقاً');
       }
-    }
-  };
+    },
+    [triggerRefresh]
+  );
 
-  const breadcrumbs = [{ title: 'باقات المنافع' }];
+  // ========================================
+  // FETCHER FUNCTION
+  // ========================================
+
+  const fetcher = useCallback(async (params) => {
+    return getBenefitPackages(params);
+  }, []);
+
+  // ========================================
+  // COLUMN DEFINITIONS
+  // ========================================
+
+  const columns = useMemo(
+    () => [
+      // Code Column
+      {
+        accessorKey: 'code',
+        header: 'الرمز',
+        size: 100,
+        Cell: ({ row }) => (
+          <Typography variant="body2" fontWeight="medium">
+            {row.original?.code || '-'}
+          </Typography>
+        )
+      },
+
+      // Arabic Name Column
+      {
+        accessorKey: 'nameAr',
+        header: 'الاسم (عربي)',
+        size: 180,
+        Cell: ({ row }) => <Typography variant="body2">{row.original?.nameAr || '-'}</Typography>
+      },
+
+      // English Name Column
+      {
+        accessorKey: 'nameEn',
+        header: 'الاسم (إنجليزي)',
+        size: 180,
+        Cell: ({ row }) => (
+          <Typography variant="body2" color="text.secondary">
+            {row.original?.nameEn || '-'}
+          </Typography>
+        )
+      },
+
+      // Description Column
+      {
+        accessorKey: 'description',
+        header: 'الوصف',
+        size: 200,
+        enableSorting: false,
+        Cell: ({ row }) => (
+          <Typography variant="body2" color="text.secondary" noWrap sx={{ maxWidth: 180 }}>
+            {row.original?.description || '-'}
+          </Typography>
+        )
+      },
+
+      // Coverage Limit Column
+      {
+        accessorKey: 'coverageLimit',
+        header: 'حد التغطية',
+        size: 130,
+        muiTableHeadCellProps: { align: 'right' },
+        muiTableBodyCellProps: { align: 'right' },
+        Cell: ({ row }) => (
+          <Typography variant="body2" fontWeight="medium">
+            {formatCurrency(row.original?.coverageLimit)}
+          </Typography>
+        )
+      },
+
+      // Deductible Column
+      {
+        accessorKey: 'deductible',
+        header: 'نسبة التحمل',
+        size: 100,
+        muiTableHeadCellProps: { align: 'center' },
+        muiTableBodyCellProps: { align: 'center' },
+        Cell: ({ row }) => (
+          <Typography variant="body2">
+            {row.original?.deductible != null ? `${row.original.deductible}%` : '-'}
+          </Typography>
+        )
+      },
+
+      // Status Column
+      {
+        accessorKey: 'active',
+        header: 'الحالة',
+        size: 100,
+        muiTableHeadCellProps: { align: 'center' },
+        muiTableBodyCellProps: { align: 'center' },
+        Cell: ({ row }) => (
+          <Chip
+            label={row.original?.active ? 'نشط' : 'غير نشط'}
+            color={row.original?.active ? 'success' : 'default'}
+            size="small"
+            variant="light"
+          />
+        )
+      },
+
+      // Actions Column
+      {
+        id: 'actions',
+        header: 'الإجراءات',
+        size: 130,
+        enableSorting: false,
+        enableHiding: false,
+        enableColumnFilter: false,
+        muiTableHeadCellProps: { align: 'center' },
+        muiTableBodyCellProps: { align: 'center' },
+        Cell: ({ row }) => (
+          <Stack direction="row" spacing={0.5} justifyContent="center">
+            <Tooltip title="عرض">
+              <IconButton size="small" color="primary" onClick={() => handleNavigateView(row.original?.id)}>
+                <VisibilityIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+
+            <Tooltip title="تعديل">
+              <IconButton size="small" color="info" onClick={() => handleNavigateEdit(row.original?.id)}>
+                <EditIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+
+            <Tooltip title="حذف">
+              <IconButton
+                size="small"
+                color="error"
+                onClick={() => handleDelete(row.original?.id, row.original?.nameAr || row.original?.code)}
+              >
+                <DeleteIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          </Stack>
+        )
+      }
+    ],
+    [handleNavigateView, handleNavigateEdit, handleDelete]
+  );
+
+  // ========================================
+  // MAIN RENDER
+  // ========================================
 
   return (
-    <>
+    <Box>
+      {/* ====== PAGE HEADER ====== */}
       <ModernPageHeader
         title="باقات المنافع"
         subtitle="إدارة باقات المنافع التأمينية"
         icon={CardGiftcardIcon}
-        breadcrumbs={breadcrumbs}
+        breadcrumbs={[{ label: 'الرئيسية', path: '/' }, { label: 'باقات المنافع' }]}
         actions={
-          <Button variant="contained" startIcon={<AddIcon />} onClick={() => navigate('/benefit-packages/create')}>
+          <Button variant="contained" startIcon={<AddIcon />} onClick={handleNavigateAdd}>
             إضافة باقة جديدة
           </Button>
         }
       />
 
+      {/* ====== MAIN CARD WITH TABLE ====== */}
       <MainCard>
-        {/* Search and Actions */}
-        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems="center" justifyContent="space-between" sx={{ mb: 3 }}>
-          <TextField
-            placeholder="بحث..."
-            value={searchInput}
-            onChange={(e) => setSearchInput(e.target.value)}
-            onKeyPress={handleSearchKeyPress}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon />
-                </InputAdornment>
-              )
-            }}
-            sx={{ minWidth: { xs: '100%', sm: 300 } }}
-          />
-          <Stack direction="row" spacing={1}>
-            <Button variant="outlined" startIcon={<SearchIcon />} onClick={handleSearch}>
-              بحث
-            </Button>
-            <IconButton onClick={refresh} color="primary">
-              <RefreshIcon />
-            </IconButton>
-          </Stack>
-        </Stack>
-
-        {/* Error Alert */}
-        {(error || apiError) && (
-          <Alert severity="error" sx={{ mb: 2 }} onClose={() => setApiError(null)}>
-            {apiError || error?.message || 'حدث خطأ أثناء تحميل البيانات'}
-          </Alert>
-        )}
-
-        {/* Loading State */}
-        {loading && <TableSkeleton columns={7} rows={5} />}
-
-        {/* Empty State */}
-        {!loading && (!data?.items || data.items.length === 0) && (
-          <ModernEmptyState
-            icon={CardGiftcardIcon}
-            title="لا توجد باقات منافع"
-            description={params.search ? 'لم يتم العثور على نتائج للبحث' : 'ابدأ بإضافة باقة منافع جديدة'}
-            action={
-              !params.search && (
-                <Button variant="contained" startIcon={<AddIcon />} onClick={() => navigate('/benefit-packages/create')}>
-                  إضافة باقة جديدة
-                </Button>
-              )
-            }
-          />
-        )}
-
-        {/* Data Table */}
-        {!loading && data?.items && data.items.length > 0 && (
-          <>
-            <TableContainer component={Paper}>
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell>
-                      <TableSortLabel
-                        active={orderBy === 'code'}
-                        direction={orderBy === 'code' ? order : 'asc'}
-                        onClick={() => handleSort('code')}
-                      >
-                        الكود
-                      </TableSortLabel>
-                    </TableCell>
-                    <TableCell>
-                      <TableSortLabel
-                        active={orderBy === 'nameAr'}
-                        direction={orderBy === 'nameAr' ? order : 'asc'}
-                        onClick={() => handleSort('nameAr')}
-                      >
-                        الاسم بالعربية
-                      </TableSortLabel>
-                    </TableCell>
-                    <TableCell>
-                      <TableSortLabel
-                        active={orderBy === 'nameEn'}
-                        direction={orderBy === 'nameEn' ? order : 'asc'}
-                        onClick={() => handleSort('nameEn')}
-                      >
-                        الاسم بالإنجليزية
-                      </TableSortLabel>
-                    </TableCell>
-                    <TableCell align="center">عدد الباقات الطبية</TableCell>
-                    <TableCell align="right">حد التغطية</TableCell>
-                    <TableCell align="center">الصلاحية</TableCell>
-                    <TableCell align="center">الحالة</TableCell>
-                    <TableCell align="center">الإجراءات</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {Array.isArray(data?.items) && data.items.map((pkg) => (
-                    <TableRow key={pkg.id} hover>
-                      <TableCell>
-                        <Typography variant="body2" fontWeight="medium">
-                          {pkg.code}
-                        </Typography>
-                      </TableCell>
-                      <TableCell>{pkg.nameAr || '-'}</TableCell>
-                      <TableCell>{pkg.nameEn || '-'}</TableCell>
-                      <TableCell align="center">
-                        <Chip label={pkg.medicalPackages?.length || 0} size="small" color="primary" variant="outlined" />
-                      </TableCell>
-                      <TableCell align="right">{pkg.coverageLimit ? `${pkg.coverageLimit.toFixed(2)}` : '-'}</TableCell>
-                      <TableCell align="center">{pkg.validityDays ? `${pkg.validityDays} يوم` : '-'}</TableCell>
-                      <TableCell align="center">
-                        <Chip label={pkg.active ? 'نشط' : 'غير نشط'} color={pkg.active ? 'success' : 'default'} size="small" />
-                      </TableCell>
-                      <TableCell align="center">
-                        <Stack direction="row" spacing={1} justifyContent="center">
-                          <Tooltip title="عرض">
-                            <IconButton size="small" color="info" onClick={() => handleView(pkg.id)}>
-                              <VisibilityIcon fontSize="small" />
-                            </IconButton>
-                          </Tooltip>
-                          <Tooltip title="تعديل">
-                            <IconButton size="small" color="primary" onClick={() => handleEdit(pkg.id)}>
-                              <EditIcon fontSize="small" />
-                            </IconButton>
-                          </Tooltip>
-                          <Tooltip title="حذف">
-                            <IconButton
-                              size="small"
-                              color="error"
-                              onClick={() => handleDelete(pkg.id, pkg.nameAr || pkg.nameEn)}
-                            >
-                              <DeleteIcon fontSize="small" />
-                            </IconButton>
-                          </Tooltip>
-                        </Stack>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-
-            {/* Pagination */}
-            <TablePagination
-              component="div"
-              count={data.total}
-              page={(data.page || 1) - 1}
-              onPageChange={handlePageChange}
-              rowsPerPage={data.size || 20}
-              onRowsPerPageChange={handleRowsPerPageChange}
-              rowsPerPageOptions={[10, 20, 50, 100]}
-              labelRowsPerPage="الصفوف في الصفحة:"
-              labelDisplayedRows={({ from, to, count }) => `${from}-${to} من ${count}`}
-            />
-          </>
-        )}
+        <TbaDataTable
+          columns={columns}
+          fetcher={fetcher}
+          queryKey={QUERY_KEY}
+          refreshKey={refreshKey}
+          enableExport={true}
+          enablePrint={true}
+          enableFilters={true}
+          exportFilename="benefit_packages"
+          printTitle="تقرير باقات المنافع"
+        />
       </MainCard>
-    </>
+    </Box>
   );
 };
 

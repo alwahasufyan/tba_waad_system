@@ -1,366 +1,297 @@
-import { useState, useMemo, useCallback } from 'react';
+/**
+ * Members List Page - Phase D2.4 (TbaDataTable Pattern)
+ * Insurance Members (Principals and Dependents)
+ *
+ * ⚠️ Pattern: ModernPageHeader → MainCard → TbaDataTable
+ *
+ * Rules Applied:
+ * 1. icon={Component} - NEVER JSX
+ * 2. Arabic only - No English labels
+ * 3. Defensive optional chaining
+ * 4. TbaDataTable for server-side pagination/sorting/filtering
+ * 5. TableRefreshContext for post-create/edit refresh (Phase D2.3)
+ */
+
+import { useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import {
-  Box,
-  Button,
-  Chip,
-  IconButton,
-  Stack,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  TextField,
-  Typography,
-  TablePagination,
-  InputAdornment,
-  Tooltip,
-  Paper,
-  TableSortLabel,
-  Alert
-} from '@mui/material';
+
+// MUI Components
+import { Box, Button, Chip, IconButton, Stack, Tooltip, Typography } from '@mui/material';
+
+// MUI Icons - Always as Component, NEVER as JSX
+import AddIcon from '@mui/icons-material/Add';
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
+import PeopleAltIcon from '@mui/icons-material/PeopleAlt';
+
+// Project Components
+import MainCard from 'components/MainCard';
+import ModernPageHeader from 'components/tba/ModernPageHeader';
+import TbaDataTable from 'components/tba/TbaDataTable';
 
 // Insurance UX Components - Phase B2
 import { MemberTypeIndicator, CardStatusBadge } from 'components/insurance';
 
-import {
-  Add as AddIcon,
-  Search as SearchIcon,
-  Visibility as VisibilityIcon,
-  Edit as EditIcon,
-  Delete as DeleteIcon,
-  PeopleAlt as PeopleAltIcon,
-  Refresh as RefreshIcon
-} from '@mui/icons-material';
+// Contexts
+import { useTableRefresh } from 'contexts/TableRefreshContext';
 
-import MainCard from 'components/MainCard';
-import ModernPageHeader from 'components/tba/ModernPageHeader';
-import ModernEmptyState from 'components/tba/ModernEmptyState';
-import TableSkeleton from 'components/tba/LoadingSkeleton';
-import { useMembersList } from 'hooks/useMembers';
-import { deleteMember } from 'services/api/members.service';
+// Services
+import { getMembers, deleteMember } from 'services/api/members.service';
 
-// Static Arabic labels
-const LABELS = {
-  members: 'الأعضاء',
-  membersDesc: 'إدارة أعضاء التأمين',
-  addMember: 'إضافة عضو',
-  search: 'البحث في الأعضاء...',
-  searchBtn: 'بحث',
-  deleteConfirm: 'هل تريد حذف هذا العضو؟',
-  deleteError: 'فشل في حذف العضو',
-  noFound: 'لم يتم العثور على أعضاء',
-  noFoundDesc: 'ابدأ بإضافة أول عضو',
-  error: 'خطأ',
-  loadError: 'فشل في تحميل الأعضاء',
-  rowsPerPage: 'عدد الصفوف في الصفحة:',
-  refresh: 'تحديث',
-  view: 'عرض',
-  edit: 'تعديل',
-  delete: 'حذف',
-  // Table headers
-  id: 'رقم',
-  fullName: 'الاسم الكامل',
-  memberType: 'نوع العضو',
-  civilId: 'رقم الهوية المدنية',
-  employer: 'صاحب العمل',
-  policyNumber: 'رقم البوليصة',
-  phone: 'الهاتف',
-  email: 'البريد الإلكتروني',
-  cardStatus: 'حالة البطاقة',
-  actions: 'الإجراءات'
-};
+// ============================================================================
+// CONSTANTS
+// ============================================================================
 
-/**
- * Members List Page
- * Displays paginated list of members with search, sort, and CRUD operations
- * Backend: MemberController → MemberViewDto (list endpoint)
- */
+const QUERY_KEY = 'members';
+
+// ============================================================================
+// MAIN COMPONENT
+// ============================================================================
+
 const MembersList = () => {
   const navigate = useNavigate();
-  const [searchInput, setSearchInput] = useState('');
-  const [orderBy, setOrderBy] = useState('createdAt');
-  const [order, setOrder] = useState('desc');
 
-  const { data, loading, error, params, setParams, refresh } = useMembersList({
-    page: 1,
-    size: 20,
-    sortBy: 'createdAt',
-    sortDir: 'desc'
-  });
+  // ========================================
+  // TABLE REFRESH CONTEXT (Phase D2.3)
+  // ========================================
 
-  const handleSearchSubmit = (e) => {
-    e.preventDefault();
-    setParams((prev) => ({ ...prev, page: 1, search: searchInput.trim() }));
-  };
+  const { refreshKey, triggerRefresh } = useTableRefresh();
 
-  const handleRequestSort = (property) => {
-    const isAsc = orderBy === property && order === 'asc';
-    const newOrder = isAsc ? 'desc' : 'asc';
-    setOrder(newOrder);
-    setOrderBy(property);
-    setParams((prev) => ({
-      ...prev,
-      sortBy: property,
-      sortDir: newOrder
-    }));
-  };
+  // ========================================
+  // NAVIGATION HANDLERS
+  // ========================================
 
-  const handleChangePage = useCallback(
-    (_, newPage) => {
-      setParams((prev) => ({ ...prev, page: newPage + 1 }));
+  const handleNavigateAdd = useCallback(() => {
+    navigate('/members/add');
+  }, [navigate]);
+
+  const handleNavigateView = useCallback(
+    (id) => {
+      navigate(`/members/${id}`);
     },
-    [setParams]
+    [navigate]
   );
 
-  const handleChangeRowsPerPage = useCallback(
-    (event) => {
-      setParams((prev) => ({
-        ...prev,
-        page: 1,
-        size: parseInt(event.target.value, 10)
-      }));
+  const handleNavigateEdit = useCallback(
+    (id) => {
+      navigate(`/members/edit/${id}`);
     },
-    [setParams]
+    [navigate]
   );
 
-  const handleDelete = async (id) => {
-    if (!window.confirm(LABELS.deleteConfirm)) return;
-    try {
-      await deleteMember(id);
-      refresh();
-    } catch (err) {
-      console.error('[MembersList] Failed to delete member:', err);
-      alert(LABELS.deleteError);
-    }
-  };
+  const handleDelete = useCallback(
+    async (id, name) => {
+      const confirmMessage = `هل أنت متأكد من حذف العضو "${name}"؟`;
+      if (!window.confirm(confirmMessage)) return;
 
-  const handleRefresh = () => {
-    setSearchInput('');
-    setParams({ page: 1, size: 20, sortBy: 'createdAt', sortDir: 'desc', search: '' });
-    refresh();
-  };
+      try {
+        await deleteMember(id);
+        // Trigger refresh via context - no page reload needed
+        triggerRefresh();
+      } catch (err) {
+        console.error('[Members] Delete failed:', err);
+        alert('فشل حذف العضو. يرجى المحاولة لاحقاً');
+      }
+    },
+    [triggerRefresh]
+  );
 
-  // Table columns based on MemberViewDto fields
-  const headCells = [
-    { id: 'id', label: LABELS.id, sortable: true },
-    { id: 'fullNameArabic', label: LABELS.fullName, sortable: true },
-    { id: 'memberType', label: LABELS.memberType, sortable: false },
-    { id: 'civilId', label: LABELS.civilId, sortable: true },
-    { id: 'employerName', label: LABELS.employer, sortable: false },
-    { id: 'policyNumber', label: LABELS.policyNumber, sortable: true },
-    { id: 'phone', label: LABELS.phone, sortable: false },
-    { id: 'email', label: LABELS.email, sortable: false },
-    { id: 'cardStatus', label: LABELS.cardStatus, sortable: true },
-    { id: 'actions', label: LABELS.actions, sortable: false, align: 'center' }
-  ];
+  // ========================================
+  // FETCHER FUNCTION
+  // ========================================
 
-  const tableContent = useMemo(() => {
-    if (loading) {
-      return (
-        <TableRow>
-          <TableCell colSpan={headCells.length}>
-            <TableSkeleton />
-          </TableCell>
-        </TableRow>
-      );
-    }
+  const fetcher = useCallback(async (params) => {
+    return getMembers(params);
+  }, []);
 
-    if (error) {
-      return (
-        <TableRow>
-          <TableCell colSpan={headCells.length}>
-            <Alert severity="error" sx={{ my: 2 }}>
-              {LABELS.error}: {error.message || LABELS.loadError}
-            </Alert>
-          </TableCell>
-        </TableRow>
-      );
-    }
+  // ========================================
+  // COLUMN DEFINITIONS
+  // ========================================
 
-    if (!data?.items || data.items.length === 0) {
-      return (
-        <TableRow>
-          <TableCell colSpan={headCells.length}>
-            <ModernEmptyState
-              icon={PeopleAltIcon}
-              title={LABELS.noFound}
-              description={LABELS.noFoundDesc}
-              action={
-                <Button variant="contained" startIcon={<AddIcon />} onClick={() => navigate('/members/add')}>
-                  {LABELS.addMember}
-                </Button>
-              }
-            />
-          </TableCell>
-        </TableRow>
-      );
-    }
-
-    return data.items.map((member) => (
-      <TableRow hover key={member?.id ?? Math.random()} sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
-        <TableCell>
-          <Typography variant="body2" fontWeight={500}>
-            {member?.id ?? '-'}
+  const columns = useMemo(
+    () => [
+      // ID Column
+      {
+        accessorKey: 'id',
+        header: 'رقم',
+        size: 70,
+        Cell: ({ row }) => (
+          <Typography variant="body2" fontWeight="medium">
+            {row.original?.id || '-'}
           </Typography>
-        </TableCell>
-        <TableCell>
+        )
+      },
+
+      // Full Name Column
+      {
+        accessorKey: 'fullNameArabic',
+        header: 'الاسم الكامل',
+        size: 180,
+        Cell: ({ row }) => (
           <Typography variant="body2" fontWeight={500}>
-            {member?.fullNameArabic || member?.fullNameEnglish || '-'}
+            {row.original?.fullNameArabic || row.original?.fullNameEnglish || '-'}
           </Typography>
-          {member?.fullNameEnglish && (
-            <Typography variant="caption" color="text.secondary" display="block">
-              {member.fullNameEnglish}
-            </Typography>
-          )}
-        </TableCell>
-        <TableCell>
-          {/* Insurance UX - MemberTypeIndicator */}
+        )
+      },
+
+      // Member Type Column
+      {
+        accessorKey: 'memberType',
+        header: 'نوع العضو',
+        size: 120,
+        muiTableHeadCellProps: { align: 'center' },
+        muiTableBodyCellProps: { align: 'center' },
+        enableSorting: false,
+        Cell: ({ row }) => (
           <MemberTypeIndicator
-            memberType={member?.memberType ?? 'PRINCIPAL'}
-            relationship={member?.relationship}
+            memberType={row.original?.memberType || 'PRINCIPAL'}
             size="small"
-            variant="chip"
+            language="ar"
           />
-        </TableCell>
-        <TableCell>
-          <Chip label={member?.civilId || '-'} size="small" variant="outlined" color="primary" />
-        </TableCell>
-        <TableCell>
-          <Typography variant="body2">{member?.employerName || '-'}</Typography>
-        </TableCell>
-        <TableCell>
-          <Typography variant="body2">{member?.policyNumber || '-'}</Typography>
-        </TableCell>
-        <TableCell>
-          <Typography variant="body2">{member?.phone || '-'}</Typography>
-        </TableCell>
-        <TableCell>
-          <Typography variant="body2" sx={{ fontSize: '0.875rem' }}>
-            {member?.email || '-'}
+        )
+      },
+
+      // Civil ID Column
+      {
+        accessorKey: 'civilId',
+        header: 'رقم الهوية',
+        size: 130,
+        Cell: ({ row }) => (
+          <Typography variant="body2" fontFamily="monospace" color="text.secondary">
+            {row.original?.civilId || '-'}
           </Typography>
-        </TableCell>
-        <TableCell>
-          {/* Insurance UX - CardStatusBadge (replaces simple active/inactive chip) */}
+        )
+      },
+
+      // Employer Column
+      {
+        accessorKey: 'employerName',
+        header: 'صاحب العمل',
+        size: 150,
+        enableSorting: false,
+        Cell: ({ row }) => (
+          <Typography variant="body2" color="text.secondary">
+            {row.original?.employerName || row.original?.employerNameAr || '-'}
+          </Typography>
+        )
+      },
+
+      // Policy Number Column
+      {
+        accessorKey: 'policyNumber',
+        header: 'رقم البوليصة',
+        size: 130,
+        Cell: ({ row }) => (
+          <Typography variant="body2" color="text.secondary">
+            {row.original?.policyNumber || '-'}
+          </Typography>
+        )
+      },
+
+      // Phone Column
+      {
+        accessorKey: 'phone',
+        header: 'الهاتف',
+        size: 130,
+        enableSorting: false,
+        Cell: ({ row }) => (
+          <Typography variant="body2" color="text.secondary" dir="ltr">
+            {row.original?.phone || row.original?.mobilePhone || '-'}
+          </Typography>
+        )
+      },
+
+      // Card Status Column
+      {
+        accessorKey: 'cardStatus',
+        header: 'حالة البطاقة',
+        size: 120,
+        muiTableHeadCellProps: { align: 'center' },
+        muiTableBodyCellProps: { align: 'center' },
+        Cell: ({ row }) => (
           <CardStatusBadge
-            status={member?.cardStatus ?? (member?.active ? 'ACTIVE' : 'INACTIVE')}
+            status={row.original?.cardStatus || 'ACTIVE'}
             size="small"
-            variant="chip"
+            language="ar"
           />
-        </TableCell>
-        <TableCell align="center">
+        )
+      },
+
+      // Actions Column
+      {
+        id: 'actions',
+        header: 'الإجراءات',
+        size: 130,
+        enableSorting: false,
+        enableHiding: false,
+        enableColumnFilter: false,
+        muiTableHeadCellProps: { align: 'center' },
+        muiTableBodyCellProps: { align: 'center' },
+        Cell: ({ row }) => (
           <Stack direction="row" spacing={0.5} justifyContent="center">
-            <Tooltip title={LABELS.view}>
-              <IconButton size="small" color="primary" onClick={() => navigate(`/members/${member?.id}`)}>
+            <Tooltip title="عرض">
+              <IconButton size="small" color="primary" onClick={() => handleNavigateView(row.original?.id)}>
                 <VisibilityIcon fontSize="small" />
               </IconButton>
             </Tooltip>
-            <Tooltip title={LABELS.edit}>
-              <IconButton size="small" color="info" onClick={() => navigate(`/members/edit/${member?.id}`)}>
+
+            <Tooltip title="تعديل">
+              <IconButton size="small" color="info" onClick={() => handleNavigateEdit(row.original?.id)}>
                 <EditIcon fontSize="small" />
               </IconButton>
             </Tooltip>
-            <Tooltip title={LABELS.delete}>
-              <IconButton size="small" color="error" onClick={() => handleDelete(member?.id)}>
+
+            <Tooltip title="حذف">
+              <IconButton
+                size="small"
+                color="error"
+                onClick={() => handleDelete(row.original?.id, row.original?.fullNameArabic || row.original?.civilId)}
+              >
                 <DeleteIcon fontSize="small" />
               </IconButton>
             </Tooltip>
           </Stack>
-        </TableCell>
-      </TableRow>
-    ));
-  }, [data, loading, error, headCells.length, navigate]);
+        )
+      }
+    ],
+    [handleNavigateView, handleNavigateEdit, handleDelete]
+  );
+
+  // ========================================
+  // MAIN RENDER
+  // ========================================
 
   return (
-    <>
+    <Box>
+      {/* ====== PAGE HEADER ====== */}
       <ModernPageHeader
-        title={LABELS.members}
-        subtitle={LABELS.membersDesc}
+        title="الأعضاء"
+        subtitle="إدارة أعضاء التأمين"
         icon={PeopleAltIcon}
-        breadcrumbs={[{ label: LABELS.members, path: '/members' }]}
+        breadcrumbs={[{ label: 'الرئيسية', path: '/' }, { label: 'الأعضاء' }]}
         actions={
-          <Stack direction="row" spacing={2}>
-            <Tooltip title={LABELS.refresh}>
-              <IconButton onClick={handleRefresh} color="primary">
-                <RefreshIcon />
-              </IconButton>
-            </Tooltip>
-            <Button variant="contained" startIcon={<AddIcon />} onClick={() => navigate('/members/add')}>
-              {LABELS.addMember}
-            </Button>
-          </Stack>
+          <Button variant="contained" startIcon={<AddIcon />} onClick={handleNavigateAdd}>
+            إضافة عضو جديد
+          </Button>
         }
       />
 
-      <MainCard content={false}>
-        {/* Toolbar */}
-        <Box sx={{ p: 2.5, borderBottom: '1px solid', borderColor: 'divider' }}>
-          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems="center">
-            <TextField
-              fullWidth
-              size="small"
-              placeholder={LABELS.search}
-              value={searchInput}
-              onChange={(e) => setSearchInput(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && handleSearchSubmit(e)}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <SearchIcon fontSize="small" />
-                  </InputAdornment>
-                )
-              }}
-              sx={{ maxWidth: { sm: 400 } }}
-            />
-            <Button variant="outlined" onClick={handleSearchSubmit} sx={{ minWidth: 100 }}>
-              {LABELS.searchBtn}
-            </Button>
-          </Stack>
-        </Box>
-
-        {/* Table */}
-        <TableContainer component={Paper} sx={{ boxShadow: 'none' }}>
-          <Table sx={{ minWidth: 750 }} size="medium">
-            <TableHead>
-              <TableRow>
-                {headCells.map((headCell) => (
-                  <TableCell key={headCell.id} align={headCell.align || 'left'} sx={{ fontWeight: 600 }}>
-                    {headCell.sortable ? (
-                      <TableSortLabel
-                        active={orderBy === headCell.id}
-                        direction={orderBy === headCell.id ? order : 'asc'}
-                        onClick={() => handleRequestSort(headCell.id)}
-                      >
-                        {headCell.label}
-                      </TableSortLabel>
-                    ) : (
-                      headCell.label
-                    )}
-                  </TableCell>
-                ))}
-              </TableRow>
-            </TableHead>
-            <TableBody>{tableContent}</TableBody>
-          </Table>
-        </TableContainer>
-
-        {/* Pagination */}
-        {!loading && !error && data?.items && data.items.length > 0 && (
-          <TablePagination
-            rowsPerPageOptions={[10, 20, 50, 100]}
-            component="div"
-            count={data.total || 0}
-            rowsPerPage={params.size}
-            page={params.page - 1}
-            onPageChange={handleChangePage}
-            onRowsPerPageChange={handleChangeRowsPerPage}
-            labelRowsPerPage={LABELS.rowsPerPage}
-          />
-        )}
+      {/* ====== MAIN CARD WITH TABLE ====== */}
+      <MainCard>
+        <TbaDataTable
+          columns={columns}
+          fetcher={fetcher}
+          queryKey={QUERY_KEY}
+          refreshKey={refreshKey}
+          enableExport={true}
+          enablePrint={true}
+          enableFilters={true}
+          exportFilename="members"
+          printTitle="تقرير الأعضاء"
+        />
       </MainCard>
-    </>
+    </Box>
   );
 };
 

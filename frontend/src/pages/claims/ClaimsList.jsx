@@ -1,39 +1,49 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import {
-  Box,
-  Button,
-  Stack,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TablePagination,
-  TableRow,
-  TextField,
-  IconButton,
-  Tooltip,
-  Typography,
-  InputAdornment
-} from '@mui/material';
-import { 
-  Add, 
-  Edit, 
-  Delete, 
-  Visibility, 
-  Search,
-  Receipt as ReceiptIcon 
-} from '@mui/icons-material';
+/**
+ * Claims List Page - Phase D2.4 (TbaDataTable Pattern)
+ * Insurance Claims Management
+ *
+ * ⚠️ Pattern: ModernPageHeader → MainCard → TbaDataTable
+ *
+ * Rules Applied:
+ * 1. icon={Component} - NEVER JSX
+ * 2. Arabic only - No English labels
+ * 3. Defensive optional chaining
+ * 4. TbaDataTable for server-side pagination/sorting/filtering
+ * 5. TableRefreshContext for post-create/edit refresh (Phase D2.3)
+ */
 
+import { useMemo, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
+
+// MUI Components
+import { Box, Button, IconButton, Stack, Tooltip, Typography } from '@mui/material';
+
+// MUI Icons - Always as Component, NEVER as JSX
+import AddIcon from '@mui/icons-material/Add';
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
+import ReceiptIcon from '@mui/icons-material/Receipt';
+
+// Project Components
 import MainCard from 'components/MainCard';
 import ModernPageHeader from 'components/tba/ModernPageHeader';
-import ModernEmptyState from 'components/tba/ModernEmptyState';
-import TableSkeleton from 'components/tba/LoadingSkeleton';
-import { useClaimsList, useDeleteClaim } from 'hooks/useClaims';
+import TbaDataTable from 'components/tba/TbaDataTable';
 
-// Insurance UX Components - Phase B2 Step 2
+// Insurance UX Components - Phase B2
 import { CardStatusBadge } from 'components/insurance';
+
+// Contexts
+import { useTableRefresh } from 'contexts/TableRefreshContext';
+
+// Services
+import { claimsService } from 'services/api/claims.service';
+
+// ============================================================================
+// CONSTANTS
+// ============================================================================
+
+const QUERY_KEY = 'claims';
 
 // Claim Status Mapping for CardStatusBadge
 const CLAIM_STATUS_MAP = {
@@ -47,243 +57,303 @@ const CLAIM_STATUS_MAP = {
   SETTLED: 'ACTIVE'
 };
 
+// ============================================================================
+// HELPER FUNCTIONS
+// ============================================================================
+
+/**
+ * Format currency with LYD
+ */
+const formatCurrency = (value) => {
+  if (value === null || value === undefined) return '-';
+  return `${Number(value).toLocaleString('ar-LY')} د.ل`;
+};
+
+/**
+ * Format date for display
+ */
+const formatDate = (date) => {
+  if (!date) return '-';
+  return new Date(date).toLocaleDateString('ar-SA');
+};
+
+// ============================================================================
+// MAIN COMPONENT
+// ============================================================================
+
 const ClaimsList = () => {
   const navigate = useNavigate();
-  const [search, setSearch] = useState('');
-  const [searchInput, setSearchInput] = useState('');
-  
-  const { data, loading, params, setParams, refresh } = useClaimsList({
-    page: 0,
-    size: 10,
-    search: ''
-  });
 
-  const { remove, deleting } = useDeleteClaim();
+  // ========================================
+  // TABLE REFRESH CONTEXT (Phase D2.3)
+  // ========================================
 
-  const handlePageChange = (event, newPage) => {
-    setParams((prev) => ({ ...prev, page: newPage }));
-  };
+  const { refreshKey, triggerRefresh } = useTableRefresh();
 
-  const handleRowsPerPageChange = (event) => {
-    setParams((prev) => ({ ...prev, size: parseInt(event.target.value, 10), page: 0 }));
-  };
+  // ========================================
+  // NAVIGATION HANDLERS
+  // ========================================
 
-  const handleSearch = () => {
-    setParams((prev) => ({ ...prev, search: searchInput, page: 0 }));
-    setSearch(searchInput);
-  };
+  const handleNavigateAdd = useCallback(() => {
+    navigate('/claims/add');
+  }, [navigate]);
 
-  const handleDelete = async (id) => {
-    if (window.confirm('هل أنت متأكد من حذف هذه المطالبة؟')) {
-      const result = await remove(id);
-      if (result.success) {
-        refresh();
+  const handleNavigateView = useCallback(
+    (id) => {
+      navigate(`/claims/${id}`);
+    },
+    [navigate]
+  );
+
+  const handleNavigateEdit = useCallback(
+    (id) => {
+      navigate(`/claims/edit/${id}`);
+    },
+    [navigate]
+  );
+
+  const handleDelete = useCallback(
+    async (id) => {
+      const confirmMessage = `هل أنت متأكد من حذف هذه المطالبة؟`;
+      if (!window.confirm(confirmMessage)) return;
+
+      try {
+        await claimsService.remove(id);
+        // Trigger refresh via context - no page reload needed
+        triggerRefresh();
+      } catch (err) {
+        console.error('[Claims] Delete failed:', err);
+        alert('فشل حذف المطالبة. يرجى المحاولة لاحقاً');
       }
+    },
+    [triggerRefresh]
+  );
+
+  // ========================================
+  // FETCHER FUNCTION
+  // ========================================
+
+  const fetcher = useCallback(async (params) => {
+    const data = await claimsService.getAll(params);
+    // If backend returns array, wrap it for TbaDataTable
+    if (Array.isArray(data)) {
+      return {
+        items: data,
+        total: data.length,
+        page: 1,
+        size: data.length
+      };
     }
-  };
+    // Handle Spring Page format
+    if (data?.content) {
+      return {
+        items: data.content,
+        total: data.totalElements || data.content.length,
+        page: (data.number || 0) + 1,
+        size: data.size || 20
+      };
+    }
+    return data;
+  }, []);
 
-  const content = data?.content || [];
-  const totalElements = data?.totalElements || 0;
+  // ========================================
+  // COLUMN DEFINITIONS
+  // ========================================
 
-  // Safely extract data
-  const safeContent = Array.isArray(content) ? content : [];
+  const columns = useMemo(
+    () => [
+      // ID Column
+      {
+        accessorKey: 'id',
+        header: '#',
+        size: 70,
+        muiTableHeadCellProps: { align: 'center' },
+        muiTableBodyCellProps: { align: 'center' },
+        Cell: ({ row }) => (
+          <Typography variant="subtitle2">
+            {row.original?.id ?? '-'}
+          </Typography>
+        )
+      },
+
+      // Member Column
+      {
+        accessorKey: 'memberFullNameArabic',
+        header: 'المؤمَّن عليه',
+        size: 180,
+        Cell: ({ row }) => {
+          const claim = row.original;
+          return (
+            <Box>
+              <Typography variant="body2">
+                {claim?.memberFullNameArabic ?? claim?.memberFullNameEnglish ?? '-'}
+              </Typography>
+              <Typography variant="caption" color="text.secondary" fontFamily="monospace">
+                {claim?.memberCivilId ?? '-'}
+              </Typography>
+            </Box>
+          );
+        }
+      },
+
+      // Insurance Company Column
+      {
+        accessorKey: 'companyName',
+        header: 'شركة التأمين',
+        size: 150,
+        Cell: ({ row }) => (
+          <Typography variant="body2">
+            {row.original?.companyName ?? '-'}
+          </Typography>
+        )
+      },
+
+      // Provider Column
+      {
+        accessorKey: 'providerName',
+        header: 'مقدم الخدمة',
+        size: 150,
+        Cell: ({ row }) => (
+          <Typography variant="body2">
+            {row.original?.providerName ?? '-'}
+          </Typography>
+        )
+      },
+
+      // Visit Date Column
+      {
+        accessorKey: 'visitDate',
+        header: 'تاريخ الزيارة',
+        size: 120,
+        Cell: ({ row }) => (
+          <Typography variant="body2" color="text.secondary">
+            {formatDate(row.original?.visitDate)}
+          </Typography>
+        )
+      },
+
+      // Requested Amount Column
+      {
+        accessorKey: 'requestedAmount',
+        header: 'المبلغ المطلوب',
+        size: 130,
+        muiTableHeadCellProps: { align: 'right' },
+        muiTableBodyCellProps: { align: 'right' },
+        Cell: ({ row }) => (
+          <Typography variant="body2" fontWeight={500}>
+            {formatCurrency(row.original?.requestedAmount)}
+          </Typography>
+        )
+      },
+
+      // Approved Amount Column
+      {
+        accessorKey: 'approvedAmount',
+        header: 'المبلغ الموافق',
+        size: 130,
+        muiTableHeadCellProps: { align: 'right' },
+        muiTableBodyCellProps: { align: 'right' },
+        Cell: ({ row }) => (
+          <Typography variant="body2" fontWeight={500} color="success.main">
+            {formatCurrency(row.original?.approvedAmount)}
+          </Typography>
+        )
+      },
+
+      // Status Column
+      {
+        accessorKey: 'status',
+        header: 'الحالة',
+        size: 120,
+        muiTableHeadCellProps: { align: 'center' },
+        muiTableBodyCellProps: { align: 'center' },
+        Cell: ({ row }) => {
+          const status = row.original?.status;
+          const mappedStatus = CLAIM_STATUS_MAP[status] || status || 'PENDING';
+          return (
+            <CardStatusBadge
+              status={mappedStatus}
+              size="small"
+              language="ar"
+            />
+          );
+        }
+      },
+
+      // Actions Column
+      {
+        id: 'actions',
+        header: 'الإجراءات',
+        size: 130,
+        enableSorting: false,
+        enableHiding: false,
+        enableColumnFilter: false,
+        muiTableHeadCellProps: { align: 'center' },
+        muiTableBodyCellProps: { align: 'center' },
+        Cell: ({ row }) => (
+          <Stack direction="row" spacing={0.5} justifyContent="center">
+            <Tooltip title="عرض">
+              <IconButton size="small" color="primary" onClick={() => handleNavigateView(row.original?.id)}>
+                <VisibilityIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+
+            <Tooltip title="تعديل">
+              <IconButton size="small" color="info" onClick={() => handleNavigateEdit(row.original?.id)}>
+                <EditIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+
+            <Tooltip title="حذف">
+              <IconButton
+                size="small"
+                color="error"
+                onClick={() => handleDelete(row.original?.id)}
+              >
+                <DeleteIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          </Stack>
+        )
+      }
+    ],
+    [handleNavigateView, handleNavigateEdit, handleDelete]
+  );
+
+  // ========================================
+  // MAIN RENDER
+  // ========================================
 
   return (
-    <>
+    <Box>
+      {/* ====== PAGE HEADER ====== */}
       <ModernPageHeader
-        title="إدارة المطالبات"
+        title="المطالبات"
         subtitle="إدارة ومتابعة مطالبات التأمين"
         icon={ReceiptIcon}
-        breadcrumbs={[{ label: 'المطالبات', path: '/claims' }]}
+        breadcrumbs={[{ label: 'الرئيسية', path: '/' }, { label: 'المطالبات' }]}
         actions={
-          <Button variant="contained" startIcon={<Add />} onClick={() => navigate('/claims/add')}>
+          <Button variant="contained" startIcon={<AddIcon />} onClick={handleNavigateAdd}>
             إضافة مطالبة
           </Button>
         }
       />
 
-      <MainCard content={false}>
-        <Box sx={{ p: 3 }}>
-        {/* Search */}
-        <Stack
-          direction={{ xs: 'column', sm: 'row' }}
-          justifyContent="space-between"
-          alignItems={{ xs: 'stretch', sm: 'center' }}
-          spacing={2}
-          sx={{ mb: 3 }}
-        >
-          <Stack direction="row" spacing={2}>
-            <TextField
-              size="small"
-              placeholder="بحث بمقدم الخدمة، التشخيص، المؤمَّن عليه..."
-              value={searchInput}
-              onChange={(e) => setSearchInput(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <Search fontSize="small" />
-                  </InputAdornment>
-                )
-              }}
-              sx={{ minWidth: 300 }}
-            />
-          </Stack>
-        </Stack>
-
-        {/* Table */}
-        {loading ? (
-          <TableSkeleton rows={10} columns={9} />
-        ) : (
-          <TableContainer>
-            <Table sx={{ '& .MuiTableCell-root': { py: 1.5 } }}>
-              <TableHead>
-                <TableRow sx={{ bgcolor: 'grey.50' }}>
-                  <TableCell align="center" sx={{ fontWeight: 600 }}>#</TableCell>
-                  <TableCell sx={{ fontWeight: 600 }}>المؤمَّن عليه</TableCell>
-                  <TableCell sx={{ fontWeight: 600 }}>شركة التأمين</TableCell>
-                  <TableCell sx={{ fontWeight: 600 }}>مقدم الخدمة</TableCell>
-                  <TableCell sx={{ fontWeight: 600 }}>تاريخ الزيارة</TableCell>
-                  <TableCell align="right" sx={{ fontWeight: 600 }}>المبلغ المطلوب</TableCell>
-                  <TableCell align="right" sx={{ fontWeight: 600 }}>المبلغ الموافق</TableCell>
-                  <TableCell align="center" sx={{ fontWeight: 600 }}>الحالة</TableCell>
-                  <TableCell align="center" sx={{ fontWeight: 600 }}>إجراءات</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {safeContent.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={9} align="center" sx={{ py: 5 }}>
-                      <ModernEmptyState
-                        icon={ReceiptIcon}
-                        title="لا توجد مطالبات"
-                        description="لم يتم العثور على مطالبات"
-                      />
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  safeContent.map((claim) => (
-                    <TableRow 
-                      key={claim?.id ?? Math.random()} 
-                      hover
-                      sx={{ '&:hover': { bgcolor: 'action.hover', cursor: 'pointer' } }}
-                    >
-                      <TableCell align="center">
-                        <Stack direction="row" spacing={0.5} alignItems="center" justifyContent="center">
-                          <ReceiptIcon fontSize="small" color="action" />
-                          <Typography variant="subtitle2">
-                            {claim?.id ?? '-'}
-                          </Typography>
-                        </Stack>
-                      </TableCell>
-                      <TableCell>
-                        <Typography variant="body2">
-                          {claim?.memberFullNameArabic ?? claim?.memberFullNameEnglish ?? '-'}
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary" fontFamily="monospace">
-                          {claim?.memberCivilId ?? '-'}
-                        </Typography>
-                      </TableCell>
-                      <TableCell>
-                        <Typography variant="body2">
-                          {claim?.companyName ?? '-'}
-                        </Typography>
-                      </TableCell>
-                      <TableCell>
-                        <Typography variant="body2">
-                          {claim?.providerName ?? '-'}
-                        </Typography>
-                      </TableCell>
-                      <TableCell>
-                        <Typography variant="body2" color="text.secondary">
-                          {claim?.visitDate ? new Date(claim.visitDate).toLocaleDateString('ar-SA') : '-'}
-                        </Typography>
-                      </TableCell>
-                      <TableCell align="right">
-                        <Typography variant="body2" fontWeight={500}>
-                          {typeof claim?.requestedAmount === 'number'
-                            ? claim.requestedAmount.toLocaleString('ar-SA', { minimumFractionDigits: 2 })
-                            : '-'}
-                        </Typography>
-                      </TableCell>
-                      <TableCell align="right">
-                        <Typography 
-                          variant="body2" 
-                          fontWeight={500} 
-                          color={claim?.approvedAmount > 0 ? 'success.main' : 'text.secondary'}
-                        >
-                          {typeof claim?.approvedAmount === 'number' && claim.approvedAmount > 0
-                            ? claim.approvedAmount.toLocaleString('ar-SA', { minimumFractionDigits: 2 })
-                            : '-'}
-                        </Typography>
-                      </TableCell>
-                      <TableCell align="center">
-                        {/* Insurance UX - CardStatusBadge for claim status */}
-                        <CardStatusBadge
-                          status={CLAIM_STATUS_MAP[claim?.status] ?? 'PENDING'}
-                          customLabel={claim?.statusLabel}
-                          size="small"
-                          variant="chip"
-                        />
-                      </TableCell>
-                      <TableCell align="center">
-                        <Stack direction="row" spacing={0.5} justifyContent="center">
-                          <Tooltip title="عرض التفاصيل">
-                            <IconButton
-                              size="small"
-                              color="primary"
-                              onClick={() => navigate(`/claims/${claim?.id}`)}
-                            >
-                              <Visibility fontSize="small" />
-                            </IconButton>
-                          </Tooltip>
-                          <Tooltip title="تعديل">
-                            <IconButton
-                              size="small"
-                              color="info"
-                              onClick={() => navigate(`/claims/edit/${claim?.id}`)}
-                            >
-                              <Edit fontSize="small" />
-                            </IconButton>
-                          </Tooltip>
-                          <Tooltip title="حذف">
-                            <IconButton
-                              size="small"
-                              color="error"
-                              onClick={() => handleDelete(claim?.id)}
-                              disabled={deleting}
-                            >
-                              <Delete fontSize="small" />
-                            </IconButton>
-                          </Tooltip>
-                        </Stack>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        )}
-
-        {!loading && (
-          <TablePagination
-            component="div"
-            count={totalElements}
-            page={params.page}
-            onPageChange={handlePageChange}
-            rowsPerPage={params.size}
-            onRowsPerPageChange={handleRowsPerPageChange}
-            rowsPerPageOptions={[10, 25, 50, 100]}
-            labelRowsPerPage="عدد الصفوف في الصفحة:"
-            labelDisplayedRows={({ from, to, count }) =>
-              `${from}–${to} من ${count}`
-            }
-          />
-        )}
-      </Box>
-    </MainCard>
-    </>
+      {/* ====== MAIN CARD WITH TABLE ====== */}
+      <MainCard>
+        <TbaDataTable
+          columns={columns}
+          fetcher={fetcher}
+          queryKey={QUERY_KEY}
+          refreshKey={refreshKey}
+          enableExport={true}
+          enablePrint={true}
+          enableFilters={true}
+          exportFilename="claims"
+          printTitle="تقرير المطالبات"
+        />
+      </MainCard>
+    </Box>
   );
 };
 
