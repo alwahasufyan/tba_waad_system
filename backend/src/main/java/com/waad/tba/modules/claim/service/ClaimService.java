@@ -368,8 +368,9 @@ public class ClaimService {
     }
 
     @Transactional(readOnly = true)
-    public Page<ClaimViewDto> listClaims(int page, int size, String search) {
-        log.debug("📋 Listing claims with pagination. page={}, size={}, search={}", page, size, search);
+    public Page<ClaimViewDto> listClaims(int page, int size, String sortBy, String sortDir, String search) {
+        log.debug("📋 Listing claims with pagination. page={}, size={}, sortBy={}, sortDir={}, search={}", 
+                page, size, sortBy, sortDir, search);
         
         User currentUser = authorizationService.getCurrentUser();
         if (currentUser == null) {
@@ -384,7 +385,9 @@ public class ClaimService {
             }
         }
         
-        Pageable pageable = PageRequest.of(page - 1, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+        // Build sort direction from string parameter
+        Sort.Direction direction = "asc".equalsIgnoreCase(sortDir) ? Sort.Direction.ASC : Sort.Direction.DESC;
+        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
         String keyword = (search != null && !search.trim().isEmpty()) ? search.trim() : "";
         
         Long employerFilter = authorizationService.getEmployerFilterForUser(currentUser);

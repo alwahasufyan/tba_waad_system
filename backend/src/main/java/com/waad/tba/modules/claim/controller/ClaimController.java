@@ -61,9 +61,12 @@ public class ClaimController {
     @PreAuthorize("hasAuthority('VIEW_CLAIMS')")
     public ResponseEntity<ApiResponse<PaginationResponse<ClaimViewDto>>> listClaims(
             @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @RequestParam(defaultValue = "desc") String sortDir,
             @RequestParam(required = false) String search) {
-        Page<ClaimViewDto> claimsPage = claimService.listClaims(Math.max(0, page - 1), size, search);
+        Page<ClaimViewDto> claimsPage = claimService.listClaims(
+                Math.max(0, page - 1), size, sortBy, sortDir, search);
         
         PaginationResponse<ClaimViewDto> response = PaginationResponse.<ClaimViewDto>builder()
                 .items(claimsPage.getContent())
