@@ -31,9 +31,33 @@ public class MedicalServiceUpdateDto {
     @NotNull(message = "Category ID is required")
     private Long categoryId;
     
+    /**
+     * Price in LYD - Phase D2.1: Primary field from frontend
+     */
+    @Positive(message = "Price must be positive")
+    private BigDecimal priceLyd;
+    
+    /**
+     * Cost in LYD - Phase D2.1: Added for frontend compatibility
+     */
+    @Positive(message = "Cost must be positive")
+    private BigDecimal costLyd;
+    
+    /**
+     * @deprecated Use priceLyd instead
+     */
+    @Deprecated
     @Positive(message = "Base price must be positive")
     private BigDecimal basePrice;
     
     private Boolean requiresApproval;
     private Boolean active;
+    
+    /**
+     * Get effective price - returns priceLyd if set, otherwise basePrice
+     * Phase D2.1: Support both field names for backward compatibility
+     */
+    public BigDecimal getEffectivePrice() {
+        return priceLyd != null ? priceLyd : basePrice;
+    }
 }

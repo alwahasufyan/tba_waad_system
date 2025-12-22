@@ -30,6 +30,21 @@ public class MedicalCategoryController {
 
     private final MedicalCategoryService service;
 
+    /**
+     * Get all medical categories for dropdowns/selectors (no pagination)
+     * GET /api/medical-categories/all
+     * Phase D2.1: Added to support frontend dropdown requirements
+     */
+    @GetMapping("/all")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAnyAuthority('VIEW_MEDICAL_CATEGORIES', 'MANAGE_MEDICAL_CATEGORIES', 'VIEW_MEDICAL_SERVICES', 'MANAGE_MEDICAL_SERVICES')")
+    @Operation(summary = "Get all medical categories", description = "Returns all medical categories for dropdowns (no pagination)")
+    public ResponseEntity<ApiResponse<List<MedicalCategoryViewDto>>> getAll() {
+        List<MedicalCategoryViewDto> categories = service.findAll().stream()
+                .map(MedicalCategoryMapper::toViewDto)
+                .toList();
+        return ResponseEntity.ok(ApiResponse.success(categories));
+    }
+
     @GetMapping("/selector")
     @PreAuthorize("hasRole('SUPER_ADMIN') or hasAnyAuthority('VIEW_MEDICAL_CATEGORIES', 'MANAGE_MEDICAL_CATEGORIES')")
     @Operation(summary = "Get medical category selector options", description = "Returns active medical categories for dropdown/selector")

@@ -4,6 +4,10 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.waad.tba.modules.medicalcategory.MedicalCategory;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "medical_services")
@@ -46,6 +50,22 @@ public class MedicalService {
     private Double priceLyd; // السعر بالدينار
 
     private Double costLyd; // اختياري
+
+    /**
+     * Creation timestamp
+     * Phase D2.1: Added for sorting support
+     */
+    @CreationTimestamp
+    @Column(nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    /**
+     * Last update timestamp
+     * Phase D2.1: Added for sorting support
+     */
+    @UpdateTimestamp
+    @Column(nullable = false)
+    private LocalDateTime updatedAt;
 
     // Transient fields for frontend compatibility
     @Transient
