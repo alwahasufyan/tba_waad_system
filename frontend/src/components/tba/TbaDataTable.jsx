@@ -1,10 +1,10 @@
 /**
  * TbaDataTable - Unified Data Table Component
  * Phase D2.2 - Material React Table Integration
- * 
+ *
  * ⚠️ This is the CONTRACT component for all data tables in the system.
  * Uses Material React Table internally with server-side mode.
- * 
+ *
  * Features:
  * - Server-side pagination, sorting, filtering
  * - Arabic localization (RTL)
@@ -19,14 +19,7 @@ import { MaterialReactTable, useMaterialReactTable } from 'material-react-table'
 import { MRT_Localization_AR } from 'material-react-table/locales/ar';
 
 // MUI Components
-import {
-  Box,
-  Button,
-  IconButton,
-  Stack,
-  Tooltip,
-  Typography
-} from '@mui/material';
+import { Box, Button, IconButton, Stack, Tooltip } from '@mui/material';
 
 // MUI Icons
 import RefreshIcon from '@mui/icons-material/Refresh';
@@ -55,7 +48,7 @@ const PAGE_SIZE_OPTIONS = [10, 20, 50, 100];
  */
 const getErrorInfo = (error) => {
   const status = error?.response?.status || error?.status || 0;
-  
+
   if (status === 403) {
     return {
       title: 'غير مصرح',
@@ -63,7 +56,7 @@ const getErrorInfo = (error) => {
       icon: LockIcon
     };
   }
-  
+
   if (status === 404) {
     return {
       title: 'غير موجود',
@@ -71,7 +64,7 @@ const getErrorInfo = (error) => {
       icon: SearchOffIcon
     };
   }
-  
+
   if (status >= 500) {
     return {
       title: 'خطأ تقني',
@@ -79,7 +72,7 @@ const getErrorInfo = (error) => {
       icon: ErrorOutlineIcon
     };
   }
-  
+
   return {
     title: 'خطأ',
     message: error?.message || 'حدث خطأ أثناء تحميل البيانات',
@@ -92,16 +85,16 @@ const getErrorInfo = (error) => {
  */
 const exportToCsv = (data, columns, filename = 'export') => {
   if (!Array.isArray(data) || data.length === 0) return;
-  
+
   // Get visible columns with accessorKey
-  const exportColumns = columns.filter(col => col.accessorKey && col.enableHiding !== false);
-  
+  const exportColumns = columns.filter((col) => col.accessorKey && col.enableHiding !== false);
+
   // Create header row
-  const headers = exportColumns.map(col => col.header || col.accessorKey);
-  
+  const headers = exportColumns.map((col) => col.header || col.accessorKey);
+
   // Create data rows
-  const rows = data.map(row => {
-    return exportColumns.map(col => {
+  const rows = data.map((row) => {
+    return exportColumns.map((col) => {
       const value = row[col.accessorKey];
       // Handle nested values
       if (typeof value === 'object' && value !== null) {
@@ -110,17 +103,16 @@ const exportToCsv = (data, columns, filename = 'export') => {
       return value ?? '';
     });
   });
-  
+
   // Build CSV content
-  const csvContent = [
-    headers.join(','),
-    ...rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
-  ].join('\n');
-  
+  const csvContent = [headers.join(','), ...rows.map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(','))].join(
+    '\n'
+  );
+
   // Add BOM for Arabic support
   const bom = '\uFEFF';
   const blob = new Blob([bom + csvContent], { type: 'text/csv;charset=utf-8;' });
-  
+
   // Download
   const link = document.createElement('a');
   link.href = URL.createObjectURL(blob);
@@ -133,12 +125,12 @@ const exportToCsv = (data, columns, filename = 'export') => {
  */
 const printTable = (data, columns, title = 'تقرير') => {
   if (!Array.isArray(data) || data.length === 0) return;
-  
-  const exportColumns = columns.filter(col => col.accessorKey && col.enableHiding !== false);
-  
+
+  const exportColumns = columns.filter((col) => col.accessorKey && col.enableHiding !== false);
+
   const printWindow = window.open('', '_blank');
   if (!printWindow) return;
-  
+
   const html = `
     <!DOCTYPE html>
     <html dir="rtl" lang="ar">
@@ -161,24 +153,30 @@ const printTable = (data, columns, title = 'تقرير') => {
       <h1>${title}</h1>
       <table>
         <thead>
-          <tr>${exportColumns.map(col => `<th>${col.header || col.accessorKey}</th>`).join('')}</tr>
+          <tr>${exportColumns.map((col) => `<th>${col.header || col.accessorKey}</th>`).join('')}</tr>
         </thead>
         <tbody>
-          ${data.map(row => `
+          ${data
+            .map(
+              (row) => `
             <tr>
-              ${exportColumns.map(col => {
-                const value = row[col.accessorKey];
-                return `<td>${value ?? '-'}</td>`;
-              }).join('')}
+              ${exportColumns
+                .map((col) => {
+                  const value = row[col.accessorKey];
+                  return `<td>${value ?? '-'}</td>`;
+                })
+                .join('')}
             </tr>
-          `).join('')}
+          `
+            )
+            .join('')}
         </tbody>
       </table>
       <script>window.onload = () => { window.print(); }</script>
     </body>
     </html>
   `;
-  
+
   printWindow.document.write(html);
   printWindow.document.close();
 };
@@ -189,7 +187,7 @@ const printTable = (data, columns, title = 'تقرير') => {
 
 /**
  * TbaDataTable - Unified server-side data table
- * 
+ *
  * @param {Object} props
  * @param {Array} props.columns - MRT column definitions
  * @param {Function} props.fetcher - async ({ page, size, sortBy, sortDir, search, ...filters }) => { items, total, page, size }
@@ -202,7 +200,7 @@ const printTable = (data, columns, title = 'تقرير') => {
  * @param {Function} props.onRowClick - Optional row click handler
  * @param {Object} props.initialFilters - Initial filter values
  * @param {number} props.refreshKey - External refresh trigger (from TableRefreshContext)
- * 
+ *
  * ⚠️ REFRESH CONTRACT (Phase D2.3):
  * - refreshKey is controlled by TableRefreshContext
  * - When refreshKey changes, table fetches exactly ONCE
@@ -225,25 +223,25 @@ const TbaDataTable = ({
   // ========================================
   // REFS - Stable references to prevent re-renders
   // ========================================
-  
+
   const fetcherRef = useRef(fetcher);
   const initialFiltersRef = useRef(initialFilters);
   const isFetchingRef = useRef(false);
-  
+
   // Update refs when props change (but don't trigger re-render)
   useEffect(() => {
     fetcherRef.current = fetcher;
   }, [fetcher]);
-  
+
   // ========================================
   // STATE
   // ========================================
-  
+
   const [data, setData] = useState([]);
   const [totalRows, setTotalRows] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  
+
   // MRT State
   const [pagination, setPagination] = useState({
     pageIndex: 0,
@@ -252,24 +250,24 @@ const TbaDataTable = ({
   const [sorting, setSorting] = useState([{ id: 'createdAt', desc: true }]);
   const [globalFilter, setGlobalFilter] = useState('');
   const [columnFilters, setColumnFilters] = useState([]);
-  
+
   // ========================================
   // DATA FETCHING
   // ========================================
-  
+
   // Serialize column filters for stable dependency
   const columnFiltersKey = useMemo(() => JSON.stringify(columnFilters), [columnFilters]);
-  
+
   const fetchData = useCallback(async () => {
     // Prevent duplicate fetches
     if (isFetchingRef.current) {
       return;
     }
-    
+
     isFetchingRef.current = true;
     setLoading(true);
     setError(null);
-    
+
     try {
       // Map MRT state to API params
       const apiParams = {
@@ -280,50 +278,45 @@ const TbaDataTable = ({
         search: globalFilter || undefined,
         ...initialFiltersRef.current
       };
-      
+
       // Add column filters
       const parsedFilters = JSON.parse(columnFiltersKey || '[]');
-      parsedFilters.forEach(filter => {
+      parsedFilters.forEach((filter) => {
         if (filter.value !== undefined && filter.value !== '') {
           apiParams[filter.id] = filter.value;
         }
       });
-      
+
       // Clean undefined values
-      Object.keys(apiParams).forEach(key => {
+      Object.keys(apiParams).forEach((key) => {
         if (apiParams[key] === undefined) {
           delete apiParams[key];
         }
       });
-      
+
       console.log(`[TbaDataTable:${queryKey}] Fetching with params:`, apiParams);
-      
+
       const response = await fetcherRef.current(apiParams);
-      
+
       // Handle response - defensive
-      const items = Array.isArray(response?.items) 
-        ? response.items 
-        : Array.isArray(response) 
-          ? response 
-          : [];
-      
+      const items = Array.isArray(response?.items) ? response.items : Array.isArray(response) ? response : [];
+
       const total = response?.total ?? response?.totalElements ?? items.length;
-      
+
       // Only update state if data actually changed
-      setData(prev => {
+      setData((prev) => {
         const newDataStr = JSON.stringify(items);
         const prevDataStr = JSON.stringify(prev);
         if (newDataStr === prevDataStr) return prev;
         return items;
       });
-      
-      setTotalRows(prev => {
+
+      setTotalRows((prev) => {
         if (prev === total) return prev;
         return total;
       });
-      
+
       console.log(`[TbaDataTable:${queryKey}] Loaded ${items.length} items, total: ${total}`);
-      
     } catch (err) {
       console.error(`[TbaDataTable:${queryKey}] Fetch error:`, err);
       setError(err);
@@ -333,101 +326,73 @@ const TbaDataTable = ({
       setLoading(false);
       isFetchingRef.current = false;
     }
-  }, [
-    pagination.pageIndex,
-    pagination.pageSize,
-    sorting,
-    globalFilter,
-    columnFiltersKey,
-    queryKey,
-    refreshKey // External refresh trigger from TableRefreshContext
-  ]);
-  
+    // refreshKey is intentionally in dependencies to trigger re-fetch (Phase D2.3 Contract)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pagination.pageIndex, pagination.pageSize, sorting, globalFilter, columnFiltersKey, queryKey, refreshKey]);
+
   // Fetch on state change or external refresh - stable dependency
   useEffect(() => {
     fetchData();
   }, [fetchData]);
-  
+
   // ========================================
   // HANDLERS
   // ========================================
-  
+
   const handleRefresh = useCallback(() => {
     fetchData();
   }, [fetchData]);
-  
+
   const handleExport = useCallback(() => {
     exportToCsv(data, columns, exportFilename || queryKey);
   }, [data, columns, exportFilename, queryKey]);
-  
+
   const handlePrint = useCallback(() => {
     printTable(data, columns, printTitle || 'تقرير');
   }, [data, columns, printTitle]);
-  
+
   // ========================================
   // CUSTOM TOOLBAR
   // ========================================
-  
-  const renderTopToolbarCustomActions = useCallback(() => (
-    <Stack direction="row" spacing={1}>
-      <Tooltip title="تحديث">
-        <IconButton onClick={handleRefresh} disabled={loading}>
-          <RefreshIcon />
-        </IconButton>
-      </Tooltip>
-      
-      {enableExport && (
-        <Tooltip title="تصدير CSV">
-          <IconButton onClick={handleExport} disabled={loading || data.length === 0}>
-            <FileDownloadIcon />
+
+  const renderTopToolbarCustomActions = useCallback(
+    () => (
+      <Stack direction="row" spacing={1}>
+        <Tooltip title="تحديث">
+          <IconButton onClick={handleRefresh} disabled={loading}>
+            <RefreshIcon />
           </IconButton>
         </Tooltip>
-      )}
-      
-      {enablePrint && (
-        <Tooltip title="طباعة">
-          <IconButton onClick={handlePrint} disabled={loading || data.length === 0}>
-            <PrintIcon />
-          </IconButton>
-        </Tooltip>
-      )}
-    </Stack>
-  ), [handleRefresh, handleExport, handlePrint, loading, enableExport, enablePrint, data.length]);
-  
-  // ========================================
-  // ERROR STATE
-  // ========================================
-  
-  if (error && !loading) {
-    const errorInfo = getErrorInfo(error);
-    const ErrorIcon = errorInfo.icon;
-    
-    return (
-      <ModernEmptyState
-        icon={ErrorIcon}
-        title={errorInfo.title}
-        description={errorInfo.message}
-        action={
-          <Button
-            variant="contained"
-            startIcon={<RefreshIcon />}
-            onClick={handleRefresh}
-          >
-            إعادة المحاولة
-          </Button>
-        }
-      />
-    );
-  }
-  
+
+        {enableExport && (
+          <Tooltip title="تصدير CSV">
+            <IconButton onClick={handleExport} disabled={loading || data.length === 0}>
+              <FileDownloadIcon />
+            </IconButton>
+          </Tooltip>
+        )}
+
+        {enablePrint && (
+          <Tooltip title="طباعة">
+            <IconButton onClick={handlePrint} disabled={loading || data.length === 0}>
+              <PrintIcon />
+            </IconButton>
+          </Tooltip>
+        )}
+      </Stack>
+    ),
+    [handleRefresh, handleExport, handlePrint, loading, enableExport, enablePrint, data.length]
+  );
+
   // ========================================
   // TABLE CONFIGURATION
+  // (Must be called before any early returns - Rules of Hooks)
   // ========================================
-  
+
   const table = useMaterialReactTable({
     columns,
     data,
-    
+
     // State
     state: {
       isLoading: loading,
@@ -437,25 +402,25 @@ const TbaDataTable = ({
       columnFilters,
       showGlobalFilter: true
     },
-    
+
     // Server-side mode
     manualPagination: true,
     manualSorting: true,
     manualFiltering: true,
     rowCount: totalRows,
-    
+
     // State handlers - with updater function support
     onPaginationChange: (updater) => {
-      setPagination(prev => typeof updater === 'function' ? updater(prev) : updater);
+      setPagination((prev) => (typeof updater === 'function' ? updater(prev) : updater));
     },
     onSortingChange: (updater) => {
-      setSorting(prev => typeof updater === 'function' ? updater(prev) : updater);
+      setSorting((prev) => (typeof updater === 'function' ? updater(prev) : updater));
     },
     onGlobalFilterChange: setGlobalFilter,
     onColumnFiltersChange: (updater) => {
-      setColumnFilters(prev => typeof updater === 'function' ? updater(prev) : updater);
+      setColumnFilters((prev) => (typeof updater === 'function' ? updater(prev) : updater));
     },
-    
+
     // Features
     enableColumnFilters: enableFilters,
     enableGlobalFilter: true,
@@ -464,7 +429,7 @@ const TbaDataTable = ({
     enableFullScreenToggle: true,
     enableHiding: true,
     enableStickyHeader: true,
-    
+
     // Pagination
     paginationDisplayMode: 'pages',
     muiPaginationProps: {
@@ -473,7 +438,7 @@ const TbaDataTable = ({
       shape: 'rounded',
       variant: 'outlined'
     },
-    
+
     // Localization - Arabic
     localization: {
       ...MRT_Localization_AR,
@@ -485,49 +450,69 @@ const TbaDataTable = ({
       rowsPerPage: 'عدد الصفوف:',
       of: 'من'
     },
-    
+
     // Toolbar
     renderTopToolbarCustomActions,
-    
+
     // Row click handler
-    muiTableBodyRowProps: onRowClick ? ({ row }) => ({
-      onClick: () => onRowClick(row.original),
-      sx: { cursor: 'pointer' }
-    }) : undefined,
-    
+    muiTableBodyRowProps: onRowClick
+      ? ({ row }) => ({
+          onClick: () => onRowClick(row.original),
+          sx: { cursor: 'pointer' }
+        })
+      : undefined,
+
     // Empty state
     renderEmptyRowsFallback: () => (
       <Box sx={{ textAlign: 'center', py: 4 }}>
-        <ModernEmptyState
-          icon={SearchOffIcon}
-          title="لا توجد بيانات"
-          description="لم يتم العثور على أي بيانات مطابقة للبحث"
-        />
+        <ModernEmptyState icon={SearchOffIcon} title="لا توجد بيانات" description="لم يتم العثور على أي بيانات مطابقة للبحث" />
       </Box>
     ),
-    
+
     // Styling
     muiTableContainerProps: {
       sx: { maxHeight: 'calc(100vh - 350px)' }
     },
-    
+
     muiTableProps: {
       sx: {
         tableLayout: 'fixed'
       }
     },
-    
+
     // Initial state
     initialState: {
       density: 'comfortable',
       showColumnFilters: false
     }
   });
-  
+
+  // ========================================
+  // ERROR STATE
+  // ========================================
+
+  if (error && !loading) {
+    const errorInfo = getErrorInfo(error);
+    const ErrorIcon = errorInfo.icon;
+
+    return (
+      <ModernEmptyState
+        icon={ErrorIcon}
+        title={errorInfo.title}
+        description={errorInfo.message}
+        action={
+          <Button variant="contained" startIcon={<RefreshIcon />} onClick={handleRefresh}>
+            إعادة المحاولة
+          </Button>
+        }
+      />
+    );
+  }
+
   // ========================================
   // RENDER
   // ========================================
-  
+
   return <MaterialReactTable table={table} />;
 };
 

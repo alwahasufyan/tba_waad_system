@@ -1,13 +1,13 @@
 /**
  * Medical Service View Page - GOLDEN REFERENCE MODULE
  * Phase D2 - Reference Module Pattern
- * 
+ *
  * ⚠️ This is the REFERENCE implementation for all CRUD view pages.
  * Pattern: ModernPageHeader → MainCard → Detail Sections (Paper boxes)
- * 
+ *
  * Rules Applied:
  * 1. icon={Component} - NEVER JSX
- * 2. Arabic only - No English labels  
+ * 2. Arabic only - No English labels
  * 3. Defensive optional chaining
  * 4. Proper error states (403 صلاحيات, 500 خطأ تقني)
  */
@@ -16,17 +16,7 @@ import { useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
 // MUI Components
-import { 
-  Box, 
-  Button, 
-  Grid, 
-  Paper, 
-  Stack, 
-  Typography, 
-  Chip, 
-  Divider, 
-  Skeleton 
-} from '@mui/material';
+import { Box, Button, Grid, Paper, Stack, Typography, Chip, Divider, Skeleton } from '@mui/material';
 
 // MUI Icons - Always as Component, NEVER as JSX
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
@@ -54,7 +44,7 @@ import { useMedicalServiceDetails } from 'hooks/useMedicalServices';
  */
 const getErrorInfo = (error) => {
   const status = error?.response?.status || error?.status;
-  
+
   if (status === 403) {
     return {
       type: 'permission',
@@ -63,7 +53,7 @@ const getErrorInfo = (error) => {
       icon: LockIcon
     };
   }
-  
+
   if (status === 404) {
     return {
       type: 'notfound',
@@ -72,7 +62,7 @@ const getErrorInfo = (error) => {
       icon: ErrorOutlineIcon
     };
   }
-  
+
   if (status >= 500) {
     return {
       type: 'server',
@@ -81,7 +71,7 @@ const getErrorInfo = (error) => {
       icon: ErrorOutlineIcon
     };
   }
-  
+
   return {
     type: 'generic',
     title: 'خطأ',
@@ -137,13 +127,13 @@ const MedicalServiceView = () => {
   // ========================================
   // DATA FETCHING
   // ========================================
-  
+
   const { data: service, loading, error } = useMedicalServiceDetails(id);
 
   // ========================================
   // HANDLERS
   // ========================================
-  
+
   const handleBack = useCallback(() => {
     navigate('/medical-services');
   }, [navigate]);
@@ -155,7 +145,7 @@ const MedicalServiceView = () => {
   // ========================================
   // RENDER - LOADING STATE
   // ========================================
-  
+
   if (loading) {
     return (
       <Box>
@@ -163,11 +153,7 @@ const MedicalServiceView = () => {
           title="عرض الخدمة الطبية"
           subtitle="تفاصيل الخدمة الطبية"
           icon={MedicalServicesIcon}
-          breadcrumbs={[
-            { label: 'الرئيسية', path: '/' },
-            { label: 'الخدمات الطبية', path: '/medical-services' },
-            { label: 'عرض' }
-          ]}
+          breadcrumbs={[{ label: 'الرئيسية', path: '/' }, { label: 'الخدمات الطبية', path: '/medical-services' }, { label: 'عرض' }]}
         />
         <MainCard>
           <Stack spacing={3}>
@@ -183,22 +169,18 @@ const MedicalServiceView = () => {
   // ========================================
   // RENDER - ERROR STATE
   // ========================================
-  
+
   if (error || !service) {
     const errorInfo = getErrorInfo(error);
     const ErrorIcon = errorInfo.icon;
-    
+
     return (
       <Box>
         <ModernPageHeader
           title="عرض الخدمة الطبية"
           subtitle="تفاصيل الخدمة الطبية"
           icon={MedicalServicesIcon}
-          breadcrumbs={[
-            { label: 'الرئيسية', path: '/' },
-            { label: 'الخدمات الطبية', path: '/medical-services' },
-            { label: 'عرض' }
-          ]}
+          breadcrumbs={[{ label: 'الرئيسية', path: '/' }, { label: 'الخدمات الطبية', path: '/medical-services' }, { label: 'عرض' }]}
         />
         <MainCard>
           <ModernEmptyState
@@ -206,11 +188,7 @@ const MedicalServiceView = () => {
             title={errorInfo.title}
             description={errorInfo.message}
             action={
-              <Button 
-                variant="outlined" 
-                startIcon={<ArrowBackIcon />} 
-                onClick={handleBack}
-              >
+              <Button variant="outlined" startIcon={<ArrowBackIcon />} onClick={handleBack}>
                 رجوع للقائمة
               </Button>
             }
@@ -242,18 +220,10 @@ const MedicalServiceView = () => {
         ]}
         actions={
           <Stack direction="row" spacing={1}>
-            <Button 
-              variant="outlined" 
-              startIcon={<ArrowBackIcon />} 
-              onClick={handleBack}
-            >
+            <Button variant="outlined" startIcon={<ArrowBackIcon />} onClick={handleBack}>
               رجوع
             </Button>
-            <Button 
-              variant="contained" 
-              startIcon={<EditIcon />} 
-              onClick={handleEdit}
-            >
+            <Button variant="contained" startIcon={<EditIcon />} onClick={handleEdit}>
               تعديل
             </Button>
           </Stack>
@@ -377,12 +347,16 @@ const MedicalServiceView = () => {
                 {service?.requiresApproval ? (
                   <>
                     <CheckCircleIcon color="success" fontSize="small" />
-                    <Typography variant="body1" fontWeight="medium">نعم</Typography>
+                    <Typography variant="body1" fontWeight="medium">
+                      نعم
+                    </Typography>
                   </>
                 ) : (
                   <>
                     <CancelIcon color="disabled" fontSize="small" />
-                    <Typography variant="body1" fontWeight="medium">لا</Typography>
+                    <Typography variant="body1" fontWeight="medium">
+                      لا
+                    </Typography>
                   </>
                 )}
               </Stack>
@@ -400,10 +374,10 @@ const MedicalServiceView = () => {
           {/* Active Status */}
           <Grid item xs={12} md={6}>
             <DetailField label="حالة الخدمة">
-              <Chip 
-                label={service?.active ? 'نشط' : 'غير نشط'} 
-                color={service?.active ? 'success' : 'default'} 
-                size="medium" 
+              <Chip
+                label={service?.active ? 'نشط' : 'غير نشط'}
+                color={service?.active ? 'success' : 'default'}
+                size="medium"
                 variant="light"
               />
             </DetailField>
@@ -420,18 +394,14 @@ const MedicalServiceView = () => {
           {/* Created At */}
           <Grid item xs={12} md={6}>
             <DetailField label="تاريخ الإنشاء">
-              <Typography variant="body1">
-                {formatDate(service?.createdAt)}
-              </Typography>
+              <Typography variant="body1">{formatDate(service?.createdAt)}</Typography>
             </DetailField>
           </Grid>
 
           {/* Updated At */}
           <Grid item xs={12} md={6}>
             <DetailField label="آخر تحديث">
-              <Typography variant="body1">
-                {formatDate(service?.updatedAt)}
-              </Typography>
+              <Typography variant="body1">{formatDate(service?.updatedAt)}</Typography>
             </DetailField>
           </Grid>
 
@@ -439,9 +409,7 @@ const MedicalServiceView = () => {
           {service?.createdBy && (
             <Grid item xs={12} md={6}>
               <DetailField label="أنشئ بواسطة">
-                <Typography variant="body1">
-                  {service.createdBy}
-                </Typography>
+                <Typography variant="body1">{service.createdBy}</Typography>
               </DetailField>
             </Grid>
           )}
@@ -450,9 +418,7 @@ const MedicalServiceView = () => {
           {service?.updatedBy && (
             <Grid item xs={12} md={6}>
               <DetailField label="آخر تحديث بواسطة">
-                <Typography variant="body1">
-                  {service.updatedBy}
-                </Typography>
+                <Typography variant="body1">{service.updatedBy}</Typography>
               </DetailField>
             </Grid>
           )}

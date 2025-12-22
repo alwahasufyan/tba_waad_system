@@ -1,10 +1,10 @@
 /**
  * Medical Service Create Page - GOLDEN REFERENCE MODULE
  * Phase D2/D2.3 - Reference Module Pattern + Refresh Contract
- * 
+ *
  * ⚠️ This is the REFERENCE implementation for all CRUD create pages.
  * Pattern: ModernPageHeader → MainCard → Form Sections → Actions
- * 
+ *
  * Rules Applied:
  * 1. icon={Component} - NEVER JSX
  * 2. Arabic only - No English labels
@@ -82,19 +82,19 @@ const MedicalServiceCreate = () => {
   // ========================================
   // TABLE REFRESH CONTEXT (Phase D2.3)
   // ========================================
-  
+
   const { triggerRefresh } = useTableRefresh();
 
   // ========================================
   // DATA FETCHING
   // ========================================
-  
+
   const { data: categories, loading: categoriesLoading } = useAllMedicalCategories();
-  
+
   // ========================================
   // DERIVED DATA - Defensive
   // ========================================
-  
+
   const categoryList = useMemo(() => {
     if (!categories) return [];
     return Array.isArray(categories) ? categories : [];
@@ -103,7 +103,7 @@ const MedicalServiceCreate = () => {
   // ========================================
   // STATE
   // ========================================
-  
+
   const [form, setForm] = useState(INITIAL_FORM_STATE);
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
@@ -112,14 +112,17 @@ const MedicalServiceCreate = () => {
   // ========================================
   // HANDLERS
   // ========================================
-  
-  const handleChange = useCallback((field) => (e) => {
-    const value = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
-    setForm((prev) => ({ ...prev, [field]: value }));
-    if (errors[field]) {
-      setErrors((prev) => ({ ...prev, [field]: null }));
-    }
-  }, [errors]);
+
+  const handleChange = useCallback(
+    (field) => (e) => {
+      const value = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
+      setForm((prev) => ({ ...prev, [field]: value }));
+      if (errors[field]) {
+        setErrors((prev) => ({ ...prev, [field]: null }));
+      }
+    },
+    [errors]
+  );
 
   const validate = useCallback(() => {
     const newErrors = {};
@@ -144,51 +147,54 @@ const MedicalServiceCreate = () => {
     return Object.keys(newErrors).length === 0;
   }, [form]);
 
-  const handleSubmit = useCallback(async (e) => {
-    e.preventDefault();
+  const handleSubmit = useCallback(
+    async (e) => {
+      e.preventDefault();
 
-    if (!validate()) return;
+      if (!validate()) return;
 
-    setSubmitting(true);
-    setApiError(null);
+      setSubmitting(true);
+      setApiError(null);
 
-    try {
-      // Prepare payload - defensive parsing
-      const payload = {
-        code: form.code?.trim() || '',
-        nameAr: form.nameAr?.trim() || '',
-        nameEn: form.nameEn?.trim() || '',
-        categoryId: form.categoryId ? parseInt(form.categoryId, 10) : null,
-        description: form.description?.trim() || null,
-        priceLyd: form.priceLyd ? parseFloat(form.priceLyd) : null,
-        costLyd: form.costLyd ? parseFloat(form.costLyd) : null,
-        coverageLimit: form.coverageLimit ? parseFloat(form.coverageLimit) : null,
-        duration: form.duration ? parseInt(form.duration, 10) : null,
-        requiresApproval: Boolean(form.requiresApproval),
-        active: Boolean(form.active)
-      };
+      try {
+        // Prepare payload - defensive parsing
+        const payload = {
+          code: form.code?.trim() || '',
+          nameAr: form.nameAr?.trim() || '',
+          nameEn: form.nameEn?.trim() || '',
+          categoryId: form.categoryId ? parseInt(form.categoryId, 10) : null,
+          description: form.description?.trim() || null,
+          priceLyd: form.priceLyd ? parseFloat(form.priceLyd) : null,
+          costLyd: form.costLyd ? parseFloat(form.costLyd) : null,
+          coverageLimit: form.coverageLimit ? parseFloat(form.coverageLimit) : null,
+          duration: form.duration ? parseInt(form.duration, 10) : null,
+          requiresApproval: Boolean(form.requiresApproval),
+          active: Boolean(form.active)
+        };
 
-      await createMedicalService(payload);
-      
-      // Trigger table refresh before navigating (Phase D2.3 Contract)
-      triggerRefresh();
-      
-      navigate('/medical-services');
-    } catch (err) {
-      console.error('[MedicalServiceCreate] Submit failed:', err);
-      const status = err?.response?.status;
-      
-      if (status === 403) {
-        setApiError('ليس لديك صلاحية لإنشاء خدمة طبية');
-      } else if (status >= 500) {
-        setApiError('خطأ تقني في الخادم. يرجى المحاولة لاحقاً');
-      } else {
-        setApiError(err?.response?.data?.message || err?.message || 'حدث خطأ أثناء إنشاء الخدمة');
+        await createMedicalService(payload);
+
+        // Trigger table refresh before navigating (Phase D2.3 Contract)
+        triggerRefresh();
+
+        navigate('/medical-services');
+      } catch (err) {
+        console.error('[MedicalServiceCreate] Submit failed:', err);
+        const status = err?.response?.status;
+
+        if (status === 403) {
+          setApiError('ليس لديك صلاحية لإنشاء خدمة طبية');
+        } else if (status >= 500) {
+          setApiError('خطأ تقني في الخادم. يرجى المحاولة لاحقاً');
+        } else {
+          setApiError(err?.response?.data?.message || err?.message || 'حدث خطأ أثناء إنشاء الخدمة');
+        }
+      } finally {
+        setSubmitting(false);
       }
-    } finally {
-      setSubmitting(false);
-    }
-  }, [form, navigate, validate]);
+    },
+    [form, navigate, validate, triggerRefresh]
+  );
 
   const handleBack = useCallback(() => {
     navigate('/medical-services');
@@ -209,17 +215,9 @@ const MedicalServiceCreate = () => {
         title="إضافة خدمة طبية جديدة"
         subtitle="إنشاء خدمة طبية جديدة في النظام"
         icon={MedicalServicesIcon}
-        breadcrumbs={[
-          { label: 'الرئيسية', path: '/' },
-          { label: 'الخدمات الطبية', path: '/medical-services' },
-          { label: 'إضافة جديد' }
-        ]}
+        breadcrumbs={[{ label: 'الرئيسية', path: '/' }, { label: 'الخدمات الطبية', path: '/medical-services' }, { label: 'إضافة جديد' }]}
         actions={
-          <Button 
-            variant="outlined" 
-            startIcon={<ArrowBackIcon />} 
-            onClick={handleBack}
-          >
+          <Button variant="outlined" startIcon={<ArrowBackIcon />} onClick={handleBack}>
             رجوع
           </Button>
         }
@@ -261,18 +259,9 @@ const MedicalServiceCreate = () => {
 
             {/* Category */}
             <Grid item xs={12} md={6}>
-              <FormControl 
-                fullWidth 
-                required 
-                error={!!errors.categoryId} 
-                disabled={submitting || categoriesLoading}
-              >
+              <FormControl fullWidth required error={!!errors.categoryId} disabled={submitting || categoriesLoading}>
                 <InputLabel>التصنيف الطبي</InputLabel>
-                <Select 
-                  value={form.categoryId} 
-                  onChange={handleChange('categoryId')} 
-                  label="التصنيف الطبي"
-                >
+                <Select value={form.categoryId} onChange={handleChange('categoryId')} label="التصنيف الطبي">
                   <MenuItem value="">-- اختر التصنيف --</MenuItem>
                   {categoryList.map((cat) => (
                     <MenuItem key={cat?.id} value={cat?.id}>
@@ -280,9 +269,7 @@ const MedicalServiceCreate = () => {
                     </MenuItem>
                   ))}
                 </Select>
-                {errors.categoryId && (
-                  <FormHelperText>{errors.categoryId}</FormHelperText>
-                )}
+                {errors.categoryId && <FormHelperText>{errors.categoryId}</FormHelperText>}
               </FormControl>
             </Grid>
 
@@ -427,21 +414,12 @@ const MedicalServiceCreate = () => {
             <Grid item xs={12} md={6}>
               <Paper variant="outlined" sx={{ p: 2 }}>
                 <FormControlLabel
-                  control={
-                    <Switch 
-                      checked={form.requiresApproval} 
-                      onChange={handleChange('requiresApproval')} 
-                      disabled={submitting} 
-                    />
-                  }
+                  control={<Switch checked={form.requiresApproval} onChange={handleChange('requiresApproval')} disabled={submitting} />}
                   label={
                     <Stack>
                       <Typography variant="body1">يتطلب موافقة مسبقة</Typography>
                       <Typography variant="caption" color="text.secondary">
-                        {form.requiresApproval 
-                          ? 'الخدمة تتطلب موافقة قبل التنفيذ' 
-                          : 'لا تتطلب موافقة مسبقة'
-                        }
+                        {form.requiresApproval ? 'الخدمة تتطلب موافقة قبل التنفيذ' : 'لا تتطلب موافقة مسبقة'}
                       </Typography>
                     </Stack>
                   }
@@ -453,21 +431,12 @@ const MedicalServiceCreate = () => {
             <Grid item xs={12} md={6}>
               <Paper variant="outlined" sx={{ p: 2 }}>
                 <FormControlLabel
-                  control={
-                    <Switch 
-                      checked={form.active} 
-                      onChange={handleChange('active')} 
-                      disabled={submitting} 
-                    />
-                  }
+                  control={<Switch checked={form.active} onChange={handleChange('active')} disabled={submitting} />}
                   label={
                     <Stack>
                       <Typography variant="body1">تفعيل الخدمة</Typography>
                       <Typography variant="caption" color="text.secondary">
-                        {form.active 
-                          ? 'الخدمة نشطة وظاهرة في النظام' 
-                          : 'الخدمة غير نشطة ولن تظهر في النظام'
-                        }
+                        {form.active ? 'الخدمة نشطة وظاهرة في النظام' : 'الخدمة غير نشطة ولن تظهر في النظام'}
                       </Typography>
                     </Stack>
                   }
@@ -478,19 +447,10 @@ const MedicalServiceCreate = () => {
             {/* ====== ACTION BUTTONS ====== */}
             <Grid item xs={12}>
               <Stack direction="row" spacing={2} justifyContent="flex-end">
-                <Button 
-                  variant="outlined" 
-                  onClick={handleBack} 
-                  disabled={submitting}
-                >
+                <Button variant="outlined" onClick={handleBack} disabled={submitting}>
                   إلغاء
                 </Button>
-                <Button 
-                  type="submit" 
-                  variant="contained" 
-                  startIcon={<SaveIcon />} 
-                  disabled={submitting}
-                >
+                <Button type="submit" variant="contained" startIcon={<SaveIcon />} disabled={submitting}>
                   {submitting ? 'جاري الحفظ...' : 'حفظ الخدمة'}
                 </Button>
               </Stack>

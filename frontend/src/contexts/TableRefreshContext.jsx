@@ -1,23 +1,23 @@
 /**
  * TableRefreshContext - Global Table Refresh Mechanism
  * Phase D2.3 - Post-Create/Edit Refresh Contract
- * 
+ *
  * ⚠️ CONTRACT:
  * - refreshKey is a number that increments on each triggerRefresh()
  * - TbaDataTable listens to refreshKey and fetches exactly ONCE when it changes
  * - Use triggerRefresh() after successful Create/Edit/Delete operations
- * 
+ *
  * Usage:
  * 1. Wrap your list page with <TableRefreshProvider>
  * 2. Pass refreshKey to <TbaDataTable refreshKey={refreshKey} />
  * 3. Call triggerRefresh() from Create/Edit pages on success
- * 
+ *
  * Example:
  * ```jsx
  * // In List page:
  * const { refreshKey } = useTableRefresh();
  * <TbaDataTable refreshKey={refreshKey} ... />
- * 
+ *
  * // In Create page:
  * const { triggerRefresh } = useTableRefresh();
  * await createItem(data);
@@ -45,27 +45,26 @@ const TableRefreshContext = createContext(null);
  */
 export const TableRefreshProvider = ({ children }) => {
   const [refreshKey, setRefreshKey] = useState(0);
-  
+
   /**
    * Trigger a table refresh by incrementing the key
    * This will cause TbaDataTable to re-fetch exactly once
    */
   const triggerRefresh = useCallback(() => {
-    setRefreshKey(prev => prev + 1);
+    setRefreshKey((prev) => prev + 1);
     console.log('[TableRefresh] Triggered refresh');
   }, []);
-  
+
   // Memoize context value to prevent unnecessary re-renders
-  const value = useMemo(() => ({
-    refreshKey,
-    triggerRefresh
-  }), [refreshKey, triggerRefresh]);
-  
-  return (
-    <TableRefreshContext.Provider value={value}>
-      {children}
-    </TableRefreshContext.Provider>
+  const value = useMemo(
+    () => ({
+      refreshKey,
+      triggerRefresh
+    }),
+    [refreshKey, triggerRefresh]
   );
+
+  return <TableRefreshContext.Provider value={value}>{children}</TableRefreshContext.Provider>;
 };
 
 TableRefreshProvider.propTypes = {
@@ -82,17 +81,20 @@ TableRefreshProvider.propTypes = {
  */
 export const TableRefreshLayout = () => {
   const [refreshKey, setRefreshKey] = useState(0);
-  
+
   const triggerRefresh = useCallback(() => {
-    setRefreshKey(prev => prev + 1);
+    setRefreshKey((prev) => prev + 1);
     console.log('[TableRefresh] Triggered refresh');
   }, []);
-  
-  const value = useMemo(() => ({
-    refreshKey,
-    triggerRefresh
-  }), [refreshKey, triggerRefresh]);
-  
+
+  const value = useMemo(
+    () => ({
+      refreshKey,
+      triggerRefresh
+    }),
+    [refreshKey, triggerRefresh]
+  );
+
   return (
     <TableRefreshContext.Provider value={value}>
       <Outlet />
@@ -110,7 +112,7 @@ export const TableRefreshLayout = () => {
  */
 export const useTableRefresh = () => {
   const context = useContext(TableRefreshContext);
-  
+
   // Return default values if used outside provider (graceful degradation)
   if (!context) {
     console.warn('[useTableRefresh] Used outside TableRefreshProvider - returning defaults');
@@ -121,7 +123,7 @@ export const useTableRefresh = () => {
       }
     };
   }
-  
+
   return context;
 };
 

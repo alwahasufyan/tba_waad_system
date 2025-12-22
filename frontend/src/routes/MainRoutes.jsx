@@ -527,9 +527,10 @@ const MainRoutes = {
       ]
     },
 
-    // Medical Categories Module
+    // Medical Categories Module - Wrapped with TableRefreshLayout (Phase D2.4)
     {
       path: 'medical-categories',
+      element: <TableRefreshLayout />,
       children: [
         {
           path: '',

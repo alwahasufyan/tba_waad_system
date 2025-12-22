@@ -1,37 +1,125 @@
-import { useNavigate, useParams } from 'react-router-dom';
-import {
-  Box,
-  Button,
-  Grid,
-  Paper,
-  Stack,
-  Typography,
-  Chip,
-  Divider,
-  Alert,
-  Skeleton
-} from '@mui/material';
-import {
-  ArrowBack as ArrowBackIcon,
-  Edit as EditIcon,
-  Category as CategoryIcon
-} from '@mui/icons-material';
+/**
+ * Medical Category View Page - Phase D2.4 (Golden Reference Clone)
+ * Cloned from Medical Services Golden Reference
+ *
+ * ⚠️ This is a REFERENCE implementation for all CRUD view pages.
+ * Pattern: ModernPageHeader → MainCard → Read-only Sections
+ *
+ * Rules Applied:
+ * 1. icon={Component} - NEVER JSX
+ * 2. Arabic only - No English labels
+ * 3. Defensive optional chaining
+ * 4. Proper error states (403 صلاحيات, 404 غير موجود, 500 خطأ تقني)
+ */
 
+import { useCallback } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+
+// MUI Components
+import { Box, Button, Grid, Paper, Stack, Typography, Chip, Divider, Skeleton } from '@mui/material';
+
+// MUI Icons - Always as Component, NEVER as JSX
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import EditIcon from '@mui/icons-material/Edit';
+import CategoryIcon from '@mui/icons-material/Category';
+import LockIcon from '@mui/icons-material/Lock';
+import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
+
+// Project Components
 import MainCard from 'components/MainCard';
 import ModernPageHeader from 'components/tba/ModernPageHeader';
+import ModernEmptyState from 'components/tba/ModernEmptyState';
+
+// Hooks
 import { useMedicalCategoryDetails } from 'hooks/useMedicalCategories';
 
+// ============================================================================
+// HELPER FUNCTIONS
+// ============================================================================
+
 /**
- * Medical Category View Page
- * Displays detailed read-only view of a medical category
+ * Parse error response and return appropriate Arabic message
  */
+const getErrorInfo = (error) => {
+  const status = error?.response?.status || error?.status;
+
+  if (status === 403) {
+    return {
+      type: 'permission',
+      title: 'غير مصرح',
+      message: 'ليس لديك صلاحية للوصول إلى هذا التصنيف',
+      icon: LockIcon
+    };
+  }
+
+  if (status === 404) {
+    return {
+      type: 'notfound',
+      title: 'غير موجود',
+      message: 'التصنيف المطلوب غير موجود',
+      icon: ErrorOutlineIcon
+    };
+  }
+
+  if (status >= 500) {
+    return {
+      type: 'server',
+      title: 'خطأ تقني',
+      message: 'حدث خطأ في الخادم. يرجى المحاولة لاحقاً',
+      icon: ErrorOutlineIcon
+    };
+  }
+
+  return {
+    type: 'generic',
+    title: 'خطأ',
+    message: error?.message || 'فشل تحميل بيانات التصنيف',
+    icon: ErrorOutlineIcon
+  };
+};
+
+/**
+ * Format date for Arabic display
+ */
+const formatDate = (dateString) => {
+  if (!dateString) return '-';
+  try {
+    return new Date(dateString).toLocaleString('ar-LY');
+  } catch {
+    return '-';
+  }
+};
+
+// ============================================================================
+// MAIN COMPONENT
+// ============================================================================
+
 const MedicalCategoryView = () => {
   const { id } = useParams();
   const navigate = useNavigate();
 
+  // ========================================
+  // DATA FETCHING
+  // ========================================
+
   const { data: category, loading, error } = useMedicalCategoryDetails(id);
 
-  // Loading skeleton
+  // ========================================
+  // HANDLERS
+  // ========================================
+
+  const handleBack = useCallback(() => {
+    navigate('/medical-categories');
+  }, [navigate]);
+
+  const handleEdit = useCallback(() => {
+    navigate(`/medical-categories/edit/${id}`);
+  }, [navigate, id]);
+
+  // ========================================
+  // RENDER - LOADING STATE
+  // ========================================
+
   if (loading) {
     return (
       <Box>
@@ -39,11 +127,7 @@ const MedicalCategoryView = () => {
           title="عرض التصنيف الطبي"
           subtitle="تفاصيل التصنيف الطبي"
           icon={CategoryIcon}
-          breadcrumbs={[
-            { label: 'الرئيسية', path: '/' },
-            { label: 'التصنيفات الطبية', path: '/medical-categories' },
-            { label: 'عرض' }
-          ]}
+          breadcrumbs={[{ label: 'الرئيسية', path: '/' }, { label: 'التصنيفات الطبية', path: '/medical-categories' }, { label: 'عرض' }]}
         />
         <MainCard>
           <Stack spacing={3}>
@@ -56,71 +140,70 @@ const MedicalCategoryView = () => {
     );
   }
 
-  // Error state
+  // ========================================
+  // RENDER - ERROR STATE
+  // ========================================
+
   if (error || !category) {
+    const errorInfo = getErrorInfo(error);
+    const ErrorIcon = errorInfo.icon;
+
     return (
       <Box>
         <ModernPageHeader
           title="عرض التصنيف الطبي"
           subtitle="تفاصيل التصنيف الطبي"
           icon={CategoryIcon}
-          breadcrumbs={[
-            { label: 'الرئيسية', path: '/' },
-            { label: 'التصنيفات الطبية', path: '/medical-categories' },
-            { label: 'عرض' }
-          ]}
+          breadcrumbs={[{ label: 'الرئيسية', path: '/' }, { label: 'التصنيفات الطبية', path: '/medical-categories' }, { label: 'عرض' }]}
         />
         <MainCard>
-          <Alert severity="error">
-            {error?.message || 'فشل تحميل بيانات التصنيف'}
-          </Alert>
-          <Button
-            variant="outlined"
-            startIcon={<ArrowBackIcon />}
-            onClick={() => navigate('/medical-categories')}
-            sx={{ mt: 2 }}
-          >
-            رجوع للقائمة
-          </Button>
+          <ModernEmptyState
+            icon={ErrorIcon}
+            title={errorInfo.title}
+            description={errorInfo.message}
+            action={
+              <Button variant="outlined" startIcon={<ArrowBackIcon />} onClick={handleBack}>
+                رجوع للقائمة
+              </Button>
+            }
+          />
         </MainCard>
       </Box>
     );
   }
 
+  // ========================================
+  // RENDER - MAIN VIEW
+  // ========================================
+
   return (
     <Box>
+      {/* ====== PAGE HEADER ====== */}
       <ModernPageHeader
         title="عرض التصنيف الطبي"
-        subtitle={category.nameAr}
+        subtitle={category?.nameAr || ''}
         icon={CategoryIcon}
         breadcrumbs={[
           { label: 'الرئيسية', path: '/' },
           { label: 'التصنيفات الطبية', path: '/medical-categories' },
-          { label: category.code }
+          { label: category?.code || 'عرض' }
         ]}
         actions={
           <Stack direction="row" spacing={1}>
-            <Button
-              variant="outlined"
-              startIcon={<ArrowBackIcon />}
-              onClick={() => navigate('/medical-categories')}
-            >
+            <Button variant="outlined" startIcon={<ArrowBackIcon />} onClick={handleBack}>
               رجوع
             </Button>
-            <Button
-              variant="contained"
-              startIcon={<EditIcon />}
-              onClick={() => navigate(`/medical-categories/edit/${id}`)}
-            >
+            <Button variant="contained" startIcon={<EditIcon />} onClick={handleEdit}>
               تعديل
             </Button>
           </Stack>
         }
       />
 
+      {/* ====== MAIN CARD ====== */}
       <MainCard>
         <Grid container spacing={3}>
-          {/* Basic Information Section */}
+          {/* ====== BASIC INFORMATION SECTION ====== */}
           <Grid item xs={12}>
             <Typography variant="h6" gutterBottom>
               المعلومات الأساسية
@@ -135,7 +218,7 @@ const MedicalCategoryView = () => {
                 الرمز
               </Typography>
               <Typography variant="body1" fontWeight="medium">
-                {category.code}
+                {category?.code || '-'}
               </Typography>
             </Paper>
           </Grid>
@@ -147,7 +230,7 @@ const MedicalCategoryView = () => {
                 ترتيب العرض
               </Typography>
               <Typography variant="body1" fontWeight="medium">
-                {category.sortOrder || 0}
+                {category?.sortOrder ?? 0}
               </Typography>
             </Paper>
           </Grid>
@@ -159,7 +242,7 @@ const MedicalCategoryView = () => {
                 الاسم (عربي)
               </Typography>
               <Typography variant="body1" fontWeight="medium">
-                {category.nameAr}
+                {category?.nameAr || '-'}
               </Typography>
             </Paper>
           </Grid>
@@ -171,13 +254,13 @@ const MedicalCategoryView = () => {
                 الاسم (إنجليزي)
               </Typography>
               <Typography variant="body1" fontWeight="medium">
-                {category.nameEn}
+                {category?.nameEn || '-'}
               </Typography>
             </Paper>
           </Grid>
 
           {/* Icon Name */}
-          {category.iconName && (
+          {category?.iconName && (
             <Grid item xs={12} md={6}>
               <Paper variant="outlined" sx={{ p: 2 }}>
                 <Typography variant="caption" color="text.secondary" gutterBottom display="block">
@@ -196,16 +279,12 @@ const MedicalCategoryView = () => {
               <Typography variant="caption" color="text.secondary" gutterBottom display="block">
                 الحالة
               </Typography>
-              <Chip
-                label={category.active ? 'نشط' : 'غير نشط'}
-                color={category.active ? 'success' : 'default'}
-                size="medium"
-              />
+              <Chip label={category?.active ? 'نشط' : 'غير نشط'} color={category?.active ? 'success' : 'default'} size="medium" />
             </Paper>
           </Grid>
 
           {/* Description */}
-          {category.description && (
+          {category?.description && (
             <Grid item xs={12}>
               <Paper variant="outlined" sx={{ p: 2 }}>
                 <Typography variant="caption" color="text.secondary" gutterBottom display="block">
@@ -218,7 +297,7 @@ const MedicalCategoryView = () => {
             </Grid>
           )}
 
-          {/* Metadata Section */}
+          {/* ====== METADATA SECTION ====== */}
           <Grid item xs={12}>
             <Typography variant="h6" gutterBottom sx={{ mt: 2 }}>
               معلومات النظام
@@ -227,57 +306,45 @@ const MedicalCategoryView = () => {
           </Grid>
 
           {/* Created At */}
-          {category.createdAt && (
-            <Grid item xs={12} md={6}>
-              <Paper variant="outlined" sx={{ p: 2 }}>
-                <Typography variant="caption" color="text.secondary" gutterBottom display="block">
-                  تاريخ الإنشاء
-                </Typography>
-                <Typography variant="body1">
-                  {new Date(category.createdAt).toLocaleString('ar-LY')}
-                </Typography>
-              </Paper>
-            </Grid>
-          )}
+          <Grid item xs={12} md={6}>
+            <Paper variant="outlined" sx={{ p: 2 }}>
+              <Typography variant="caption" color="text.secondary" gutterBottom display="block">
+                تاريخ الإنشاء
+              </Typography>
+              <Typography variant="body1">{formatDate(category?.createdAt)}</Typography>
+            </Paper>
+          </Grid>
 
           {/* Updated At */}
-          {category.updatedAt && (
-            <Grid item xs={12} md={6}>
-              <Paper variant="outlined" sx={{ p: 2 }}>
-                <Typography variant="caption" color="text.secondary" gutterBottom display="block">
-                  آخر تحديث
-                </Typography>
-                <Typography variant="body1">
-                  {new Date(category.updatedAt).toLocaleString('ar-LY')}
-                </Typography>
-              </Paper>
-            </Grid>
-          )}
+          <Grid item xs={12} md={6}>
+            <Paper variant="outlined" sx={{ p: 2 }}>
+              <Typography variant="caption" color="text.secondary" gutterBottom display="block">
+                آخر تحديث
+              </Typography>
+              <Typography variant="body1">{formatDate(category?.updatedAt)}</Typography>
+            </Paper>
+          </Grid>
 
           {/* Created By */}
-          {category.createdBy && (
+          {category?.createdBy && (
             <Grid item xs={12} md={6}>
               <Paper variant="outlined" sx={{ p: 2 }}>
                 <Typography variant="caption" color="text.secondary" gutterBottom display="block">
                   أنشئ بواسطة
                 </Typography>
-                <Typography variant="body1">
-                  {category.createdBy}
-                </Typography>
+                <Typography variant="body1">{category.createdBy}</Typography>
               </Paper>
             </Grid>
           )}
 
           {/* Updated By */}
-          {category.updatedBy && (
+          {category?.updatedBy && (
             <Grid item xs={12} md={6}>
               <Paper variant="outlined" sx={{ p: 2 }}>
                 <Typography variant="caption" color="text.secondary" gutterBottom display="block">
                   آخر تحديث بواسطة
                 </Typography>
-                <Typography variant="body1">
-                  {category.updatedBy}
-                </Typography>
+                <Typography variant="body1">{category.updatedBy}</Typography>
               </Paper>
             </Grid>
           )}
