@@ -99,6 +99,45 @@ export const preApprovalsService = {
   reject: async (id, data) => {
     const response = await apiClient.post(`${BASE_URL}/${id}/reject`, data);
     return unwrap(response);
+  },
+
+  // ======================= INBOX OPERATIONS =======================
+
+  /**
+   * Get pending pre-approvals for inbox (with pagination)
+   * @param {Object} params - Pagination params {page, size, sortBy, sortDir}
+   * @returns {Promise<Object>} Paginated pending pre-approvals {items, total, page, size}
+   */
+  getPending: async (params = {}) => {
+    const queryParams = new URLSearchParams();
+    if (params.page) queryParams.append('page', params.page);
+    if (params.size) queryParams.append('size', params.size);
+    if (params.sortBy) queryParams.append('sortBy', params.sortBy);
+    if (params.sortDir) queryParams.append('sortDir', params.sortDir);
+    
+    const response = await apiClient.get(`${BASE_URL}/inbox/pending?${queryParams.toString()}`);
+    return unwrap(response);
+  },
+
+  /**
+   * Get pre-approvals by member
+   * @param {number} memberId - Member ID
+   * @returns {Promise<Array>} List of pre-approvals for member
+   */
+  getByMember: async (memberId) => {
+    const response = await apiClient.get(`${BASE_URL}/member/${memberId}`);
+    return unwrap(response);
+  },
+
+  /**
+   * Check if member has valid pre-approval for service
+   * @param {number} memberId - Member ID
+   * @param {string} serviceCode - Service code
+   * @returns {Promise<Object>} Validity check result {valid, preApproval, remainingAmount}
+   */
+  checkValidity: async (memberId, serviceCode) => {
+    const response = await apiClient.get(`${BASE_URL}/check-validity?memberId=${memberId}&serviceCode=${serviceCode}`);
+    return unwrap(response);
   }
 };
 

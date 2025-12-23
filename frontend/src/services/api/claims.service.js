@@ -120,6 +120,114 @@ export const claimsService = {
   search: async (searchTerm) => {
     const response = await apiClient.get(`${BASE_URL}/search?q=${encodeURIComponent(searchTerm)}`);
     return unwrap(response);
+  },
+
+  // ======================= INBOX OPERATIONS =======================
+
+  /**
+   * Get pending claims for inbox (operations review)
+   * @param {Object} params - Pagination params {page, size, sortBy, sortDir}
+   * @returns {Promise<Object>} Paginated pending claims {items, total, page, size}
+   */
+  getPendingClaims: async (params = {}) => {
+    const queryParams = new URLSearchParams();
+    if (params.page) queryParams.append('page', params.page);
+    if (params.size) queryParams.append('size', params.size);
+    if (params.sortBy) queryParams.append('sortBy', params.sortBy);
+    if (params.sortDir) queryParams.append('sortDir', params.sortDir);
+    
+    const response = await apiClient.get(`${BASE_URL}/inbox/pending?${queryParams.toString()}`);
+    return unwrap(response);
+  },
+
+  /**
+   * Get approved claims ready for settlement
+   * @param {Object} params - Pagination params {page, size, sortBy, sortDir}
+   * @returns {Promise<Object>} Paginated approved claims {items, total, page, size}
+   */
+  getApprovedClaims: async (params = {}) => {
+    const queryParams = new URLSearchParams();
+    if (params.page) queryParams.append('page', params.page);
+    if (params.size) queryParams.append('size', params.size);
+    if (params.sortBy) queryParams.append('sortBy', params.sortBy);
+    if (params.sortDir) queryParams.append('sortDir', params.sortDir);
+    
+    const response = await apiClient.get(`${BASE_URL}/inbox/approved?${queryParams.toString()}`);
+    return unwrap(response);
+  },
+
+  /**
+   * Get cost breakdown (Financial Snapshot) for a claim
+   * @param {number} id - Claim ID
+   * @returns {Promise<Object>} Cost breakdown {requestedAmount, patientCoPay, netProviderAmount, ...}
+   */
+  getCostBreakdown: async (id) => {
+    const response = await apiClient.get(`${BASE_URL}/${id}/cost-breakdown`);
+    return unwrap(response);
+  },
+
+  /**
+   * Submit claim for review (change status from DRAFT to PENDING)
+   * @param {number} id - Claim ID
+   * @returns {Promise<Object>} Updated claim
+   */
+  submit: async (id) => {
+    const response = await apiClient.post(`${BASE_URL}/${id}/submit`);
+    return unwrap(response);
+  },
+
+  /**
+   * Settle an approved claim (Finance operation)
+   * @param {number} id - Claim ID
+   * @param {Object} data - Settlement data {paymentReference, notes}
+   * @returns {Promise<Object>} Settled claim
+   */
+  settle: async (id, data) => {
+    const response = await apiClient.post(`${BASE_URL}/${id}/settle`, data);
+    return unwrap(response);
+  },
+
+  // ======================= REPORTS =======================
+
+  /**
+   * Get adjudication report
+   * @param {Object} params - Report params {startDate, endDate, providerId, status}
+   * @returns {Promise<Object>} Adjudication report
+   */
+  getAdjudicationReport: async (params = {}) => {
+    const queryParams = new URLSearchParams();
+    if (params.startDate) queryParams.append('startDate', params.startDate);
+    if (params.endDate) queryParams.append('endDate', params.endDate);
+    if (params.providerId) queryParams.append('providerId', params.providerId);
+    if (params.status) queryParams.append('status', params.status);
+    
+    const response = await apiClient.get(`/reports/adjudication?${queryParams.toString()}`);
+    return unwrap(response);
+  },
+
+  /**
+   * Get provider settlement report
+   * @param {number} providerId - Provider ID
+   * @param {Object} params - Report params {startDate, endDate}
+   * @returns {Promise<Object>} Provider settlement report
+   */
+  getProviderSettlementReport: async (providerId, params = {}) => {
+    const queryParams = new URLSearchParams();
+    if (params.startDate) queryParams.append('startDate', params.startDate);
+    if (params.endDate) queryParams.append('endDate', params.endDate);
+    
+    const response = await apiClient.get(`/reports/provider-settlement/${providerId}?${queryParams.toString()}`);
+    return unwrap(response);
+  },
+
+  /**
+   * Get member statement
+   * @param {number} memberId - Member ID
+   * @returns {Promise<Object>} Member claims statement
+   */
+  getMemberStatement: async (memberId) => {
+    const response = await apiClient.get(`/reports/member-statement/${memberId}`);
+    return unwrap(response);
   }
 };
 

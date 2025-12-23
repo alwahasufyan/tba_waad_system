@@ -75,12 +75,12 @@ COMMENT ON TABLE eligibility_checks IS 'Audit log for all eligibility checks per
 -- ============================================================================
 -- Add new permission for eligibility checks
 -- ============================================================================
-INSERT INTO permissions (name, name_ar, description, description_ar, module, created_at, updated_at)
-SELECT 'eligibility.check', 'التحقق من الأحقية', 'Check member eligibility for medical services', 'التحقق من أحقية العضو للحصول على خدمة طبية', 'ELIGIBILITY', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+INSERT INTO permissions (name, description, module, created_at, updated_at)
+SELECT 'eligibility.check', 'Check member eligibility for medical services - التحقق من أحقية العضو', 'ELIGIBILITY', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
 WHERE NOT EXISTS (SELECT 1 FROM permissions WHERE name = 'eligibility.check');
 
-INSERT INTO permissions (name, name_ar, description, description_ar, module, created_at, updated_at)
-SELECT 'eligibility.view_logs', 'عرض سجل الأحقية', 'View eligibility check history and logs', 'عرض سجل التحقق من الأحقية', 'ELIGIBILITY', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+INSERT INTO permissions (name, description, module, created_at, updated_at)
+SELECT 'eligibility.view_logs', 'View eligibility check history and logs - عرض سجل التحقق من الأحقية', 'ELIGIBILITY', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
 WHERE NOT EXISTS (SELECT 1 FROM permissions WHERE name = 'eligibility.view_logs');
 
 -- Assign permissions to relevant roles

@@ -2,6 +2,7 @@ package com.waad.tba.modules.claim.service;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -17,9 +18,13 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.waad.tba.common.exception.BusinessRuleException;
 import com.waad.tba.common.exception.ResourceNotFoundException;
+import com.waad.tba.modules.claim.dto.ClaimApproveDto;
 import com.waad.tba.modules.claim.dto.ClaimCreateDto;
+import com.waad.tba.modules.claim.dto.ClaimRejectDto;
+import com.waad.tba.modules.claim.dto.ClaimSettleDto;
 import com.waad.tba.modules.claim.dto.ClaimUpdateDto;
 import com.waad.tba.modules.claim.dto.ClaimViewDto;
+import com.waad.tba.modules.claim.dto.CostBreakdownDto;
 import com.waad.tba.modules.claim.entity.Claim;
 import com.waad.tba.modules.claim.entity.ClaimStatus;
 import com.waad.tba.modules.claim.entity.ClaimType;
@@ -442,6 +447,315 @@ public class ClaimService {
         Claim claim = claimRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Claim", "id", id));
         return costCalculationService.calculateCosts(claim);
+    }
+
+    /**
+     * Get cost breakdown as DTO for API response.
+     */
+    @Transactional(readOnly = true)
+    public CostBreakdownDto getCostBreakdownDto(Long id) {
+        CostCalculationService.CostBreakdown breakdown = getCostBreakdown(id);
+        return CostBreakdownDto.from(breakdown);
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // MVP PHASE: Approve / Reject / Settle Endpoints
+    // ═══════════════════════════════════════════════════════════════════════════════
+
+    /**
+     * Approve a claim with financial validation.
+     * 
+     * POST /api/claims/{id}/approve
+     * 
+     * Business Rules:
+     * 1. Claim must be in SUBMITTED or UNDER_REVIEW status
+     * 2. Cost breakdown is calculated and validated
+     * 3. Coverage limits are checked (via CoverageValidationService)
+     * 4. Financial snapshot is stored on the claim
+     * 5. Status transitions to APPROVED
+     * 
+     * @param id Claim ID
+     * @param dto Approval details
+     * @return Updated claim with financial snapshot
+     */
+    @Transactional
+    public ClaimViewDto approveClaim(Long id, ClaimApproveDto dto) {
+        log.info("✅ Approving claim {}", id);
+        
+        Claim claim = claimRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Claim", "id", id));
+        
+        User currentUser = authorizationService.getCurrentUser();
+        ClaimStatus previousStatus = claim.getStatus();
+        
+        // Step 1: Calculate cost breakdown
+        CostCalculationService.CostBreakdown breakdown = costCalculationService.calculateCosts(claim);
+        log.info("💰 Cost breakdown for claim {}: {}", id, breakdown.getSummary());
+        
+        // Step 2: Determine approved amount
+        BigDecimal approvedAmount;
+        if (Boolean.TRUE.equals(dto.getUseSystemCalculation()) || dto.getApprovedAmount() == null) {
+            // Use system-calculated amount (insurance pays)
+            approvedAmount = breakdown.insuranceAmount();
+            log.info("📊 Using system-calculated approved amount: {}", approvedAmount);
+        } else {
+            // Use manual amount from reviewer
+            approvedAmount = dto.getApprovedAmount();
+            log.info("📊 Using manual approved amount: {}", approvedAmount);
+        }
+        
+        // Step 3: Validate approved amount
+        if (approvedAmount == null || approvedAmount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new BusinessRuleException("المبلغ المعتمد يجب أن يكون أكبر من صفر");
+        }
+        
+        if (approvedAmount.compareTo(claim.getRequestedAmount()) > 0) {
+            throw new BusinessRuleException("المبلغ المعتمد لا يمكن أن يتجاوز المبلغ المطلوب");
+        }
+        
+        // Step 4: Validate Financial Snapshot equation
+        // Rule: RequestedAmount = PatientCoPay + NetProviderAmount
+        BigDecimal patientCoPay = breakdown.patientResponsibility();
+        BigDecimal netProviderAmount = breakdown.insuranceAmount();
+        BigDecimal total = patientCoPay.add(netProviderAmount);
+        
+        if (total.compareTo(claim.getRequestedAmount()) != 0) {
+            log.warn("⚠️ Financial calculation mismatch: {} + {} = {} != {}", 
+                patientCoPay, netProviderAmount, total, claim.getRequestedAmount());
+            // Auto-adjust to ensure balance
+            netProviderAmount = claim.getRequestedAmount().subtract(patientCoPay);
+        }
+        
+        // Step 5: Validate coverage limits (Middleware Gate)
+        Member member = claim.getMember();
+        Policy policy = member.getPolicy();
+        if (policy != null) {
+            try {
+                coverageValidationService.validateAmountLimits(
+                    member, policy, approvedAmount, 
+                    claim.getVisitDate() != null ? claim.getVisitDate() : LocalDate.now()
+                );
+            } catch (Exception e) {
+                log.error("❌ Coverage validation failed: {}", e.getMessage());
+                throw new BusinessRuleException("فشل التحقق من التغطية: " + e.getMessage());
+            }
+        }
+        
+        // Step 6: Update claim with financial snapshot
+        claim.setApprovedAmount(approvedAmount);
+        claim.setPatientCoPay(patientCoPay);
+        claim.setNetProviderAmount(netProviderAmount);
+        claim.setCoPayPercent(breakdown.coPayPercent());
+        claim.setDeductibleApplied(breakdown.deductibleApplied());
+        claim.setDifferenceAmount(claim.getRequestedAmount().subtract(approvedAmount));
+        
+        if (dto.getNotes() != null && !dto.getNotes().isBlank()) {
+            claim.setReviewerComment(dto.getNotes());
+        }
+        
+        // Step 7: Transition to APPROVED status
+        claimStateMachine.transition(claim, ClaimStatus.APPROVED, currentUser);
+        
+        Claim savedClaim = claimRepository.save(claim);
+        
+        // Step 8: Record in audit trail (pass null for previousApprovedAmount as it wasn't approved before)
+        claimAuditService.recordApproval(savedClaim, previousStatus, null, currentUser, dto.getNotes());
+        
+        log.info("✅ Claim {} approved: requested={}, approved={}, patientCoPay={}, netProvider={}", 
+            id, claim.getRequestedAmount(), approvedAmount, patientCoPay, netProviderAmount);
+        
+        return claimMapper.toViewDto(savedClaim);
+    }
+
+    /**
+     * Reject a claim with mandatory reason.
+     * 
+     * POST /api/claims/{id}/reject
+     * 
+     * Business Rules:
+     * 1. Claim must be in SUBMITTED or UNDER_REVIEW status
+     * 2. Rejection reason is MANDATORY
+     * 3. Status transitions to REJECTED (terminal state)
+     * 
+     * @param id Claim ID
+     * @param dto Rejection details with mandatory reason
+     * @return Updated claim
+     */
+    @Transactional
+    public ClaimViewDto rejectClaim(Long id, ClaimRejectDto dto) {
+        log.info("❌ Rejecting claim {}", id);
+        
+        Claim claim = claimRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Claim", "id", id));
+        
+        User currentUser = authorizationService.getCurrentUser();
+        ClaimStatus previousStatus = claim.getStatus();
+        
+        // Validate rejection reason is provided
+        if (dto.getRejectionReason() == null || dto.getRejectionReason().trim().isEmpty()) {
+            throw new BusinessRuleException("سبب الرفض مطلوب");
+        }
+        
+        // Set rejection details
+        claim.setReviewerComment(dto.getRejectionReason());
+        claim.setApprovedAmount(BigDecimal.ZERO);
+        claim.setNetProviderAmount(BigDecimal.ZERO);
+        
+        // Transition to REJECTED status
+        claimStateMachine.transition(claim, ClaimStatus.REJECTED, currentUser);
+        
+        Claim savedClaim = claimRepository.save(claim);
+        
+        // Record in audit trail
+        claimAuditService.recordRejection(savedClaim, previousStatus, currentUser, dto.getRejectionReason());
+        
+        log.info("❌ Claim {} rejected. Reason: {}", id, dto.getRejectionReason());
+        
+        return claimMapper.toViewDto(savedClaim);
+    }
+
+    /**
+     * Settle a claim (mark ready for payment).
+     * 
+     * POST /api/claims/{id}/settle
+     * 
+     * Business Rules:
+     * 1. Claim must be in APPROVED status
+     * 2. Payment reference must be provided
+     * 3. Status transitions to SETTLED (terminal state)
+     * 
+     * @param id Claim ID
+     * @param dto Settlement details
+     * @return Updated claim
+     */
+    @Transactional
+    public ClaimViewDto settleClaim(Long id, ClaimSettleDto dto) {
+        log.info("💳 Settling claim {}", id);
+        
+        Claim claim = claimRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Claim", "id", id));
+        
+        User currentUser = authorizationService.getCurrentUser();
+        ClaimStatus previousStatus = claim.getStatus();
+        
+        // Validate claim is in APPROVED status
+        if (claim.getStatus() != ClaimStatus.APPROVED) {
+            throw new BusinessRuleException(
+                String.format("لا يمكن تسوية المطالبة. الحالة الحالية: %s. يجب أن تكون: APPROVED", 
+                    claim.getStatus())
+            );
+        }
+        
+        // Validate payment reference
+        if (dto.getPaymentReference() == null || dto.getPaymentReference().trim().isEmpty()) {
+            throw new BusinessRuleException("رقم مرجع الدفع مطلوب");
+        }
+        
+        // Set settlement details
+        claim.setPaymentReference(dto.getPaymentReference());
+        claim.setSettledAt(LocalDateTime.now());
+        
+        if (dto.getNotes() != null) {
+            claim.setSettlementNotes(dto.getNotes());
+        }
+        
+        // Verify settlement amount matches approved amount
+        if (dto.getSettlementAmount() != null) {
+            if (dto.getSettlementAmount().compareTo(claim.getApprovedAmount()) != 0) {
+                log.warn("⚠️ Settlement amount {} differs from approved amount {}", 
+                    dto.getSettlementAmount(), claim.getApprovedAmount());
+            }
+        }
+        
+        // Transition to SETTLED status
+        claimStateMachine.transition(claim, ClaimStatus.SETTLED, currentUser);
+        
+        Claim savedClaim = claimRepository.save(claim);
+        
+        // Record in audit trail
+        claimAuditService.recordSettlement(savedClaim, currentUser);
+        
+        log.info("💳 Claim {} settled. Payment Ref: {}, Amount: {}", 
+            id, dto.getPaymentReference(), claim.getApprovedAmount());
+        
+        return claimMapper.toViewDto(savedClaim);
+    }
+
+    /**
+     * Submit a draft claim for review.
+     * 
+     * POST /api/claims/{id}/submit
+     * 
+     * Business Rules:
+     * 1. Claim must be in DRAFT or RETURNED_FOR_INFO status
+     * 2. All required attachments must be present
+     * 3. Status transitions to SUBMITTED
+     */
+    @Transactional
+    public ClaimViewDto submitClaim(Long id) {
+        log.info("📤 Submitting claim {}", id);
+        
+        Claim claim = claimRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Claim", "id", id));
+        
+        User currentUser = authorizationService.getCurrentUser();
+        ClaimStatus previousStatus = claim.getStatus();
+        
+        // Validate current status allows submission
+        if (claim.getStatus() != ClaimStatus.DRAFT && 
+            claim.getStatus() != ClaimStatus.RETURNED_FOR_INFO) {
+            throw new BusinessRuleException(
+                String.format("لا يمكن تقديم المطالبة. الحالة الحالية: %s", claim.getStatus())
+            );
+        }
+        
+        // Validate attachments
+        var attachmentResult = attachmentRulesService.validateForSubmission(claim, ClaimType.GENERAL);
+        if (!attachmentResult.valid()) {
+            throw new BusinessRuleException(
+                "لا يمكن تقديم المطالبة: " + attachmentResult.getErrorMessage()
+            );
+        }
+        
+        // Transition to SUBMITTED status
+        claimStateMachine.transition(claim, ClaimStatus.SUBMITTED, currentUser);
+        
+        Claim savedClaim = claimRepository.save(claim);
+        
+        // Record in audit trail
+        claimAuditService.recordStatusChange(savedClaim, previousStatus, currentUser, "تم تقديم المطالبة للمراجعة");
+        
+        log.info("📤 Claim {} submitted for review", id);
+        
+        return claimMapper.toViewDto(savedClaim);
+    }
+
+    /**
+     * Get claims pending review (for inbox).
+     * Returns claims in SUBMITTED or UNDER_REVIEW status.
+     */
+    @Transactional(readOnly = true)
+    public Page<ClaimViewDto> getPendingClaims(int page, int size, String sortBy, String sortDir) {
+        Sort.Direction direction = "asc".equalsIgnoreCase(sortDir) ? Sort.Direction.ASC : Sort.Direction.DESC;
+        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
+        
+        List<ClaimStatus> pendingStatuses = List.of(ClaimStatus.SUBMITTED, ClaimStatus.UNDER_REVIEW);
+        Page<Claim> claims = claimRepository.findByStatusIn(pendingStatuses, pageable);
+        
+        return claims.map(claimMapper::toViewDto);
+    }
+
+    /**
+     * Get claims ready for settlement (APPROVED status).
+     */
+    @Transactional(readOnly = true)
+    public Page<ClaimViewDto> getApprovedClaims(int page, int size, String sortBy, String sortDir) {
+        Sort.Direction direction = "asc".equalsIgnoreCase(sortDir) ? Sort.Direction.ASC : Sort.Direction.DESC;
+        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
+        
+        Page<Claim> claims = claimRepository.findByStatus(ClaimStatus.APPROVED, pageable);
+        
+        return claims.map(claimMapper::toViewDto);
     }
 
     /**

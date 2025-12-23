@@ -97,6 +97,52 @@ public class Claim {
     @Column(name = "reviewed_at")
     private LocalDateTime reviewedAt;
 
+    // ========== Financial Snapshot Fields (Phase MVP) ==========
+    
+    /**
+     * نسبة تحمل المريض (Co-Pay + Deductible)
+     */
+    @Column(name = "patient_copay", precision = 15, scale = 2)
+    private BigDecimal patientCoPay;
+    
+    /**
+     * المبلغ الصافي المستحق لمقدم الخدمة
+     */
+    @Column(name = "net_provider_amount", precision = 15, scale = 2)
+    private BigDecimal netProviderAmount;
+    
+    /**
+     * نسبة المشاركة المُطبقة (%)
+     */
+    @Column(name = "copay_percent", precision = 5, scale = 2)
+    private BigDecimal coPayPercent;
+    
+    /**
+     * الخصم المُطبق (Deductible)
+     */
+    @Column(name = "deductible_applied", precision = 15, scale = 2)
+    private BigDecimal deductibleApplied;
+
+    // ========== Settlement Fields (Phase MVP) ==========
+    
+    /**
+     * رقم مرجع الدفع
+     */
+    @Column(name = "payment_reference", length = 100)
+    private String paymentReference;
+    
+    /**
+     * تاريخ التسوية
+     */
+    @Column(name = "settled_at")
+    private LocalDateTime settledAt;
+    
+    /**
+     * ملاحظات التسوية
+     */
+    @Column(name = "settlement_notes", columnDefinition = "TEXT")
+    private String settlementNotes;
+
     @Column(name = "service_count")
     private Integer serviceCount;
 

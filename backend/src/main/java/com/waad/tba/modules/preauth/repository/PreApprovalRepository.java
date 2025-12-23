@@ -69,4 +69,27 @@ public interface PreApprovalRepository extends JpaRepository<PreApproval, Long> 
     );
     
     boolean existsByApprovalNumber(String approvalNumber);
+
+    /**
+     * Find pending pre-approvals for Operations Inbox
+     * Orders by creation date (oldest first - FIFO)
+     */
+    @Query("SELECT pa FROM PreApproval pa " +
+           "WHERE pa.status = 'PENDING' " +
+           "AND pa.active = true " +
+           "ORDER BY pa.createdAt ASC")
+    Page<PreApproval> findPendingPreApprovals(Pageable pageable);
+
+    /**
+     * Find pre-approvals by status with pagination
+     */
+    Page<PreApproval> findByStatus(PreApproval.ApprovalStatus status, Pageable pageable);
+
+    /**
+     * Count pending pre-approvals
+     */
+    @Query("SELECT COUNT(pa) FROM PreApproval pa " +
+           "WHERE pa.status = 'PENDING' " +
+           "AND pa.active = true")
+    long countPending();
 }

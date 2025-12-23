@@ -18,17 +18,24 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.waad.tba.common.dto.ApiResponse;
 import com.waad.tba.common.dto.PaginationResponse;
+import com.waad.tba.modules.claim.dto.ClaimApproveDto;
 import com.waad.tba.modules.claim.dto.ClaimCreateDto;
+import com.waad.tba.modules.claim.dto.ClaimRejectDto;
+import com.waad.tba.modules.claim.dto.ClaimSettleDto;
 import com.waad.tba.modules.claim.dto.ClaimUpdateDto;
 import com.waad.tba.modules.claim.dto.ClaimViewDto;
+import com.waad.tba.modules.claim.dto.CostBreakdownDto;
 import com.waad.tba.modules.claim.service.ClaimService;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/api/claims")
 @RequiredArgsConstructor
+@Tag(name = "Claims", description = "Claims Management APIs - Full Lifecycle")
 public class ClaimController {
 
     private final ClaimService claimService;
@@ -111,5 +118,141 @@ public class ClaimController {
     public ResponseEntity<ApiResponse<List<ClaimViewDto>>> getClaimsByPreApproval(@PathVariable Long preApprovalId) {
         List<ClaimViewDto> claims = claimService.getClaimsByPreApproval(preApprovalId);
         return ResponseEntity.ok(ApiResponse.success("Pre-approval claims retrieved successfully", claims));
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // MVP PHASE: Claim Lifecycle Endpoints
+    // ═══════════════════════════════════════════════════════════════════════════════
+
+    /**
+     * Submit a draft claim for review.
+     * Transitions: DRAFT → SUBMITTED
+     */
+    @PostMapping("/{id}/submit")
+    @PreAuthorize("hasAuthority('MANAGE_CLAIMS')")
+    @Operation(summary = "Submit claim for review", 
+               description = "Submit a draft claim for review. Validates required attachments.")
+    public ResponseEntity<ApiResponse<ClaimViewDto>> submitClaim(@PathVariable Long id) {
+        ClaimViewDto claim = claimService.submitClaim(id);
+        return ResponseEntity.ok(ApiResponse.success("تم تقديم المطالبة للمراجعة بنجاح", claim));
+    }
+
+    /**
+     * Approve a claim with cost calculation.
+     * Transitions: SUBMITTED/UNDER_REVIEW → APPROVED
+     * 
+     * Validates:
+     * - Coverage limits (via CoverageValidationService)
+     * - Financial snapshot equation: RequestedAmount = PatientCoPay + NetProviderAmount
+     */
+    @PostMapping("/{id}/approve")
+    @PreAuthorize("hasAuthority('APPROVE_CLAIMS')")
+    @Operation(summary = "Approve claim", 
+               description = "Approve a claim with automatic cost calculation. Validates coverage limits and calculates patient co-pay.")
+    public ResponseEntity<ApiResponse<ClaimViewDto>> approveClaim(
+            @PathVariable Long id,
+            @Valid @RequestBody ClaimApproveDto dto) {
+        ClaimViewDto claim = claimService.approveClaim(id, dto);
+        return ResponseEntity.ok(ApiResponse.success("تمت الموافقة على المطالبة بنجاح", claim));
+    }
+
+    /**
+     * Reject a claim with mandatory reason.
+     * Transitions: SUBMITTED/UNDER_REVIEW → REJECTED (terminal)
+     */
+    @PostMapping("/{id}/reject")
+    @PreAuthorize("hasAuthority('APPROVE_CLAIMS')")
+    @Operation(summary = "Reject claim", 
+               description = "Reject a claim. Rejection reason is mandatory.")
+    public ResponseEntity<ApiResponse<ClaimViewDto>> rejectClaim(
+            @PathVariable Long id,
+            @Valid @RequestBody ClaimRejectDto dto) {
+        ClaimViewDto claim = claimService.rejectClaim(id, dto);
+        return ResponseEntity.ok(ApiResponse.success("تم رفض المطالبة", claim));
+    }
+
+    /**
+     * Settle a claim (mark ready for payment).
+     * Transitions: APPROVED → SETTLED (terminal)
+     */
+    @PostMapping("/{id}/settle")
+    @PreAuthorize("hasAuthority('SETTLE_CLAIMS')")
+    @Operation(summary = "Settle claim", 
+               description = "Settle an approved claim. Requires payment reference number.")
+    public ResponseEntity<ApiResponse<ClaimViewDto>> settleClaim(
+            @PathVariable Long id,
+            @Valid @RequestBody ClaimSettleDto dto) {
+        ClaimViewDto claim = claimService.settleClaim(id, dto);
+        return ResponseEntity.ok(ApiResponse.success("تمت تسوية المطالبة بنجاح", claim));
+    }
+
+    /**
+     * Get cost breakdown for a claim (Financial Snapshot).
+     * Shows: RequestedAmount | PatientCoPay | NetProviderAmount
+     */
+    @GetMapping("/{id}/cost-breakdown")
+    @PreAuthorize("hasAuthority('VIEW_CLAIMS')")
+    @Operation(summary = "Get cost breakdown", 
+               description = "Get detailed cost breakdown including deductible, co-pay, and insurance amount.")
+    public ResponseEntity<ApiResponse<CostBreakdownDto>> getCostBreakdown(@PathVariable Long id) {
+        CostBreakdownDto breakdown = claimService.getCostBreakdownDto(id);
+        return ResponseEntity.ok(ApiResponse.success("تم استرجاع تفاصيل التكلفة", breakdown));
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // MVP PHASE: Inbox Endpoints (for Operations Staff)
+    // ═══════════════════════════════════════════════════════════════════════════════
+
+    /**
+     * Get claims pending review (Inbox for reviewers).
+     * Returns claims in SUBMITTED or UNDER_REVIEW status.
+     */
+    @GetMapping("/inbox/pending")
+    @PreAuthorize("hasAuthority('VIEW_CLAIMS')")
+    @Operation(summary = "Claims pending review", 
+               description = "Get claims awaiting review (SUBMITTED or UNDER_REVIEW status)")
+    public ResponseEntity<ApiResponse<PaginationResponse<ClaimViewDto>>> getPendingClaims(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @RequestParam(defaultValue = "asc") String sortDir) {
+        
+        Page<ClaimViewDto> claimsPage = claimService.getPendingClaims(
+                Math.max(0, page - 1), size, sortBy, sortDir);
+        
+        PaginationResponse<ClaimViewDto> response = PaginationResponse.<ClaimViewDto>builder()
+                .items(claimsPage.getContent())
+                .total(claimsPage.getTotalElements())
+                .page(page)
+                .size(size)
+                .build();
+        
+        return ResponseEntity.ok(ApiResponse.success("المطالبات المعلقة", response));
+    }
+
+    /**
+     * Get approved claims ready for settlement (Inbox for finance).
+     */
+    @GetMapping("/inbox/approved")
+    @PreAuthorize("hasAuthority('VIEW_CLAIMS')")
+    @Operation(summary = "Claims ready for settlement", 
+               description = "Get approved claims awaiting settlement (APPROVED status)")
+    public ResponseEntity<ApiResponse<PaginationResponse<ClaimViewDto>>> getApprovedClaims(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "reviewedAt") String sortBy,
+            @RequestParam(defaultValue = "asc") String sortDir) {
+        
+        Page<ClaimViewDto> claimsPage = claimService.getApprovedClaims(
+                Math.max(0, page - 1), size, sortBy, sortDir);
+        
+        PaginationResponse<ClaimViewDto> response = PaginationResponse.<ClaimViewDto>builder()
+                .items(claimsPage.getContent())
+                .total(claimsPage.getTotalElements())
+                .page(page)
+                .size(size)
+                .build();
+        
+        return ResponseEntity.ok(ApiResponse.success("المطالبات الموافق عليها", response));
     }
 }

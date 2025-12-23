@@ -14,7 +14,10 @@ import {
   Settings as SettingsIcon,
   Assessment as AssessmentIcon,
   Gavel as GavelIcon,
-  CardGiftcard as CardGiftcardIcon
+  CardGiftcard as CardGiftcardIcon,
+  Inbox as InboxIcon,
+  Payment as PaymentIcon,
+  CheckCircle as CheckCircleIcon
 } from '@mui/icons-material';
 
 // ==============================|| RBAC MENU FILTERING ||============================== //
@@ -34,16 +37,20 @@ export const filterMenuByRoles = (menuItems, userRoles = []) => {
 
   const roleRules = {
     EMPLOYER: {
-      hide: ['employers', 'providers', 'provider-contracts', 'policies', 'audit'],
+      hide: ['employers', 'providers', 'provider-contracts', 'policies', 'audit', 'claims-inbox', 'pre-approvals-inbox', 'settlement-inbox'],
       show: ['dashboard', 'members', 'claims', 'visits', 'pre-approvals', 'medical-categories', 'medical-services', 'medical-packages', 'benefit-packages', 'settings']
     },
     INSURANCE_COMPANY: {
       hide: ['employers'],
-      show: ['dashboard', 'members', 'providers', 'claims', 'visits', 'pre-approvals', 'medical-categories', 'medical-services', 'medical-packages', 'benefit-packages', 'provider-contracts', 'policies', 'audit', 'settings']
+      show: ['dashboard', 'members', 'providers', 'claims', 'visits', 'pre-approvals', 'medical-categories', 'medical-services', 'medical-packages', 'benefit-packages', 'provider-contracts', 'policies', 'audit', 'settings', 'claims-inbox', 'pre-approvals-inbox', 'settlement-inbox']
     },
     REVIEWER: {
-      hide: ['employers', 'providers', 'members', 'visits', 'provider-contracts', 'policies'],
-      show: ['dashboard', 'claims', 'pre-approvals', 'medical-categories', 'medical-services', 'medical-packages', 'benefit-packages', 'audit', 'settings']
+      hide: ['employers', 'providers', 'members', 'visits', 'provider-contracts', 'policies', 'settlement-inbox'],
+      show: ['dashboard', 'claims', 'pre-approvals', 'medical-categories', 'medical-services', 'medical-packages', 'benefit-packages', 'audit', 'settings', 'claims-inbox', 'pre-approvals-inbox']
+    },
+    FINANCE: {
+      hide: ['employers', 'providers', 'members', 'visits', 'provider-contracts', 'policies', 'claims-inbox', 'pre-approvals-inbox'],
+      show: ['dashboard', 'claims', 'settlement-inbox', 'audit', 'settings']
     }
   };
 
@@ -166,6 +173,40 @@ const menuItem = [
         icon: DescriptionIcon,
         breadcrumbs: true,
         search: 'pre-approvals authorization approval requests الموافقات المسبقة'
+      }
+    ]
+  },
+  {
+    id: 'group-operations',
+    title: 'صناديق العمليات',
+    type: 'group',
+    children: [
+      {
+        id: 'claims-inbox',
+        title: 'صندوق المطالبات',
+        type: 'item',
+        url: '/claims/inbox',
+        icon: InboxIcon,
+        breadcrumbs: true,
+        search: 'claims inbox review pending صندوق المطالبات المراجعة'
+      },
+      {
+        id: 'pre-approvals-inbox',
+        title: 'صندوق الموافقات',
+        type: 'item',
+        url: '/pre-approvals/inbox',
+        icon: CheckCircleIcon,
+        breadcrumbs: true,
+        search: 'pre-approvals inbox review pending صندوق الموافقات المسبقة'
+      },
+      {
+        id: 'settlement-inbox',
+        title: 'صندوق التسويات',
+        type: 'item',
+        url: '/claims/settlement',
+        icon: PaymentIcon,
+        breadcrumbs: true,
+        search: 'settlement inbox payment finance صندوق التسويات المالية الدفع'
       }
     ]
   },

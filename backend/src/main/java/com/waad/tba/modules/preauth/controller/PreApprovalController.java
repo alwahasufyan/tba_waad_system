@@ -238,6 +238,24 @@ public class PreApprovalController {
         return ResponseEntity.ok(ApiResponse.success("Pre-approvals retrieved", null));
     }
 
+    /**
+     * Get pending pre-approvals for Operations Inbox
+     * Returns pre-approvals with status PENDING, ordered by creation date (FIFO)
+     */
+    @GetMapping("/inbox/pending")
+    @PreAuthorize("hasAnyAuthority('APPROVE_PRE_APPROVAL', 'MEDICAL_REVIEWER', 'TPA_MANAGER', 'TPA_STAFF')")
+    @Operation(summary = "Get pending pre-approvals for inbox")
+    public ResponseEntity<ApiResponse<Page<PreApprovalResponseDto>>> getPendingForInbox(
+            Pageable pageable) {
+        
+        log.info("Fetching pending pre-approvals for inbox");
+        
+        Page<PreApproval> pendingApprovals = preApprovalService.getPendingPreApprovals(pageable);
+        Page<PreApprovalResponseDto> response = pendingApprovals.map(this::mapToDto);
+        
+        return ResponseEntity.ok(ApiResponse.success("Pending pre-approvals retrieved", response));
+    }
+
     // Helper method to map entity to DTO
     private PreApprovalResponseDto mapToDto(PreApproval entity) {
         return PreApprovalResponseDto.builder()

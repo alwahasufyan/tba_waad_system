@@ -32,6 +32,8 @@ const ClaimsList = Loadable(lazy(() => import('pages/claims/ClaimsList')));
 const ClaimCreate = Loadable(lazy(() => import('pages/claims/ClaimCreate')));
 const ClaimEdit = Loadable(lazy(() => import('pages/claims/ClaimEdit')));
 const ClaimView = Loadable(lazy(() => import('pages/claims/ClaimView')));
+const ClaimsInbox = Loadable(lazy(() => import('pages/claims/ClaimsInbox')));
+const SettlementInbox = Loadable(lazy(() => import('pages/claims/SettlementInbox')));
 
 // ==============================|| LAZY LOADING - PROVIDERS ||============================== //
 
@@ -64,6 +66,7 @@ const PreApprovalsList = Loadable(lazy(() => import('pages/pre-approvals/PreAppr
 const PreApprovalCreate = Loadable(lazy(() => import('pages/pre-approvals/PreApprovalCreate')));
 const PreApprovalEdit = Loadable(lazy(() => import('pages/pre-approvals/PreApprovalEdit')));
 const PreApprovalView = Loadable(lazy(() => import('pages/pre-approvals/PreApprovalView')));
+const PreApprovalsInbox = Loadable(lazy(() => import('pages/pre-approvals/PreApprovalsInbox')));
 
 // ==============================|| LAZY LOADING - BENEFIT PACKAGES ||============================== //
 
@@ -257,6 +260,22 @@ const MainRoutes = {
           )
         },
         {
+          path: 'inbox',
+          element: (
+            <RouteGuard allowedRoles={['ADMIN', 'REVIEWER']}>
+              <ClaimsInbox />
+            </RouteGuard>
+          )
+        },
+        {
+          path: 'settlement',
+          element: (
+            <RouteGuard allowedRoles={['ADMIN', 'FINANCE']}>
+              <SettlementInbox />
+            </RouteGuard>
+          )
+        },
+        {
           path: 'add',
           element: (
             <RouteGuard allowedRoles={['ADMIN', 'EMPLOYER']}>
@@ -390,6 +409,14 @@ const MainRoutes = {
           element: (
             <RouteGuard allowedRoles={['ADMIN', 'REVIEWER']}>
               <PreApprovalsList />
+            </RouteGuard>
+          )
+        },
+        {
+          path: 'inbox',
+          element: (
+            <RouteGuard allowedRoles={['ADMIN', 'REVIEWER']}>
+              <PreApprovalsInbox />
             </RouteGuard>
           )
         },

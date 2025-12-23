@@ -106,4 +106,42 @@ public interface ClaimRepository extends JpaRepository<Claim, Long> {
            "AND c.active = true")
     List<Claim> findByMemberIdAndStatusIn(@Param("memberId") Long memberId, 
                                           @Param("statuses") List<com.waad.tba.modules.claim.entity.ClaimStatus> statuses);
+
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // MVP PHASE: Inbox Queries
+    // ═══════════════════════════════════════════════════════════════════════════════
+
+    /**
+     * Find claims by status list with pagination (for inbox views).
+     */
+    @Query("SELECT c FROM Claim c " +
+           "LEFT JOIN FETCH c.member m " +
+           "LEFT JOIN FETCH c.insuranceCompany " +
+           "WHERE c.active = true " +
+           "AND c.status IN :statuses")
+    Page<Claim> findByStatusIn(@Param("statuses") List<com.waad.tba.modules.claim.entity.ClaimStatus> statuses, 
+                               Pageable pageable);
+
+    /**
+     * Find claims by single status with pagination.
+     */
+    @Query("SELECT c FROM Claim c " +
+           "LEFT JOIN FETCH c.member m " +
+           "LEFT JOIN FETCH c.insuranceCompany " +
+           "WHERE c.active = true " +
+           "AND c.status = :status")
+    Page<Claim> findByStatus(@Param("status") com.waad.tba.modules.claim.entity.ClaimStatus status, 
+                             Pageable pageable);
+
+    /**
+     * Count claims by status.
+     */
+    @Query("SELECT COUNT(c) FROM Claim c WHERE c.active = true AND c.status = :status")
+    long countByStatus(@Param("status") com.waad.tba.modules.claim.entity.ClaimStatus status);
+
+    /**
+     * Count claims by status list.
+     */
+    @Query("SELECT COUNT(c) FROM Claim c WHERE c.active = true AND c.status IN :statuses")
+    long countByStatusIn(@Param("statuses") List<com.waad.tba.modules.claim.entity.ClaimStatus> statuses);
 }

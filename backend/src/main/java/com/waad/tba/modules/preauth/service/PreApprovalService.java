@@ -8,6 +8,8 @@ import com.waad.tba.modules.provider.entity.Provider;
 import com.waad.tba.modules.provider.repository.ProviderRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -272,6 +274,32 @@ public class PreApprovalService {
         
         preApprovalRepository.saveAll(expired);
         log.info("Marked {} approvals as expired", expired.size());
+    }
+
+    /**
+     * Get pending pre-approvals for Operations Inbox
+     * Returns paginated list ordered by creation date (FIFO)
+     */
+    @Transactional(readOnly = true)
+    public Page<PreApproval> getPendingPreApprovals(Pageable pageable) {
+        log.info("Fetching pending pre-approvals for inbox");
+        return preApprovalRepository.findPendingPreApprovals(pageable);
+    }
+
+    /**
+     * Get pre-approvals by status with pagination
+     */
+    @Transactional(readOnly = true)
+    public Page<PreApproval> getByStatus(PreApproval.ApprovalStatus status, Pageable pageable) {
+        return preApprovalRepository.findByStatus(status, pageable);
+    }
+
+    /**
+     * Count pending pre-approvals
+     */
+    @Transactional(readOnly = true)
+    public long countPending() {
+        return preApprovalRepository.countPending();
     }
 
     /**

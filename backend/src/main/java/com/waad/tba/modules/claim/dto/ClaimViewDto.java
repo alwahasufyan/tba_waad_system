@@ -48,10 +48,49 @@ public class ClaimViewDto {
     private String diagnosis;
     private LocalDate visitDate;
     
-    // Financial information
+    // Financial information (Basic)
     private BigDecimal requestedAmount;
     private BigDecimal approvedAmount;
     private BigDecimal differenceAmount;
+    
+    // ========== Financial Snapshot (MVP Phase) ==========
+    
+    /**
+     * نسبة تحمل المريض (مجموع الخصومات + Co-Pay)
+     */
+    private BigDecimal patientCoPay;
+    
+    /**
+     * المبلغ الصافي المستحق لمقدم الخدمة
+     */
+    private BigDecimal netProviderAmount;
+    
+    /**
+     * نسبة المشاركة في التكلفة (%)
+     */
+    private BigDecimal coPayPercent;
+    
+    /**
+     * الخصم المُطبق (Deductible)
+     */
+    private BigDecimal deductibleApplied;
+    
+    // ========== Settlement Fields (MVP Phase) ==========
+    
+    /**
+     * رقم مرجع الدفع
+     */
+    private String paymentReference;
+    
+    /**
+     * تاريخ التسوية
+     */
+    private LocalDateTime settledAt;
+    
+    /**
+     * ملاحظات التسوية
+     */
+    private String settlementNotes;
     
     // Status and review
     private ClaimStatus status;
@@ -73,4 +112,33 @@ public class ClaimViewDto {
     private LocalDateTime updatedAt;
     private String createdBy;
     private String updatedBy;
+    
+    // ========== Helper Methods ==========
+    
+    /**
+     * Get financial summary in Arabic
+     */
+    public String getFinancialSummaryArabic() {
+        if (requestedAmount == null) return "";
+        
+        StringBuilder sb = new StringBuilder();
+        sb.append("💰 المطلوب: ").append(requestedAmount).append(" د.ل");
+        
+        if (patientCoPay != null) {
+            sb.append(" | 👤 تحمل المريض: ").append(patientCoPay).append(" د.ل");
+        }
+        
+        if (netProviderAmount != null) {
+            sb.append(" | 🏥 المستحق: ").append(netProviderAmount).append(" د.ل");
+        }
+        
+        return sb.toString();
+    }
+    
+    /**
+     * Check if claim has financial snapshot calculated
+     */
+    public boolean hasFinancialSnapshot() {
+        return patientCoPay != null && netProviderAmount != null;
+    }
 }

@@ -147,6 +147,15 @@ public class ClaimMapper {
                 .updatedAt(claim.getUpdatedAt())
                 .createdBy(claim.getCreatedBy())
                 .updatedBy(claim.getUpdatedBy())
+                // Financial Snapshot (MVP Phase)
+                .patientCoPay(claim.getPatientCoPay())
+                .netProviderAmount(claim.getNetProviderAmount())
+                .coPayPercent(claim.getCoPayPercent())
+                .deductibleApplied(claim.getDeductibleApplied())
+                // Settlement Fields (MVP Phase)
+                .paymentReference(claim.getPaymentReference())
+                .settledAt(claim.getSettledAt())
+                .settlementNotes(claim.getSettlementNotes())
                 .build();
 
         if (claim.getMember() != null) {
