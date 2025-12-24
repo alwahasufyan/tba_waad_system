@@ -17,7 +17,8 @@ import {
   CardGiftcard as CardGiftcardIcon,
   Inbox as InboxIcon,
   Payment as PaymentIcon,
-  CheckCircle as CheckCircleIcon
+  CheckCircle as CheckCircleIcon,
+  Policy as PolicyIcon
 } from '@mui/icons-material';
 
 // ==============================|| RBAC MENU FILTERING ||============================== //
@@ -38,18 +39,18 @@ export const filterMenuByRoles = (menuItems, userRoles = []) => {
   const roleRules = {
     EMPLOYER: {
       hide: ['employers', 'providers', 'provider-contracts', 'policies', 'audit', 'claims-inbox', 'pre-approvals-inbox', 'settlement-inbox'],
-      show: ['dashboard', 'members', 'claims', 'visits', 'pre-approvals', 'medical-categories', 'medical-services', 'medical-packages', 'benefit-packages', 'settings']
+      show: ['dashboard', 'members', 'claims', 'visits', 'pre-approvals', 'medical-categories', 'medical-services', 'medical-packages', 'benefit-packages', 'benefit-policies', 'settings']
     },
     INSURANCE_COMPANY: {
       hide: ['employers'],
-      show: ['dashboard', 'members', 'providers', 'claims', 'visits', 'pre-approvals', 'medical-categories', 'medical-services', 'medical-packages', 'benefit-packages', 'provider-contracts', 'policies', 'audit', 'settings', 'claims-inbox', 'pre-approvals-inbox', 'settlement-inbox']
+      show: ['dashboard', 'members', 'providers', 'claims', 'visits', 'pre-approvals', 'medical-categories', 'medical-services', 'medical-packages', 'benefit-packages', 'benefit-policies', 'provider-contracts', 'policies', 'audit', 'settings', 'claims-inbox', 'pre-approvals-inbox', 'settlement-inbox']
     },
     REVIEWER: {
-      hide: ['employers', 'providers', 'members', 'visits', 'provider-contracts', 'policies', 'settlement-inbox'],
+      hide: ['employers', 'providers', 'members', 'visits', 'provider-contracts', 'policies', 'settlement-inbox', 'benefit-policies'],
       show: ['dashboard', 'claims', 'pre-approvals', 'medical-categories', 'medical-services', 'medical-packages', 'benefit-packages', 'audit', 'settings', 'claims-inbox', 'pre-approvals-inbox']
     },
     FINANCE: {
-      hide: ['employers', 'providers', 'members', 'visits', 'provider-contracts', 'policies', 'claims-inbox', 'pre-approvals-inbox'],
+      hide: ['employers', 'providers', 'members', 'visits', 'provider-contracts', 'policies', 'claims-inbox', 'pre-approvals-inbox', 'benefit-policies'],
       show: ['dashboard', 'claims', 'settlement-inbox', 'audit', 'settings']
     }
   };
@@ -258,6 +259,15 @@ const menuItem = [
     title: 'العقود والوثائق',
     type: 'group',
     children: [
+      {
+        id: 'benefit-policies',
+        title: 'وثائق المنافع',
+        type: 'item',
+        url: '/benefit-policies',
+        icon: PolicyIcon,
+        breadcrumbs: true,
+        search: 'benefit policies coverage rules benefits وثائق المنافع سياسات التغطية'
+      },
       {
         id: 'provider-contracts',
         title: 'عقود مقدمي الخدمة',

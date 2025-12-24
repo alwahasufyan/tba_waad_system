@@ -76,6 +76,11 @@ const BenefitPackageCreate = Loadable(lazy(() => import('pages/benefit-packages/
 const BenefitPackageEdit = Loadable(lazy(() => import('pages/benefit-packages/BenefitPackageEdit')));
 const BenefitPackageView = Loadable(lazy(() => import('pages/benefit-packages/BenefitPackageView')));
 
+// ==============================|| LAZY LOADING - BENEFIT POLICIES ||============================== //
+
+const BenefitPoliciesList = Loadable(lazy(() => import('pages/benefit-policies/BenefitPoliciesList')));
+const BenefitPolicyView = Loadable(lazy(() => import('pages/benefit-policies/BenefitPolicyView')));
+
 // ==============================|| LAZY LOADING - INSURANCE COMPANIES (LOCKED - SINGLE TENANT) ||============================== //
 
 // All insurance company routes now redirect to locked page - single tenant mode
@@ -681,6 +686,29 @@ const MainRoutes = {
           element: (
             <RouteGuard allowedRoles={['ADMIN', 'INSURANCE_COMPANY', 'REVIEWER']}>
               <BenefitPackageView />
+            </RouteGuard>
+          )
+        }
+      ]
+    },
+
+    // Benefit Policies Module (NEW)
+    {
+      path: 'benefit-policies',
+      children: [
+        {
+          path: '',
+          element: (
+            <RouteGuard allowedRoles={['ADMIN', 'INSURANCE_COMPANY', 'EMPLOYER']}>
+              <BenefitPoliciesList />
+            </RouteGuard>
+          )
+        },
+        {
+          path: ':id',
+          element: (
+            <RouteGuard allowedRoles={['ADMIN', 'INSURANCE_COMPANY', 'EMPLOYER']}>
+              <BenefitPolicyView />
             </RouteGuard>
           )
         }
