@@ -65,10 +65,16 @@ public class BenefitPolicyController {
             @Parameter(description = "Sort field") @RequestParam(defaultValue = "createdAt") String sortBy,
             @Parameter(description = "Sort direction") @RequestParam(defaultValue = "DESC") String sortDir) {
         
+        log.info("[BENEFIT-POLICIES] GET /api/benefit-policies - page={}, size={}, sortBy={}, sortDir={}", 
+                page, size, sortBy, sortDir);
+        
         Sort sort = Sort.by(Sort.Direction.fromString(sortDir), sortBy);
         Pageable pageable = PageRequest.of(page, size, sort);
         
         Page<BenefitPolicyResponseDto> result = benefitPolicyService.findAll(pageable);
+        log.info("[BENEFIT-POLICIES] Returning {} records (totalElements: {}, totalPages: {})", 
+                result.getContent().size(), result.getTotalElements(), result.getTotalPages());
+        
         return ResponseEntity.ok(ApiResponse.success("Benefit policies retrieved", result));
     }
 

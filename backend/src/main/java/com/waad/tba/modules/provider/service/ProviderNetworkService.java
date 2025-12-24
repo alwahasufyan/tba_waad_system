@@ -9,9 +9,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.waad.tba.common.enums.NetworkType;
 import com.waad.tba.modules.provider.entity.Provider;
-import com.waad.tba.modules.provider.entity.ProviderContract;
-import com.waad.tba.modules.provider.repository.ProviderContractRepository;
 import com.waad.tba.modules.provider.repository.ProviderRepository;
+import com.waad.tba.modules.providercontract.entity.ProviderContract;
+import com.waad.tba.modules.providercontract.repository.ProviderContractRepository;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -101,7 +101,7 @@ public class ProviderNetworkService {
             return false;
         }
         
-        var contracts = providerContractRepository.findByProviderId(providerId);
+        var contracts = providerContractRepository.findByProviderIdAndActiveTrue(providerId);
         LocalDate today = LocalDate.now();
         
         return contracts.stream().anyMatch(contract -> 
@@ -121,12 +121,12 @@ public class ProviderNetworkService {
             return BigDecimal.ZERO;
         }
         
-        var contracts = providerContractRepository.findByProviderId(providerId);
+        var contracts = providerContractRepository.findByProviderIdAndActiveTrue(providerId);
         LocalDate today = LocalDate.now();
         
         return contracts.stream()
             .filter(c -> c.getActive() && isContractDateValid(c, today))
-            .map(ProviderContract::getDiscountRate)
+            .map(ProviderContract::getDiscountPercent)
             .filter(rate -> rate != null)
             .max(BigDecimal::compareTo)
             .orElse(BigDecimal.ZERO);

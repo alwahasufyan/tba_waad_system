@@ -1,5 +1,6 @@
 package com.waad.tba.modules.provider.entity;
 
+import com.waad.tba.modules.providercontract.entity.ProviderContract;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

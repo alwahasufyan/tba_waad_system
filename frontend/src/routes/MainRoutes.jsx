@@ -46,6 +46,7 @@ const ProviderView = Loadable(lazy(() => import('pages/providers/ProviderView'))
 // ==============================|| LAZY LOADING - PROVIDER CONTRACTS ||============================== //
 
 const ProviderContractsList = Loadable(lazy(() => import('pages/provider-contracts')));
+const ProviderContractView = Loadable(lazy(() => import('pages/provider-contracts/ProviderContractView')));
 
 // ==============================|| LAZY LOADING - VISITS ||============================== //
 
@@ -362,11 +363,24 @@ const MainRoutes = {
     // Provider Contracts Module
     {
       path: 'provider-contracts',
-      element: (
-        <RouteGuard allowedRoles={['ADMIN', 'INSURANCE_COMPANY', 'REVIEWER']}>
-          <ProviderContractsList />
-        </RouteGuard>
-      )
+      children: [
+        {
+          path: '',
+          element: (
+            <RouteGuard allowedRoles={['ADMIN', 'INSURANCE_COMPANY', 'REVIEWER']}>
+              <ProviderContractsList />
+            </RouteGuard>
+          )
+        },
+        {
+          path: ':id',
+          element: (
+            <RouteGuard allowedRoles={['ADMIN', 'INSURANCE_COMPANY', 'REVIEWER']}>
+              <ProviderContractView />
+            </RouteGuard>
+          )
+        }
+      ]
     },
 
     // Visits Module

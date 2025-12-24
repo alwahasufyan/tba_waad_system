@@ -44,8 +44,11 @@ public class BenefitPolicyService {
     @Transactional(readOnly = true)
     public Page<BenefitPolicyResponseDto> findAll(Pageable pageable) {
         log.debug("Finding all benefit policies, page: {}", pageable.getPageNumber());
-        return benefitPolicyRepository.findAll(pageable)
+        Page<BenefitPolicyResponseDto> result = benefitPolicyRepository.findByActiveTrue(pageable)
                 .map(BenefitPolicyResponseDto::fromEntity);
+        log.info("[BENEFIT-POLICIES] Retrieved {} records (total: {})", 
+                result.getContent().size(), result.getTotalElements());
+        return result;
     }
 
     /**
