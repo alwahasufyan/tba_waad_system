@@ -50,6 +50,8 @@ public class BenefitPolicyResponseDto {
 
     // Stats
     private Integer coveredMembersCount;
+    private Integer rulesCount;
+    private Integer activeRulesCount;
 
     // Metadata
     private String notes;
@@ -92,6 +94,8 @@ public class BenefitPolicyResponseDto {
                 .statusDisplay(getStatusDisplay(entity.getStatus()))
                 .effective(entity.isEffective())
                 .coveredMembersCount(entity.getCoveredMembersCount())
+                .rulesCount(entity.getRules() != null ? entity.getRules().size() : 0)
+                .activeRulesCount(entity.getRules() != null ? entity.getActiveRulesCount() : 0)
                 .notes(entity.getNotes())
                 .active(entity.isActive())
                 .createdAt(entity.getCreatedAt())

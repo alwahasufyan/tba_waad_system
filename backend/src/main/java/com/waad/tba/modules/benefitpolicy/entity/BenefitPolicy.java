@@ -14,6 +14,8 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Benefit Policy Entity - represents a medical benefits document.
@@ -165,6 +167,18 @@ public class BenefitPolicy {
     private LocalDateTime updatedAt;
 
     // ═══════════════════════════════════════════════════════════════════════════
+    // RELATIONSHIPS
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    /**
+     * Coverage rules defined under this policy.
+     * Each rule specifies coverage for a category or specific service.
+     */
+    @OneToMany(mappedBy = "benefitPolicy", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
+    @Builder.Default
+    private List<BenefitPolicyRule> rules = new ArrayList<>();
+
+    // ═══════════════════════════════════════════════════════════════════════════
     // BUSINESS METHODS
     // ═══════════════════════════════════════════════════════════════════════════
 
@@ -215,6 +229,40 @@ public class BenefitPolicy {
      */
     public void suspend() {
         this.status = BenefitPolicyStatus.SUSPENDED;
+    }
+
+    /**
+     * Add a rule to this policy
+     */
+    public void addRule(BenefitPolicyRule rule) {
+        rules.add(rule);
+        rule.setBenefitPolicy(this);
+    }
+
+    /**
+     * Remove a rule from this policy
+     */
+    public void removeRule(BenefitPolicyRule rule) {
+        rules.remove(rule);
+        rule.setBenefitPolicy(null);
+    }
+
+    /**
+     * Get active rules only
+     */
+    public List<BenefitPolicyRule> getActiveRules() {
+        return rules.stream()
+                .filter(BenefitPolicyRule::isActive)
+                .toList();
+    }
+
+    /**
+     * Get count of active rules
+     */
+    public int getActiveRulesCount() {
+        return (int) rules.stream()
+                .filter(BenefitPolicyRule::isActive)
+                .count();
     }
 
     // ═══════════════════════════════════════════════════════════════════════════
