@@ -92,10 +92,12 @@ export const filterMenuByRoles = (menuItems, userRoles = []) => {
 
 // ==============================|| MENU ITEMS ||============================== //
 
+
+// ========== القائمة الجانبية النهائية حسب متطلبات TPA ========== //
 const menuItem = [
   {
-    id: 'group-main',
-    title: 'الرئيسية',
+    id: 'group-dashboard',
+    title: 'لوحة التحكم',
     type: 'group',
     children: [
       {
@@ -104,212 +106,173 @@ const menuItem = [
         type: 'item',
         url: '/dashboard',
         icon: DashboardIcon,
-        breadcrumbs: false,
-        search: 'dashboard home main لوحة التحكم الرئيسية'
-      }
-    ]
-  },
-  {
-    id: 'group-management',
-    title: 'إدارة البيانات',
-    type: 'group',
-    children: [
-      {
-        id: 'members',
-        title: 'المؤمَّن عليهم',
-        type: 'item',
-        url: '/members',
-        icon: PeopleAltIcon,
-        breadcrumbs: true,
-        search: 'members patients insurance holders beneficiaries المؤمَّن عليهم المشتركين الأعضاء'
-      },
-      {
-        id: 'employers',
-        title: 'جهات التعاقد',
-        type: 'item',
-        url: '/employers',
-        icon: BusinessIcon,
-        breadcrumbs: true,
-        search: 'employers companies organizations clients جهات التعاقد جهات العمل الشركات'
-      },
-      {
-        id: 'providers',
-        title: 'مقدمو الخدمة الصحية',
-        type: 'item',
-        url: '/providers',
-        icon: LocalHospitalIcon,
-        breadcrumbs: true,
-        search: 'providers hospitals clinics healthcare facilities مقدمو الخدمة الصحية مقدمي الخدمة المستشفيات'
-      }
-    ]
-  },
-  {
-    id: 'group-claims',
-    title: 'إدارة المطالبات',
-    type: 'group',
-    children: [
-      {
-        id: 'claims',
-        title: 'المطالبات',
-        type: 'item',
-        url: '/claims',
-        icon: ReceiptIcon,
-        breadcrumbs: true,
-        search: 'claims requests reimbursement billing المطالبات الفواتير'
-      },
-      {
-        id: 'visits',
-        title: 'الزيارات الطبية',
-        type: 'item',
-        url: '/visits',
-        icon: LocalHospitalIcon,
-        breadcrumbs: true,
-        search: 'visits appointments consultations الزيارات الطبية المواعيد'
-      },
-      {
-        id: 'pre-approvals',
-        title: 'الموافقات المسبقة',
-        type: 'item',
-        url: '/pre-approvals',
-        icon: DescriptionIcon,
-        breadcrumbs: true,
-        search: 'pre-approvals authorization approval requests الموافقات المسبقة'
-      }
-    ]
-  },
-  {
-    id: 'group-operations',
-    title: 'صناديق العمليات',
-    type: 'group',
-    children: [
-      {
-        id: 'claims-inbox',
-        title: 'صندوق المطالبات',
-        type: 'item',
-        url: '/claims/inbox',
-        icon: InboxIcon,
-        breadcrumbs: true,
-        search: 'claims inbox review pending صندوق المطالبات المراجعة'
-      },
-      {
-        id: 'pre-approvals-inbox',
-        title: 'صندوق الموافقات',
-        type: 'item',
-        url: '/pre-approvals/inbox',
-        icon: CheckCircleIcon,
-        breadcrumbs: true,
-        search: 'pre-approvals inbox review pending صندوق الموافقات المسبقة'
-      },
-      {
-        id: 'settlement-inbox',
-        title: 'صندوق التسويات',
-        type: 'item',
-        url: '/claims/settlement',
-        icon: PaymentIcon,
-        breadcrumbs: true,
-        search: 'settlement inbox payment finance صندوق التسويات المالية الدفع'
-      }
-    ]
-  },
-  {
-    id: 'group-medical',
-    title: 'الإدارة الطبية',
-    type: 'group',
-    children: [
-      {
-        id: 'medical-categories',
-        title: 'التصنيفات الطبية',
-        type: 'item',
-        url: '/medical-categories',
-        icon: CategoryIcon,
-        breadcrumbs: true,
-        search: 'medical categories services types التصنيفات الطبية'
-      },
-      {
-        id: 'medical-services',
-        title: 'الخدمات الطبية',
-        type: 'item',
-        url: '/medical-services',
-        icon: MedicalServicesIcon,
-        breadcrumbs: true,
-        search: 'medical services procedures treatments الخدمات الطبية'
-      },
-      {
-        id: 'medical-packages',
-        title: 'الباقات الطبية',
-        type: 'item',
-        url: '/medical-packages',
-        icon: InventoryIcon,
-        breadcrumbs: true,
-        search: 'medical packages bundles plans الباقات الطبية'
-      },
-      {
-        id: 'benefit-packages',
-        title: 'باقات المنافع',
-        type: 'item',
-        url: '/benefit-packages',
-        icon: CardGiftcardIcon,
-        breadcrumbs: true,
-        search: 'benefit packages insurance coverage plans باقات المنافع التغطية'
+        breadcrumbs: false
       }
     ]
   },
   {
     id: 'group-contracts',
-    title: 'العقود والوثائق',
+    title: 'الجهات والعقود',
     type: 'group',
     children: [
+      {
+        id: 'employers',
+        title: 'جهات العمل',
+        type: 'item',
+        url: '/employers',
+        icon: BusinessIcon
+      },
+      {
+        id: 'insurance-companies',
+        title: 'شركات التأمين',
+        type: 'item',
+        url: '/insurance-companies',
+        icon: BusinessIcon
+      },
       {
         id: 'benefit-policies',
         title: 'وثائق المنافع',
         type: 'item',
         url: '/benefit-policies',
         icon: PolicyIcon,
-        breadcrumbs: true,
-        search: 'benefit policies coverage rules benefits وثائق المنافع سياسات التغطية'
+        permission: ['benefit_policies.view']
       },
       {
         id: 'provider-contracts',
         title: 'عقود مقدمي الخدمة',
         type: 'item',
         url: '/provider-contracts',
-        icon: BusinessCenterIcon,
-        breadcrumbs: true,
-        search: 'provider contracts agreements partnerships عقود مقدمي الخدمة'
-      },
-      {
-        id: 'policies',
-        title: 'وثائق التأمين',
-        type: 'item',
-        url: '/policies',
-        icon: GavelIcon,
-        breadcrumbs: true,
-        search: 'policies insurance coverage plans وثائق التأمين البوالص'
+        icon: BusinessCenterIcon
       }
     ]
   },
   {
-    id: 'group-settings',
-    title: 'الإعدادات',
+    id: 'group-medical-network',
+    title: 'الشبكة الطبية',
     type: 'group',
     children: [
       {
-        id: 'settings',
-        title: 'إعدادات النظام',
+        id: 'providers',
+        title: 'مقدمو الخدمة',
         type: 'item',
-        url: '/settings',
-        icon: SettingsIcon,
-        breadcrumbs: true,
-        search: 'settings configuration system إعدادات النظام'
+        url: '/providers',
+        icon: LocalHospitalIcon
+      },
+      {
+        id: 'medical-categories',
+        title: 'تصنيفات الخدمات الطبية',
+        type: 'item',
+        url: '/medical-categories',
+        icon: CategoryIcon
+      },
+      {
+        id: 'medical-services',
+        title: 'الخدمات الطبية',
+        type: 'item',
+        url: '/medical-services',
+        icon: MedicalServicesIcon
+      },
+      {
+        id: 'medical-packages',
+        title: 'حزم الخدمات الطبية',
+        type: 'item',
+        url: '/medical-packages',
+        icon: InventoryIcon
+      }
+    ]
+  },
+  {
+    id: 'group-members',
+    title: 'الأعضاء والمستفيدون',
+    type: 'group',
+    children: [
+      {
+        id: 'members',
+        title: 'المؤمن عليهم',
+        type: 'item',
+        url: '/members',
+        icon: PeopleAltIcon
+      }
+      // أفراد العائلة يظهرون داخل صفحة العضو فقط
+    ]
+  },
+  {
+    id: 'group-medical-ops',
+    title: 'التشغيل الطبي',
+    type: 'group',
+    children: [
+      {
+        id: 'pre-approvals',
+        title: 'الموافقات المسبقة',
+        type: 'item',
+        url: '/pre-approvals',
+        icon: DescriptionIcon
+      },
+      {
+        id: 'visits',
+        title: 'الزيارات الطبية',
+        type: 'item',
+        url: '/visits',
+        icon: LocalHospitalIcon
+      },
+      {
+        id: 'claims',
+        title: 'المطالبات',
+        type: 'item',
+        url: '/claims',
+        icon: ReceiptIcon
+      }
+    ]
+  },
+  {
+    id: 'group-reports',
+    title: 'التقارير والتدقيق',
+    type: 'group',
+    children: [
+      {
+        id: 'reports',
+        title: 'التقارير',
+        type: 'item',
+        url: '/reports',
+        icon: AssessmentIcon
       },
       {
         id: 'audit',
         title: 'سجل التدقيق',
         type: 'item',
         url: '/audit',
-        icon: AssessmentIcon,
-        breadcrumbs: true,
-        search: 'audit log history سجل التدقيق'
+        icon: AssessmentIcon
+      }
+    ]
+  },
+  {
+    id: 'group-admin',
+    title: 'إدارة النظام',
+    type: 'group',
+    children: [
+      {
+        id: 'admin-users',
+        title: 'المستخدمون',
+        type: 'item',
+        url: '/admin/users',
+        icon: PeopleAltIcon,
+        permission: ['admin.users.view']
+      },
+      {
+        id: 'rbac',
+        title: 'الصلاحيات',
+        type: 'item',
+        url: '/rbac',
+        icon: AssignmentIcon,
+        permission: ['rbac.view']
+      },
+      {
+        id: 'settings',
+        title: 'إعدادات النظام',
+        type: 'item',
+        url: '/settings',
+        icon: SettingsIcon,
+        permission: ['settings.view']
       }
     ]
   }
