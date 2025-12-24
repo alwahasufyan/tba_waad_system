@@ -14,6 +14,8 @@ import {
   Divider,
   Grid,
   Stack,
+  Tab,
+  Tabs,
   Typography
 } from '@mui/material';
 import {
@@ -28,7 +30,9 @@ import {
   CalendarToday as CalendarIcon,
   AttachMoney as MoneyIcon,
   Percent as PercentIcon,
-  Code as CodeIcon
+  Code as CodeIcon,
+  Info as InfoIcon,
+  Rule as RuleIcon
 } from '@mui/icons-material';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
@@ -44,6 +48,8 @@ import {
   cancelBenefitPolicy,
   deleteBenefitPolicy
 } from 'services/api/benefit-policies.service';
+
+import BenefitPolicyRulesTab from './BenefitPolicyRulesTab';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // STATUS CONFIGURATION
@@ -170,6 +176,7 @@ const ConfirmDialog = ({ open, title, message, onConfirm, onCancel, loading, con
  * 
  * Features:
  * - Display policy header details (Odoo-like design)
+ * - Tabs: Overview | Rules
  * - Lifecycle actions: Activate, Suspend, Cancel, Delete
  * - RBAC permission checks
  * 
@@ -180,6 +187,9 @@ const BenefitPolicyView = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { enqueueSnackbar } = useSnackbar();
+
+  // Tab state
+  const [activeTab, setActiveTab] = useState(0);
 
   // Dialog states
   const [dialogState, setDialogState] = useState({
@@ -318,6 +328,11 @@ const BenefitPolicyView = () => {
       'هل أنت متأكد من حذف هذه الوثيقة؟ سيتم حذفها بشكل نهائي.'
     );
   };
+
+  // Tab change handler
+  const handleTabChange = useCallback((event, newValue) => {
+    setActiveTab(newValue);
+  }, []);
 
   // ═══════════════════════════════════════════════════════════════════════════
   // RENDER STATES
@@ -472,17 +487,40 @@ const BenefitPolicyView = () => {
         }
       />
 
-      {/* Policy Header Card - Odoo Style */}
-      <Grid container spacing={3}>
-        {/* Basic Information */}
-        <Grid item xs={12} md={6}>
-          <MainCard 
-            title="معلومات أساسية" 
-            secondary={<StatusChip status={policy?.status} />}
-          >
-            <DetailRow 
-              label="اسم الوثيقة" 
-              value={policy?.name} 
+      {/* Tabs Navigation */}
+      <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
+        <Tabs 
+          value={activeTab} 
+          onChange={handleTabChange}
+          textColor="primary"
+          indicatorColor="primary"
+        >
+          <Tab 
+            icon={<InfoIcon />} 
+            iconPosition="start" 
+            label="نظرة عامة" 
+          />
+          <Tab 
+            icon={<RuleIcon />} 
+            iconPosition="start" 
+            label={`قواعد التغطية (${policy?.rulesCount || 0})`}
+          />
+        </Tabs>
+      </Box>
+
+      {/* Tab Content */}
+      {activeTab === 0 && (
+        /* Overview Tab - Policy Header Card - Odoo Style */
+        <Grid container spacing={3}>
+          {/* Basic Information */}
+          <Grid item xs={12} md={6}>
+            <MainCard 
+              title="معلومات أساسية" 
+              secondary={<StatusChip status={policy?.status} />}
+            >
+              <DetailRow 
+                label="اسم الوثيقة" 
+                value={policy?.name} 
               icon={PolicyIcon} 
             />
             <DetailRow 
@@ -575,6 +613,15 @@ const BenefitPolicyView = () => {
           </MainCard>
         </Grid>
       </Grid>
+      )}
+
+      {/* Rules Tab */}
+      {activeTab === 1 && (
+        <BenefitPolicyRulesTab 
+          policyId={id} 
+          policyStatus={policy?.status} 
+        />
+      )}
 
       {/* Confirmation Dialog */}
       <ConfirmDialog
