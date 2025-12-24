@@ -41,7 +41,8 @@ export default function Breadcrumbs({
 }) {
   const theme = useTheme();
   const location = useLocation();
-  const { sidebarItems } = useRBACSidebar();
+  // Phase B2: Use dynamic sidebar groups from useRBACSidebar
+  const { sidebarGroups } = useRBACSidebar();
 
   const [main, setMain] = useState();
   const [item, setItem] = useState();
@@ -62,8 +63,9 @@ export default function Breadcrumbs({
   }
 
   useEffect(() => {
-    // Phase B2: Use dynamic sidebar items from useRBACSidebar
-    const navigation = { items: [{ type: 'group', children: sidebarItems }] };
+    // Phase B2: Use grouped sidebar structure from useRBACSidebar
+    // sidebarGroups is an array of groups, each with children
+    const navigation = { items: sidebarGroups || [] };
     
     navigation?.items?.map((menu) => {
       if (menu.type && menu.type === 'group') {
@@ -76,7 +78,7 @@ export default function Breadcrumbs({
       }
       return false;
     });
-  }, [sidebarItems, customLocation]);
+  }, [sidebarGroups, customLocation]);
 
   // set active item state
   const getCollapse = (menu) => {

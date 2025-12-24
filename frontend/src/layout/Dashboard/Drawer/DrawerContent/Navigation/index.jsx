@@ -36,8 +36,8 @@ export default function Navigation() {
   const drawerOpen = menuMaster.isDashboardDrawerOpened;
   const downLG = useMediaQuery((theme) => theme.breakpoints.down('lg'));
 
-  // Phase B2: Use dynamic RBAC sidebar
-  const { sidebarItems, loading } = useRBACSidebar();
+  // Phase B2: Use dynamic RBAC sidebar with GROUPED structure
+  const { sidebarGroups, loading } = useRBACSidebar();
   
   // Phase D1.5: Use translation hook
   const { t } = useLocale();
@@ -48,30 +48,17 @@ export default function Navigation() {
   const [menuItems, setMenuItems] = useState({ items: [] });
 
   useLayoutEffect(() => {
-    if (!loading && sidebarItems.length > 0) {
-      // Convert flat sidebarItems to menu structure
-      // Translate labels using the t() function
+    if (!loading && sidebarGroups && sidebarGroups.length > 0) {
+      // Use the grouped structure directly from useRBACSidebar
+      // Groups already have: id, title, type: 'group', children
+      // Children have: id, title, type: 'item', url, icon
       const menuStructure = {
-        items: [
-          {
-            id: 'main-group',
-            type: 'group',
-            title: '', // No group title - flat menu
-            children: sidebarItems.map(item => ({
-              id: item.id,
-              title: t(item.translationKey), // Translate the label
-              type: 'item',
-              url: item.path,
-              icon: item.icon,
-              breadcrumbs: false
-            }))
-          }
-        ]
+        items: sidebarGroups
       };
       
       setMenuItems(menuStructure);
     }
-  }, [loading, sidebarItems, t]);
+  }, [loading, sidebarGroups, t]);
 
   const isHorizontal = state.menuOrientation === MenuOrientation.HORIZONTAL && !downLG;
 

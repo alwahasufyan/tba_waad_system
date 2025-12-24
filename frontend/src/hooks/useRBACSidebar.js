@@ -18,7 +18,13 @@ import {
   Shield,
   ViewModule,
   ToggleOn,
-  Assignment
+  Assignment,
+  Policy,
+  BusinessCenter,
+  Assessment,
+  Inventory,
+  Handshake,
+  FactCheck
 } from '@mui/icons-material';
 import { useRBAC } from 'api/rbac';
 import axios from 'utils/axios';
@@ -26,7 +32,19 @@ import axios from 'utils/axios';
 /**
  * useRBACSidebar Hook
  * Phase B2 - Dynamic Role-Based Sidebar with Feature Toggles
- *
+ * 
+ * ====================================================
+ * REORGANIZED SIDEBAR STRUCTURE (TPA Enterprise Standard)
+ * ====================================================
+ * 
+ * 1️⃣ لوحة التحكم (Dashboard)
+ * 2️⃣ الجهات والعقود (Entities & Contracts)
+ * 3️⃣ الشبكة الطبية (Medical Network)
+ * 4️⃣ الأعضاء والمستفيدون (Members & Beneficiaries)
+ * 5️⃣ التشغيل الطبي (Medical Operations)
+ * 6️⃣ التقارير والتدقيق (Reports & Audit)
+ * 7️⃣ إدارة النظام (System Administration)
+ * 
  * Returns sidebar menu items based on:
  * 1. User role (SUPER_ADMIN, INSURANCE_ADMIN, EMPLOYER_ADMIN, PROVIDER, USER)
  * 2. RBAC permissions
@@ -74,154 +92,16 @@ const useRBACSidebar = () => {
     fetchFeatureToggles();
   }, [user, hasRole]);
 
-  const sidebarItems = useMemo(() => {
+  // ====================================================
+  // GROUPED MENU STRUCTURE - TPA Enterprise Standard
+  // ====================================================
+  const sidebarGroups = useMemo(() => {
     if (!user || !roles || roles.length === 0) {
       return [];
     }
 
-    // Define all possible menu items - using translation keys from ar.json/en.json
-    const allItems = [
-      {
-        id: 'dashboard',
-        label: 'nav.dashboard',
-        icon: Dashboard,
-        path: '/dashboard',
-        roles: ['SUPER_ADMIN', 'INSURANCE_ADMIN'],
-        permissions: []
-      },
-      {
-        id: 'members',
-        label: 'nav.members',
-        icon: People,
-        path: '/members',
-        roles: ['SUPER_ADMIN', 'INSURANCE_ADMIN', 'EMPLOYER_ADMIN'],
-        permissions: ['MANAGE_MEMBERS', 'VIEW_MEMBERS']
-      },
-      {
-        id: 'employers',
-        label: 'nav.employers',
-        icon: Business,
-        path: '/employers',
-        roles: ['SUPER_ADMIN', 'INSURANCE_ADMIN'],
-        permissions: ['MANAGE_EMPLOYERS', 'VIEW_EMPLOYERS']
-      },
-      {
-        id: 'claims',
-        label: 'nav.claims',
-        icon: Receipt,
-        path: '/claims',
-        roles: ['SUPER_ADMIN', 'INSURANCE_ADMIN', 'EMPLOYER_ADMIN', 'PROVIDER'],
-        permissions: ['VIEW_CLAIMS', 'MANAGE_CLAIMS'],
-        featureToggle: 'canViewClaims' // For EMPLOYER_ADMIN only
-      },
-      {
-        id: 'visits',
-        label: 'nav.visits',
-        icon: LocalHospital,
-        path: '/visits',
-        roles: ['SUPER_ADMIN', 'INSURANCE_ADMIN', 'EMPLOYER_ADMIN', 'PROVIDER'],
-        permissions: ['VIEW_VISITS', 'MANAGE_VISITS'],
-        featureToggle: 'canViewVisits' // For EMPLOYER_ADMIN only
-      },
-      {
-        id: 'medical-services',
-        label: 'nav.medical-services',
-        icon: MedicalServices,
-        path: '/medical-services',
-        roles: ['SUPER_ADMIN', 'INSURANCE_ADMIN'],
-        permissions: ['MANAGE_MEDICAL_SERVICES']
-      },
-      {
-        id: 'medical-categories',
-        label: 'nav.medical-categories',
-        icon: Category,
-        path: '/medical-categories',
-        roles: ['SUPER_ADMIN', 'INSURANCE_ADMIN'],
-        permissions: ['MANAGE_MEDICAL_CATEGORIES']
-      },
-      {
-        id: 'medical-packages',
-        label: 'nav.medical-packages',
-        icon: LocalOffer,
-        path: '/medical-packages',
-        roles: ['SUPER_ADMIN', 'INSURANCE_ADMIN'],
-        permissions: ['MANAGE_MEDICAL_PACKAGES']
-      },
-      {
-        id: 'providers',
-        label: 'nav.providers',
-        icon: AssignmentInd,
-        path: '/providers',
-        roles: ['SUPER_ADMIN', 'INSURANCE_ADMIN'],
-        permissions: ['MANAGE_PROVIDERS', 'VIEW_PROVIDERS']
-      },
-      {
-        id: 'benefit-packages',
-        label: 'nav.benefit-packages',
-        icon: LocalOffer,
-        path: '/benefit-packages',
-        roles: ['SUPER_ADMIN', 'INSURANCE_ADMIN'],
-        permissions: ['MANAGE_BENEFIT_PACKAGES']
-      },
-      {
-        id: 'pre-approvals',
-        label: 'nav.pre-approvals',
-        icon: Assignment,
-        path: '/pre-approvals',
-        roles: ['SUPER_ADMIN', 'INSURANCE_ADMIN', 'PROVIDER'],
-        permissions: ['VIEW_PRE_APPROVALS', 'MANAGE_PRE_APPROVALS']
-      },
-      {
-        id: 'policies',
-        label: 'nav.policies',
-        icon: Description,
-        path: '/policies',
-        roles: ['SUPER_ADMIN', 'INSURANCE_ADMIN'],
-        permissions: ['MANAGE_POLICIES']
-      },
-      // Insurance Companies removed - Single Tenant Lock (Phase D0)
-      // System operates with fixed company: "الواحة للتأمين"
-      // Access only via system settings, not as CRUD module
-      {
-        id: 'rbac',
-        label: 'nav.rbac',
-        icon: Security,
-        path: '/rbac',
-        roles: ['SUPER_ADMIN'],
-        permissions: []
-      },
-      {
-        id: 'settings',
-        label: 'nav.settings',
-        icon: Settings,
-        path: '/settings',
-        roles: ['SUPER_ADMIN', 'INSURANCE_ADMIN'],
-        permissions: []
-      },
-      {
-        id: 'audit',
-        label: 'nav.audit',
-        icon: Timeline,
-        path: '/audit',
-        roles: ['SUPER_ADMIN', 'INSURANCE_ADMIN'],
-        permissions: []
-      }
-      // ==================== SYSTEM ADMINISTRATION - DISABLED ====================
-      // System Admin UI has been removed from frontend
-      // {
-      //   id: 'system-admin',
-      //   label: 'nav.system-admin',
-      //   icon: AdminPanelSettings,
-      //   path: '/system-admin',
-      //   roles: ['SUPER_ADMIN'],
-      //   permissions: [],
-      //   isGroup: true,
-      //   children: [...]
-      // }
-    ];
-
-    // Filter items based on role, permissions, and feature toggles
-    const filteredItems = allItems.filter((item) => {
+    // Helper function to check if item should be visible
+    const isItemVisible = (item) => {
       // SUPER_ADMIN bypasses ALL checks - sees everything
       if (roles.includes('SUPER_ADMIN')) return true;
       
@@ -230,7 +110,8 @@ const useRBACSidebar = () => {
       if (!hasRoleAccess) return false;
 
       // Check permissions (if any permission matches OR no permissions required)
-      const hasPermissionAccess = item.permissions.length === 0 || item.permissions.some((perm) => permissions.includes(perm));
+      const hasPermissionAccess = item.permissions.length === 0 || 
+        item.permissions.some((perm) => permissions.includes(perm));
 
       if (!hasPermissionAccess) return false;
 
@@ -246,19 +127,302 @@ const useRBACSidebar = () => {
       }
 
       return true;
-    });
+    };
 
-    return filteredItems.map((item) => ({
-      id: item.id,
-      translationKey: item.label,
-      icon: item.icon,
-      path: item.path,
-      visible: true
-    }));
+    // ========================================
+    // DEFINE GROUPED MENU STRUCTURE
+    // ========================================
+    const menuGroups = [
+      // ==========================================
+      // 1️⃣ لوحة التحكم (Dashboard)
+      // ==========================================
+      {
+        id: 'group-dashboard',
+        title: 'لوحة التحكم',
+        type: 'group',
+        children: [
+          {
+            id: 'dashboard',
+            title: 'لوحة التحكم',
+            type: 'item',
+            url: '/dashboard',
+            icon: Dashboard,
+            breadcrumbs: false,
+            roles: ['SUPER_ADMIN', 'INSURANCE_ADMIN', 'EMPLOYER_ADMIN', 'PROVIDER'],
+            permissions: []
+          }
+        ]
+      },
+
+      // ==========================================
+      // 2️⃣ الجهات والعقود (Entities & Contracts)
+      // ==========================================
+      {
+        id: 'group-contracts',
+        title: 'الجهات والعقود',
+        type: 'group',
+        children: [
+          {
+            id: 'employers',
+            title: 'جهات العمل',
+            type: 'item',
+            url: '/employers',
+            icon: Business,
+            roles: ['SUPER_ADMIN', 'INSURANCE_ADMIN'],
+            permissions: ['MANAGE_EMPLOYERS', 'VIEW_EMPLOYERS']
+          },
+          {
+            id: 'insurance-companies',
+            title: 'شركات التأمين',
+            type: 'item',
+            url: '/insurance-companies',
+            icon: BusinessCenter,
+            roles: ['SUPER_ADMIN', 'INSURANCE_ADMIN'],
+            permissions: []
+          },
+          {
+            id: 'benefit-policies',
+            title: 'وثائق المنافع',
+            type: 'item',
+            url: '/benefit-policies',
+            icon: Policy,
+            permission: ['benefit_policies.view'],
+            roles: ['SUPER_ADMIN', 'INSURANCE_ADMIN', 'EMPLOYER_ADMIN'],
+            permissions: ['VIEW_BENEFIT_POLICIES', 'MANAGE_BENEFIT_POLICIES']
+          },
+          {
+            id: 'provider-contracts',
+            title: 'عقود مقدمي الخدمة',
+            type: 'item',
+            url: '/provider-contracts',
+            icon: Handshake,
+            roles: ['SUPER_ADMIN', 'INSURANCE_ADMIN'],
+            permissions: ['MANAGE_PROVIDER_CONTRACTS', 'VIEW_PROVIDER_CONTRACTS']
+          }
+        ]
+      },
+
+      // ==========================================
+      // 3️⃣ الشبكة الطبية (Medical Network)
+      // ==========================================
+      {
+        id: 'group-medical-network',
+        title: 'الشبكة الطبية',
+        type: 'group',
+        children: [
+          {
+            id: 'providers',
+            title: 'مقدمو الخدمة',
+            type: 'item',
+            url: '/providers',
+            icon: LocalHospital,
+            roles: ['SUPER_ADMIN', 'INSURANCE_ADMIN'],
+            permissions: ['MANAGE_PROVIDERS', 'VIEW_PROVIDERS']
+          },
+          {
+            id: 'medical-categories',
+            title: 'تصنيفات الخدمات الطبية',
+            type: 'item',
+            url: '/medical-categories',
+            icon: Category,
+            roles: ['SUPER_ADMIN', 'INSURANCE_ADMIN'],
+            permissions: ['MANAGE_MEDICAL_CATEGORIES']
+          },
+          {
+            id: 'medical-services',
+            title: 'الخدمات الطبية',
+            type: 'item',
+            url: '/medical-services',
+            icon: MedicalServices,
+            roles: ['SUPER_ADMIN', 'INSURANCE_ADMIN'],
+            permissions: ['MANAGE_MEDICAL_SERVICES']
+          },
+          {
+            id: 'medical-packages',
+            title: 'حزم الخدمات الطبية',
+            type: 'item',
+            url: '/medical-packages',
+            icon: Inventory,
+            roles: ['SUPER_ADMIN', 'INSURANCE_ADMIN'],
+            permissions: ['MANAGE_MEDICAL_PACKAGES']
+          }
+        ]
+      },
+
+      // ==========================================
+      // 4️⃣ الأعضاء والمستفيدون (Members & Beneficiaries)
+      // ==========================================
+      {
+        id: 'group-members',
+        title: 'الأعضاء والمستفيدون',
+        type: 'group',
+        children: [
+          {
+            id: 'members',
+            title: 'المؤمن عليهم',
+            type: 'item',
+            url: '/members',
+            icon: People,
+            roles: ['SUPER_ADMIN', 'INSURANCE_ADMIN', 'EMPLOYER_ADMIN'],
+            permissions: ['MANAGE_MEMBERS', 'VIEW_MEMBERS']
+          }
+          // Family members are viewed inside member view - no separate menu item
+        ]
+      },
+
+      // ==========================================
+      // 5️⃣ التشغيل الطبي (Medical Operations)
+      // ==========================================
+      {
+        id: 'group-medical-ops',
+        title: 'التشغيل الطبي',
+        type: 'group',
+        children: [
+          {
+            id: 'pre-approvals',
+            title: 'الموافقات المسبقة',
+            type: 'item',
+            url: '/pre-approvals',
+            icon: FactCheck,
+            roles: ['SUPER_ADMIN', 'INSURANCE_ADMIN', 'PROVIDER'],
+            permissions: ['VIEW_PRE_APPROVALS', 'MANAGE_PRE_APPROVALS']
+          },
+          {
+            id: 'visits',
+            title: 'الزيارات الطبية',
+            type: 'item',
+            url: '/visits',
+            icon: AssignmentInd,
+            roles: ['SUPER_ADMIN', 'INSURANCE_ADMIN', 'EMPLOYER_ADMIN', 'PROVIDER'],
+            permissions: ['VIEW_VISITS', 'MANAGE_VISITS'],
+            featureToggle: 'canViewVisits'
+          },
+          {
+            id: 'claims',
+            title: 'المطالبات',
+            type: 'item',
+            url: '/claims',
+            icon: Receipt,
+            roles: ['SUPER_ADMIN', 'INSURANCE_ADMIN', 'EMPLOYER_ADMIN', 'PROVIDER'],
+            permissions: ['VIEW_CLAIMS', 'MANAGE_CLAIMS'],
+            featureToggle: 'canViewClaims'
+          }
+        ]
+      },
+
+      // ==========================================
+      // 6️⃣ التقارير والتدقيق (Reports & Audit)
+      // ==========================================
+      {
+        id: 'group-reports',
+        title: 'التقارير والتدقيق',
+        type: 'group',
+        children: [
+          {
+            id: 'reports',
+            title: 'التقارير',
+            type: 'item',
+            url: '/reports',
+            icon: Assessment,
+            roles: ['SUPER_ADMIN', 'INSURANCE_ADMIN'],
+            permissions: []
+          },
+          {
+            id: 'audit',
+            title: 'سجل التدقيق',
+            type: 'item',
+            url: '/audit',
+            icon: Timeline,
+            roles: ['SUPER_ADMIN', 'INSURANCE_ADMIN'],
+            permissions: []
+          }
+        ]
+      },
+
+      // ==========================================
+      // 7️⃣ إدارة النظام (System Administration)
+      // ==========================================
+      {
+        id: 'group-admin',
+        title: 'إدارة النظام',
+        type: 'group',
+        children: [
+          {
+            id: 'admin-users',
+            title: 'المستخدمون',
+            type: 'item',
+            url: '/admin/users',
+            icon: ManageAccounts,
+            permission: ['admin.users.view'],
+            roles: ['SUPER_ADMIN'],
+            permissions: []
+          },
+          {
+            id: 'rbac',
+            title: 'الصلاحيات',
+            type: 'item',
+            url: '/rbac',
+            icon: Security,
+            permission: ['rbac.view'],
+            roles: ['SUPER_ADMIN'],
+            permissions: []
+          },
+          {
+            id: 'settings',
+            title: 'إعدادات النظام',
+            type: 'item',
+            url: '/settings',
+            icon: Settings,
+            permission: ['settings.view'],
+            roles: ['SUPER_ADMIN', 'INSURANCE_ADMIN'],
+            permissions: []
+          }
+        ]
+      }
+    ];
+
+    // Filter groups and children based on RBAC
+    const filteredGroups = menuGroups
+      .map((group) => {
+        // Filter children based on visibility
+        const visibleChildren = group.children.filter(isItemVisible);
+        
+        // Only include group if it has visible children
+        if (visibleChildren.length === 0) {
+          return null;
+        }
+
+        return {
+          ...group,
+          children: visibleChildren
+        };
+      })
+      .filter(Boolean); // Remove null groups
+
+    return filteredGroups;
   }, [user, roles, permissions, featureToggles, loading, hasRole]);
 
+  // Legacy flat items for backward compatibility (if needed)
+  const sidebarItems = useMemo(() => {
+    // Flatten groups into items for components that need flat structure
+    const items = [];
+    sidebarGroups.forEach((group) => {
+      group.children.forEach((child) => {
+        items.push({
+          id: child.id,
+          translationKey: child.title, // Using Arabic title directly
+          icon: child.icon,
+          path: child.url,
+          visible: true
+        });
+      });
+    });
+    return items;
+  }, [sidebarGroups]);
+
   return {
-    sidebarItems,
+    sidebarItems,      // Flat items (legacy)
+    sidebarGroups,     // Grouped items (new)
     loading
   };
 };

@@ -18,7 +18,13 @@ import {
   Inbox as InboxIcon,
   Payment as PaymentIcon,
   CheckCircle as CheckCircleIcon,
-  Policy as PolicyIcon
+  Policy as PolicyIcon,
+  Handshake as HandshakeIcon,
+  ManageAccounts as ManageAccountsIcon,
+  Security as SecurityIcon,
+  Timeline as TimelineIcon,
+  FactCheck as FactCheckIcon,
+  AssignmentInd as AssignmentIndIcon
 } from '@mui/icons-material';
 
 // ==============================|| RBAC MENU FILTERING ||============================== //
@@ -38,20 +44,20 @@ export const filterMenuByRoles = (menuItems, userRoles = []) => {
 
   const roleRules = {
     EMPLOYER: {
-      hide: ['employers', 'providers', 'provider-contracts', 'policies', 'audit', 'claims-inbox', 'pre-approvals-inbox', 'settlement-inbox'],
-      show: ['dashboard', 'members', 'claims', 'visits', 'pre-approvals', 'medical-categories', 'medical-services', 'medical-packages', 'benefit-packages', 'benefit-policies', 'settings']
+      hide: ['employers', 'providers', 'provider-contracts', 'policies', 'audit', 'claims-inbox', 'pre-approvals-inbox', 'settlement-inbox', 'insurance-companies', 'admin-users', 'rbac'],
+      show: ['dashboard', 'members', 'claims', 'visits', 'pre-approvals', 'medical-categories', 'medical-services', 'medical-packages', 'benefit-policies', 'settings']
     },
     INSURANCE_COMPANY: {
-      hide: ['employers'],
-      show: ['dashboard', 'members', 'providers', 'claims', 'visits', 'pre-approvals', 'medical-categories', 'medical-services', 'medical-packages', 'benefit-packages', 'benefit-policies', 'provider-contracts', 'policies', 'audit', 'settings', 'claims-inbox', 'pre-approvals-inbox', 'settlement-inbox']
+      hide: ['employers', 'admin-users', 'rbac'],
+      show: ['dashboard', 'members', 'providers', 'claims', 'visits', 'pre-approvals', 'medical-categories', 'medical-services', 'medical-packages', 'benefit-policies', 'provider-contracts', 'insurance-companies', 'audit', 'settings', 'reports']
     },
     REVIEWER: {
-      hide: ['employers', 'providers', 'members', 'visits', 'provider-contracts', 'policies', 'settlement-inbox', 'benefit-policies'],
-      show: ['dashboard', 'claims', 'pre-approvals', 'medical-categories', 'medical-services', 'medical-packages', 'benefit-packages', 'audit', 'settings', 'claims-inbox', 'pre-approvals-inbox']
+      hide: ['employers', 'providers', 'members', 'visits', 'provider-contracts', 'policies', 'settlement-inbox', 'benefit-policies', 'insurance-companies', 'admin-users', 'rbac'],
+      show: ['dashboard', 'claims', 'pre-approvals', 'medical-categories', 'medical-services', 'medical-packages', 'audit', 'settings', 'reports']
     },
     FINANCE: {
-      hide: ['employers', 'providers', 'members', 'visits', 'provider-contracts', 'policies', 'claims-inbox', 'pre-approvals-inbox', 'benefit-policies'],
-      show: ['dashboard', 'claims', 'settlement-inbox', 'audit', 'settings']
+      hide: ['employers', 'providers', 'members', 'visits', 'provider-contracts', 'policies', 'claims-inbox', 'pre-approvals-inbox', 'benefit-policies', 'insurance-companies', 'admin-users', 'rbac'],
+      show: ['dashboard', 'claims', 'settlement-inbox', 'audit', 'settings', 'reports']
     }
   };
 
@@ -92,9 +98,31 @@ export const filterMenuByRoles = (menuItems, userRoles = []) => {
 
 // ==============================|| MENU ITEMS ||============================== //
 
-
-// ========== القائمة الجانبية النهائية حسب متطلبات TPA ========== //
+/**
+ * ====================================================
+ * القائمة الجانبية النهائية - نظام TPA المؤسسي
+ * FINAL SIDEBAR MENU - TPA Enterprise Standard
+ * ====================================================
+ * 
+ * هيكل القائمة المُعاد تنظيمه وفقاً لسير العمل المؤسسي:
+ * 
+ * 1️⃣ لوحة التحكم (Dashboard)
+ * 2️⃣ الجهات والعقود (Entities & Contracts)
+ * 3️⃣ الشبكة الطبية (Medical Network)
+ * 4️⃣ الأعضاء والمستفيدون (Members & Beneficiaries)
+ * 5️⃣ التشغيل الطبي (Medical Operations)
+ * 6️⃣ التقارير والتدقيق (Reports & Audit)
+ * 7️⃣ إدارة النظام (System Administration)
+ * 
+ * ⚠️ ملاحظات مهمة:
+ * - جميع المسارات (routes) موجودة ولم يتم تغييرها
+ * - تمت إزالة benefit-packages (قديم/مكرر مع benefit-policies)
+ * - أفراد العائلة يظهرون داخل صفحة العضو فقط
+ */
 const menuItem = [
+  // ==========================================
+  // 1️⃣ لوحة التحكم (Dashboard)
+  // ==========================================
   {
     id: 'group-dashboard',
     title: 'لوحة التحكم',
@@ -110,6 +138,10 @@ const menuItem = [
       }
     ]
   },
+
+  // ==========================================
+  // 2️⃣ الجهات والعقود (Entities & Contracts)
+  // ==========================================
   {
     id: 'group-contracts',
     title: 'الجهات والعقود',
@@ -127,7 +159,7 @@ const menuItem = [
         title: 'شركات التأمين',
         type: 'item',
         url: '/insurance-companies',
-        icon: BusinessIcon
+        icon: BusinessCenterIcon
       },
       {
         id: 'benefit-policies',
@@ -142,10 +174,14 @@ const menuItem = [
         title: 'عقود مقدمي الخدمة',
         type: 'item',
         url: '/provider-contracts',
-        icon: BusinessCenterIcon
+        icon: HandshakeIcon
       }
     ]
   },
+
+  // ==========================================
+  // 3️⃣ الشبكة الطبية (Medical Network)
+  // ==========================================
   {
     id: 'group-medical-network',
     title: 'الشبكة الطبية',
@@ -181,6 +217,10 @@ const menuItem = [
       }
     ]
   },
+
+  // ==========================================
+  // 4️⃣ الأعضاء والمستفيدون (Members & Beneficiaries)
+  // ==========================================
   {
     id: 'group-members',
     title: 'الأعضاء والمستفيدون',
@@ -193,9 +233,13 @@ const menuItem = [
         url: '/members',
         icon: PeopleAltIcon
       }
-      // أفراد العائلة يظهرون داخل صفحة العضو فقط
+      // أفراد العائلة يظهرون داخل صفحة العضو فقط - لا حاجة لعنصر قائمة منفصل
     ]
   },
+
+  // ==========================================
+  // 5️⃣ التشغيل الطبي (Medical Operations)
+  // ==========================================
   {
     id: 'group-medical-ops',
     title: 'التشغيل الطبي',
@@ -206,14 +250,14 @@ const menuItem = [
         title: 'الموافقات المسبقة',
         type: 'item',
         url: '/pre-approvals',
-        icon: DescriptionIcon
+        icon: FactCheckIcon
       },
       {
         id: 'visits',
         title: 'الزيارات الطبية',
         type: 'item',
         url: '/visits',
-        icon: LocalHospitalIcon
+        icon: AssignmentIndIcon
       },
       {
         id: 'claims',
@@ -224,6 +268,10 @@ const menuItem = [
       }
     ]
   },
+
+  // ==========================================
+  // 6️⃣ التقارير والتدقيق (Reports & Audit)
+  // ==========================================
   {
     id: 'group-reports',
     title: 'التقارير والتدقيق',
@@ -241,10 +289,14 @@ const menuItem = [
         title: 'سجل التدقيق',
         type: 'item',
         url: '/audit',
-        icon: AssessmentIcon
+        icon: TimelineIcon
       }
     ]
   },
+
+  // ==========================================
+  // 7️⃣ إدارة النظام (System Administration)
+  // ==========================================
   {
     id: 'group-admin',
     title: 'إدارة النظام',
@@ -255,7 +307,7 @@ const menuItem = [
         title: 'المستخدمون',
         type: 'item',
         url: '/admin/users',
-        icon: PeopleAltIcon,
+        icon: ManageAccountsIcon,
         permission: ['admin.users.view']
       },
       {
@@ -263,7 +315,7 @@ const menuItem = [
         title: 'الصلاحيات',
         type: 'item',
         url: '/rbac',
-        icon: AssignmentIcon,
+        icon: SecurityIcon,
         permission: ['rbac.view']
       },
       {
@@ -276,6 +328,13 @@ const menuItem = [
       }
     ]
   }
+
+  // ==========================================
+  // ❌ العناصر المُزالة / المُلغاة (Removed / Deprecated)
+  // ==========================================
+  // - benefit-packages: قديم ومكرر مع benefit-policies
+  // - policies: تم استبداله بـ benefit-policies
+  // - insurance-policies: تم دمجه مع benefit-policies
 ];
 
 export default menuItem;

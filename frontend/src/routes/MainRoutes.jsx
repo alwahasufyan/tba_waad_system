@@ -152,6 +152,10 @@ const AccountSettings = Loadable(lazy(() => import('pages/profile/AccountSetting
 
 const AuditLog = Loadable(lazy(() => import('pages/audit')));
 
+// ==============================|| LAZY LOADING - REPORTS ||============================== //
+
+const ReportsPage = Loadable(lazy(() => import('pages/reports')));
+
 // ==============================|| LAZY LOADING - ERROR PAGES ||============================== //
 
 const NoAccess = Loadable(lazy(() => import('pages/errors/NoAccess')));
@@ -914,6 +918,16 @@ const MainRoutes = {
           element: <AccountSettings />
         }
       ]
+    },
+
+    // Reports Module
+    {
+      path: 'reports',
+      element: (
+        <RouteGuard allowedRoles={['ADMIN', 'SUPER_ADMIN', 'INSURANCE_COMPANY']}>
+          <ReportsPage />
+        </RouteGuard>
+      )
     },
 
     // Audit Log
