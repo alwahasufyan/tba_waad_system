@@ -26,15 +26,24 @@ public interface EmployerRepository extends JpaRepository<Employer, Long> {
     Optional<Employer> findByEmail(String email);
     
     /**
-     * Find employer by name (case-insensitive exact match)
+     * Find employer by Arabic name (case-insensitive exact match)
      */
-    @Query("SELECT e FROM Employer e WHERE LOWER(e.name) = LOWER(:name)")
+    Optional<Employer> findByNameArIgnoreCase(String nameAr);
+    
+    /**
+     * Find employer by English name (case-insensitive exact match)
+     */
+    Optional<Employer> findByNameEnIgnoreCase(String nameEn);
+    
+    /**
+     * Find employer by name (Arabic or English, case-insensitive)
+     */
+    @Query("SELECT e FROM Employer e WHERE LOWER(e.nameAr) = LOWER(:name) OR LOWER(e.nameEn) = LOWER(:name)")
     Optional<Employer> findByNameIgnoreCase(@Param("name") String name);
     
     /**
-     * Find employers by name containing (partial match for import)
+     * Find employers by name containing (partial match for import - searches both Arabic and English)
      */
-    @Query("SELECT e FROM Employer e WHERE LOWER(e.name) LIKE LOWER(CONCAT('%', :name, '%'))")
+    @Query("SELECT e FROM Employer e WHERE LOWER(e.nameAr) LIKE LOWER(CONCAT('%', :name, '%')) OR LOWER(e.nameEn) LIKE LOWER(CONCAT('%', :name, '%'))")
     List<Employer> findByNameContainingIgnoreCase(@Param("name") String name);
 }
-
