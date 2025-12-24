@@ -1,6 +1,10 @@
 import { RouterProvider } from 'react-router-dom';
 import { Suspense } from 'react';
 
+// MUI X Date Pickers
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+
 // project imports
 import router from 'routes';
 import ThemeCustomization from 'themes';
@@ -25,18 +29,20 @@ export default function App() {
       <ThemeCustomization>
         <RTLLayout>
           <Locales>
-            <ScrollTop>
-              <AuthProvider>
-                <CompanyProvider>
-                  <Notistack>
-                    <Suspense fallback={<Loader />}>
-                      <RouterProvider router={router} />
-                    </Suspense>
-                    <Snackbar />
-                  </Notistack>
-                </CompanyProvider>
-              </AuthProvider>
-            </ScrollTop>
+            <LocalizationProvider dateAdapter={AdapterDayjs}>
+              <ScrollTop>
+                <AuthProvider>
+                  <CompanyProvider>
+                    <Notistack>
+                      <Suspense fallback={<Loader />}>
+                        <RouterProvider router={router} />
+                      </Suspense>
+                      <Snackbar />
+                    </Notistack>
+                  </CompanyProvider>
+                </AuthProvider>
+              </ScrollTop>
+            </LocalizationProvider>
           </Locales>
         </RTLLayout>
       </ThemeCustomization>

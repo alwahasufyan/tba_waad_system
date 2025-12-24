@@ -59,6 +59,8 @@ public class SecurityConfig {
                         "/api/auth/login",
                         "/api/auth/register",
                         "/api/auth/refresh",
+                        // Member import endpoints (multipart file upload)
+                        "/api/members/import/**",
                         // Public endpoints (no authentication required)
                         "/v3/api-docs/**",
                         "/swagger-ui/**"
