@@ -136,4 +136,8 @@ public class MemberViewDto {
 
     @Schema(description = "Family members count", example = "3")
     private Integer familyMembersCount;
+
+    // Flexible Attributes
+    @Schema(description = "List of custom attributes (key-value pairs)")
+    private List<MemberAttributeDto> attributes;
 }

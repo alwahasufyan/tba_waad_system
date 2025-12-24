@@ -98,4 +98,9 @@ public class MemberUpdateDto {
     @Schema(description = "List of family members")
     @Valid
     private List<FamilyMemberDto> familyMembers;
+
+    // Flexible Attributes (for sync: add new, update existing, delete removed)
+    @Schema(description = "List of custom attributes (key-value pairs)")
+    @Valid
+    private List<MemberAttributeDto> attributes;
 }

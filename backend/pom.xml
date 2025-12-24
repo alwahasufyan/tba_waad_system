@@ -138,6 +138,18 @@
         <artifactId>appengine-api-1.0-sdk</artifactId>
         <version>1.9.76</version>
       </dependency>
+    
+      <!-- Apache POI for Excel Import/Export -->
+      <dependency>
+        <groupId>org.apache.poi</groupId>
+        <artifactId>poi</artifactId>
+        <version>5.2.5</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.poi</groupId>
+        <artifactId>poi-ooxml</artifactId>
+        <version>5.2.5</version>
+      </dependency>
     </dependencies>
     
     <build>

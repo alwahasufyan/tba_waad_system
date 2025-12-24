@@ -309,6 +309,40 @@ const MemberView = () => {
           </SectionCard>
         )}
 
+        {/* Custom Attributes */}
+        {Array.isArray(member?.attributes) && member.attributes.length > 0 && (
+          <SectionCard title={`السمات المخصصة (${member.attributes.length})`} icon={<PersonIcon color="primary" />}>
+            <TableContainer component={Paper} variant="outlined">
+              <Table size="small">
+                <TableHead>
+                  <TableRow>
+                    <TableCell>رمز السمة</TableCell>
+                    <TableCell>القيمة</TableCell>
+                    <TableCell>المصدر</TableCell>
+                    <TableCell>تاريخ الإنشاء</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {member.attributes.map((attr, index) => (
+                    <TableRow key={attr?.id ?? index}>
+                      <TableCell>{attr?.code ?? '-'}</TableCell>
+                      <TableCell>{attr?.value ?? '-'}</TableCell>
+                      <TableCell>
+                        <Chip
+                          size="small"
+                          label={attr?.source === 'IMPORT' ? 'استيراد' : attr?.source === 'ODOO' ? 'Odoo' : 'يدوي'}
+                          color={attr?.source === 'IMPORT' || attr?.source === 'ODOO' ? 'info' : 'default'}
+                        />
+                      </TableCell>
+                      <TableCell>{attr?.createdAt ? new Date(attr.createdAt).toLocaleDateString('ar-LY') : '-'}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </SectionCard>
+        )}
+
         {/* Audit Information */}
         <SectionCard title="معلومات النظام" icon={<CalendarMonthIcon color="primary" />}>
           <InfoRow label="أُنشئ بواسطة" value={member?.createdBy} />

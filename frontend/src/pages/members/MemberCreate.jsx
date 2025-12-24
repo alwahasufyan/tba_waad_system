@@ -85,7 +85,10 @@ const MemberCreate = () => {
     active: true,
 
     // Family Members
-    familyMembers: []
+    familyMembers: [],
+
+    // Flexible Attributes
+    attributes: []
   });
 
   // Family Member Draft
@@ -97,6 +100,12 @@ const MemberCreate = () => {
     gender: 'MALE',
     relationship: 'SON',
     active: true
+  });
+
+  // Attribute Draft
+  const [attributeDraft, setAttributeDraft] = useState({
+    code: '',
+    value: ''
   });
 
   // Selectors Data
@@ -201,6 +210,43 @@ const MemberCreate = () => {
     }));
   };
 
+  // Attribute Handlers
+  const handleAttributeDraftChange = (field) => (event) => {
+    setAttributeDraft((prev) => ({ ...prev, [field]: event.target.value }));
+  };
+
+  const addAttribute = () => {
+    if (!attributeDraft.code) {
+      openSnackbar({ message: 'رمز السمة مطلوب', variant: 'error' });
+      return;
+    }
+    if (!attributeDraft.value) {
+      openSnackbar({ message: 'قيمة السمة مطلوبة', variant: 'error' });
+      return;
+    }
+
+    // Check for duplicate attribute code
+    if (form.attributes.some((attr) => attr.code === attributeDraft.code)) {
+      openSnackbar({ message: 'هذه السمة موجودة بالفعل', variant: 'warning' });
+      return;
+    }
+
+    setForm((prev) => ({
+      ...prev,
+      attributes: [...prev.attributes, { ...attributeDraft, source: 'MANUAL' }]
+    }));
+
+    setAttributeDraft({ code: '', value: '' });
+    openSnackbar({ message: 'تمت إضافة السمة', variant: 'success' });
+  };
+
+  const removeAttribute = (index) => {
+    setForm((prev) => ({
+      ...prev,
+      attributes: prev.attributes.filter((_, i) => i !== index)
+    }));
+  };
+
   // Validation
   const validate = () => {
     const newErrors = {};
@@ -267,6 +313,11 @@ const MemberCreate = () => {
           birthDate: fm.birthDate,
           gender: fm.gender,
           active: fm.active ?? true
+        })),
+        attributes: form.attributes.map((attr) => ({
+          code: attr.code,
+          value: attr.value,
+          source: attr.source || 'MANUAL'
         }))
       };
 
@@ -712,6 +763,103 @@ const MemberCreate = () => {
                 <Grid item xs={12} md={3}>
                   <Button fullWidth variant="outlined" startIcon={<AddIcon />} onClick={addFamilyMember}>
                     إضافة تابع
+                  </Button>
+                </Grid>
+              </Grid>
+            </Stack>
+          </MainCard>
+
+          {/* SECTION 7: Custom Attributes */}
+          <MainCard title="السمات المخصصة">
+            <Stack spacing={2}>
+              {/* Attributes List */}
+              {Array.isArray(form.attributes) && form.attributes.length > 0 && (
+                <TableContainer component={Paper} variant="outlined">
+                  <Table size="small">
+                    <TableHead>
+                      <TableRow>
+                        <TableCell>رمز السمة</TableCell>
+                        <TableCell>القيمة</TableCell>
+                        <TableCell>المصدر</TableCell>
+                        <TableCell align="center">الإجراءات</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {form.attributes.map((attr, index) => (
+                        <TableRow key={index}>
+                          <TableCell>{attr.code}</TableCell>
+                          <TableCell>{attr.value}</TableCell>
+                          <TableCell>{attr.source || 'MANUAL'}</TableCell>
+                          <TableCell align="center">
+                            <IconButton size="small" color="error" onClick={() => removeAttribute(index)}>
+                              <DeleteIcon fontSize="small" />
+                            </IconButton>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              )}
+
+              <Divider />
+
+              {/* Add Attribute Form */}
+              <Typography variant="h6" gutterBottom>
+                إضافة سمة
+              </Typography>
+
+              <Grid container spacing={2}>
+                <Grid item xs={12} md={4}>
+                  <FormControl fullWidth size="small">
+                    <InputLabel>رمز السمة</InputLabel>
+                    <Select
+                      value={attributeDraft.code}
+                      onChange={handleAttributeDraftChange('code')}
+                      label="رمز السمة"
+                    >
+                      <MenuItem value="job_title">المسمى الوظيفي</MenuItem>
+                      <MenuItem value="department">القسم</MenuItem>
+                      <MenuItem value="work_location">موقع العمل</MenuItem>
+                      <MenuItem value="cost_center">مركز التكلفة</MenuItem>
+                      <MenuItem value="badge_number">رقم البطاقة</MenuItem>
+                      <MenuItem value="blood_type">فصيلة الدم</MenuItem>
+                      <MenuItem value="emergency_contact">جهة الاتصال للطوارئ</MenuItem>
+                      <MenuItem value="emergency_phone">هاتف الطوارئ</MenuItem>
+                      <MenuItem value="custom">مخصص...</MenuItem>
+                    </Select>
+                  </FormControl>
+                </Grid>
+
+                {attributeDraft.code === 'custom' && (
+                  <Grid item xs={12} md={4}>
+                    <TextField
+                      fullWidth
+                      size="small"
+                      label="رمز السمة المخصص"
+                      value={attributeDraft.code === 'custom' ? '' : attributeDraft.code}
+                      onChange={(e) =>
+                        setAttributeDraft((prev) => ({ ...prev, code: e.target.value }))
+                      }
+                      placeholder="custom_field"
+                    />
+                  </Grid>
+                )}
+
+                <Grid item xs={12} md={attributeDraft.code === 'custom' ? 4 : 5}>
+                  <TextField
+                    fullWidth
+                    size="small"
+                    label="قيمة السمة"
+                    value={attributeDraft.value}
+                    onChange={handleAttributeDraftChange('value')}
+                    placeholder="أدخل القيمة"
+                  />
+                </Grid>
+
+                <Grid item xs={12} md={3}>
+                  <Button fullWidth variant="outlined" startIcon={<AddIcon />} onClick={addAttribute}>
+                    إضافة سمة
                   </Button>
                 </Grid>
               </Grid>

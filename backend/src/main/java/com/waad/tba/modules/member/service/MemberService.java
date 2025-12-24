@@ -15,14 +15,17 @@ import com.waad.tba.modules.employer.repository.EmployerRepository;
 import com.waad.tba.modules.insurance.entity.InsuranceCompany;
 import com.waad.tba.modules.insurance.repository.InsuranceCompanyRepository;
 import com.waad.tba.modules.member.dto.FamilyMemberDto;
+import com.waad.tba.modules.member.dto.MemberAttributeDto;
 import com.waad.tba.modules.member.dto.MemberCreateDto;
 import com.waad.tba.modules.member.dto.MemberSelectorDto;
 import com.waad.tba.modules.member.dto.MemberUpdateDto;
 import com.waad.tba.modules.member.dto.MemberViewDto;
 import com.waad.tba.modules.member.entity.FamilyMember;
 import com.waad.tba.modules.member.entity.Member;
+import com.waad.tba.modules.member.entity.MemberAttribute;
 import com.waad.tba.modules.member.mapper.MemberMapperV2;
 import com.waad.tba.modules.member.repository.FamilyMemberRepository;
+import com.waad.tba.modules.member.repository.MemberAttributeRepository;
 import com.waad.tba.modules.member.repository.MemberRepository;
 import com.waad.tba.modules.rbac.entity.User;
 import com.waad.tba.security.AuthorizationService;
@@ -37,6 +40,7 @@ public class MemberService {
 
     private final MemberRepository memberRepository;
     private final FamilyMemberRepository familyRepo;
+    private final MemberAttributeRepository attributeRepo;
     private final MemberMapperV2 mapper;
 
     private final EmployerRepository employerRepo;
@@ -110,7 +114,10 @@ public class MemberService {
         return members.stream()
                 .map(member -> {
                     List<FamilyMember> family = familyRepo.findByMemberId(member.getId());
-                    return mapper.toViewDto(member, family);
+                    List<MemberAttribute> attrs = attributeRepo.findByMemberId(member.getId());
+                    MemberViewDto viewDto = mapper.toViewDto(member, family);
+                    viewDto.setAttributes(mapper.toAttributeDtoList(attrs));
+                    return viewDto;
                 })
                 .collect(Collectors.toList());
     }
@@ -133,6 +140,7 @@ public class MemberService {
 
         Member savedMember = memberRepository.save(member);
 
+        // Save family members
         List<FamilyMember> family = dto.getFamilyMembers() != null
                 ? dto.getFamilyMembers().stream()
                         .map(mapper::toFamilyMemberEntity)
@@ -144,7 +152,22 @@ public class MemberService {
             familyRepo.saveAll(family);
         }
 
-        return mapper.toViewDto(savedMember, family);
+        // Save custom attributes
+        if (dto.getAttributes() != null && !dto.getAttributes().isEmpty()) {
+            for (MemberAttributeDto attrDto : dto.getAttributes()) {
+                if (attrDto.getCode() != null && attrDto.getValue() != null) {
+                    MemberAttribute attr = mapper.toAttributeEntity(attrDto);
+                    attr.setMember(savedMember);
+                    attributeRepo.save(attr);
+                }
+            }
+        }
+
+        List<MemberAttribute> savedAttrs = attributeRepo.findByMemberId(savedMember.getId());
+        MemberViewDto viewDto = mapper.toViewDto(savedMember, family);
+        viewDto.setAttributes(mapper.toAttributeDtoList(savedAttrs));
+        
+        return viewDto;
     }
 
     @Transactional
@@ -202,7 +225,68 @@ public class MemberService {
 
         List<FamilyMember> updatedFamily = familyRepo.findByMemberId(member.getId());
 
-        return mapper.toViewDto(member, updatedFamily);
+        // Handle attributes sync (add new, update existing, delete removed)
+        syncMemberAttributes(member, dto.getAttributes());
+
+        List<MemberAttribute> updatedAttrs = attributeRepo.findByMemberId(member.getId());
+        MemberViewDto viewDto = mapper.toViewDto(member, updatedFamily);
+        viewDto.setAttributes(mapper.toAttributeDtoList(updatedAttrs));
+        
+        return viewDto;
+    }
+    
+    /**
+     * Sync member attributes: add new, update existing, delete removed.
+     */
+    private void syncMemberAttributes(Member member, List<MemberAttributeDto> incomingAttrs) {
+        if (incomingAttrs == null) {
+            // Null means don't touch attributes
+            return;
+        }
+        
+        List<MemberAttribute> existingAttrs = attributeRepo.findByMemberId(member.getId());
+        
+        // Get incoming IDs (for existing attributes being updated)
+        List<Long> incomingIds = incomingAttrs.stream()
+                .map(MemberAttributeDto::getId)
+                .filter(id -> id != null)
+                .collect(Collectors.toList());
+        
+        // Delete attributes not in incoming list
+        for (MemberAttribute attr : existingAttrs) {
+            if (!incomingIds.contains(attr.getId())) {
+                attributeRepo.delete(attr);
+            }
+        }
+        
+        // Add or update attributes
+        for (MemberAttributeDto attrDto : incomingAttrs) {
+            if (attrDto.getCode() == null || attrDto.getValue() == null) {
+                continue; // Skip incomplete attributes
+            }
+            
+            MemberAttribute attr;
+            if (attrDto.getId() != null) {
+                // Update existing
+                attr = existingAttrs.stream()
+                        .filter(a -> a.getId().equals(attrDto.getId()))
+                        .findFirst()
+                        .orElse(null);
+                if (attr != null) {
+                    attr.setAttributeCode(attrDto.getCode());
+                    attr.setAttributeValue(attrDto.getValue());
+                    if (attrDto.getSource() != null) {
+                        attr.setSource(MemberAttribute.AttributeSource.valueOf(attrDto.getSource()));
+                    }
+                    attributeRepo.save(attr);
+                }
+            } else {
+                // Add new
+                attr = mapper.toAttributeEntity(attrDto);
+                attr.setMember(member);
+                attributeRepo.save(attr);
+            }
+        }
     }
 
     @Transactional(readOnly = true)
@@ -225,8 +309,12 @@ public class MemberService {
                 .orElseThrow(() -> new ResourceNotFoundException("Member not found: " + id));
 
         List<FamilyMember> family = familyRepo.findByMemberId(member.getId());
+        List<MemberAttribute> attrs = attributeRepo.findByMemberId(member.getId());
 
-        return mapper.toViewDto(member, family);
+        MemberViewDto viewDto = mapper.toViewDto(member, family);
+        viewDto.setAttributes(mapper.toAttributeDtoList(attrs));
+        
+        return viewDto;
     }
 
     @Transactional(readOnly = true)
@@ -261,7 +349,10 @@ public class MemberService {
         
         return memberPage.map(member -> {
             List<FamilyMember> family = familyRepo.findByMemberId(member.getId());
-            return mapper.toViewDto(member, family);
+            List<MemberAttribute> attrs = attributeRepo.findByMemberId(member.getId());
+            MemberViewDto viewDto = mapper.toViewDto(member, family);
+            viewDto.setAttributes(mapper.toAttributeDtoList(attrs));
+            return viewDto;
         });
     }
 

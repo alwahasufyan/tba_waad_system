@@ -109,4 +109,9 @@ public class MemberCreateDto {
     @Schema(description = "List of family members")
     @Valid
     private List<FamilyMemberDto> familyMembers;
+
+    // Flexible Attributes
+    @Schema(description = "List of custom attributes (key-value pairs)")
+    @Valid
+    private List<MemberAttributeDto> attributes;
 }

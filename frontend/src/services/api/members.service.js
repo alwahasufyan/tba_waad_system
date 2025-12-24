@@ -115,6 +115,87 @@ export const searchMembers = async (query) => {
   return unwrap(response);
 };
 
+// ============================================================================
+// BULK IMPORT OPERATIONS
+// ============================================================================
+
+/**
+ * Preview import from Excel file (dry-run)
+ * Endpoint: POST /api/members/import/preview
+ * @param {File} file - Excel file (.xlsx)
+ * @returns {Promise<Object>} MemberImportPreviewDto
+ */
+export const previewImport = async (file) => {
+  const formData = new FormData();
+  formData.append('file', file);
+  
+  const response = await axiosClient.post(`${BASE_URL}/import/preview`, formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  });
+  return unwrap(response);
+};
+
+/**
+ * Execute import from Excel file
+ * Endpoint: POST /api/members/import/execute
+ * @param {File} file - Excel file (.xlsx)
+ * @param {string} batchId - Import batch ID from preview
+ * @returns {Promise<Object>} MemberImportResultDto
+ */
+export const executeImport = async (file, batchId) => {
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('batchId', batchId);
+  
+  const response = await axiosClient.post(`${BASE_URL}/import/execute`, formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  });
+  return unwrap(response);
+};
+
+/**
+ * Get import logs list
+ * Endpoint: GET /api/members/import/logs
+ * @param {Object} params - Pagination params
+ * @returns {Promise<Object>} Paginated import logs
+ */
+export const getImportLogs = async (params = {}) => {
+  const response = await axiosClient.get(`${BASE_URL}/import/logs`, { params });
+  return unwrap(response);
+};
+
+/**
+ * Get import log details
+ * Endpoint: GET /api/members/import/logs/{batchId}
+ * @param {string} batchId - Import batch ID
+ * @returns {Promise<Object>} Import log details
+ */
+export const getImportLogDetails = async (batchId) => {
+  const response = await axiosClient.get(`${BASE_URL}/import/logs/${batchId}`);
+  return unwrap(response);
+};
+
+/**
+ * Get import errors for a batch
+ * Endpoint: GET /api/members/import/logs/{batchId}/errors
+ * @param {string} batchId - Import batch ID
+ * @returns {Promise<Array>} List of import errors
+ */
+export const getImportErrors = async (batchId) => {
+  const response = await axiosClient.get(`${BASE_URL}/import/logs/${batchId}/errors`);
+  return unwrap(response);
+};
+
+/**
+ * Get import template info
+ * Endpoint: GET /api/members/import/template
+ * @returns {Promise<Object>} Template column info
+ */
+export const getImportTemplate = async () => {
+  const response = await axiosClient.get(`${BASE_URL}/import/template`);
+  return unwrap(response);
+};
+
 // Default export for convenient imports
 const membersService = {
   getMembers,
@@ -124,7 +205,14 @@ const membersService = {
   deleteMember,
   getMembersSelector,
   getMembersCount,
-  searchMembers
+  searchMembers,
+  // Import operations
+  previewImport,
+  executeImport,
+  getImportLogs,
+  getImportLogDetails,
+  getImportErrors,
+  getImportTemplate
 };
 
 export default membersService;

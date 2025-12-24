@@ -74,7 +74,8 @@ const MemberEdit = () => {
     blockedReason: '',
     notes: '',
     active: true,
-    familyMembers: []
+    familyMembers: [],
+    attributes: []
   });
 
   // Family Member Draft
@@ -86,6 +87,12 @@ const MemberEdit = () => {
     gender: 'MALE',
     relationship: 'SON',
     active: true
+  });
+
+  // Attribute Draft
+  const [attributeDraft, setAttributeDraft] = useState({
+    code: '',
+    value: ''
   });
 
   // Selectors Data
@@ -137,7 +144,8 @@ const MemberEdit = () => {
         blockedReason: member.blockedReason || '',
         notes: member.notes || '',
         active: member.active ?? true,
-        familyMembers: member.familyMembers || []
+        familyMembers: member.familyMembers || [],
+        attributes: member.attributes || []
       });
 
       // Load Selectors
@@ -234,6 +242,43 @@ const MemberEdit = () => {
     }));
   };
 
+  // Attribute Handlers
+  const handleAttributeDraftChange = (field) => (event) => {
+    setAttributeDraft((prev) => ({ ...prev, [field]: event.target.value }));
+  };
+
+  const addAttribute = () => {
+    if (!attributeDraft.code) {
+      openSnackbar({ message: 'رمز السمة مطلوب', variant: 'error' });
+      return;
+    }
+    if (!attributeDraft.value) {
+      openSnackbar({ message: 'قيمة السمة مطلوبة', variant: 'error' });
+      return;
+    }
+
+    // Check for duplicate attribute code
+    if (form.attributes.some((attr) => attr.code === attributeDraft.code)) {
+      openSnackbar({ message: 'هذه السمة موجودة بالفعل', variant: 'warning' });
+      return;
+    }
+
+    setForm((prev) => ({
+      ...prev,
+      attributes: [...prev.attributes, { ...attributeDraft, source: 'MANUAL' }]
+    }));
+
+    setAttributeDraft({ code: '', value: '' });
+    openSnackbar({ message: 'تمت إضافة السمة', variant: 'success' });
+  };
+
+  const removeAttribute = (index) => {
+    setForm((prev) => ({
+      ...prev,
+      attributes: prev.attributes.filter((_, i) => i !== index)
+    }));
+  };
+
   // Validation
   const validate = () => {
     const newErrors = {};
@@ -292,6 +337,12 @@ const MemberEdit = () => {
           birthDate: fm.birthDate,
           gender: fm.gender,
           active: fm.active ?? true
+        })),
+        attributes: form.attributes.map((attr) => ({
+          id: attr.id || null,
+          code: attr.code,
+          value: attr.value,
+          source: attr.source || 'MANUAL'
         }))
       };
 
@@ -674,6 +725,98 @@ const MemberEdit = () => {
 
                 <Grid item xs={12} md={3}>
                   <Button fullWidth variant="outlined" startIcon={<AddIcon />} onClick={addFamilyMember}>
+                    Add
+                  </Button>
+                </Grid>
+              </Grid>
+            </Stack>
+          </MainCard>
+
+          {/* Custom Attributes */}
+          <MainCard title="Custom Attributes">
+            <Stack spacing={2}>
+              {Array.isArray(form.attributes) && form.attributes.length > 0 && (
+                <TableContainer component={Paper} variant="outlined">
+                  <Table size="small">
+                    <TableHead>
+                      <TableRow>
+                        <TableCell>Attribute Code</TableCell>
+                        <TableCell>Value</TableCell>
+                        <TableCell>Source</TableCell>
+                        <TableCell align="center">Actions</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {form.attributes.map((attr, index) => (
+                        <TableRow key={index}>
+                          <TableCell>{attr.code}</TableCell>
+                          <TableCell>{attr.value}</TableCell>
+                          <TableCell>{attr.source || 'MANUAL'}</TableCell>
+                          <TableCell align="center">
+                            <IconButton size="small" color="error" onClick={() => removeAttribute(index)}>
+                              <DeleteIcon fontSize="small" />
+                            </IconButton>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              )}
+
+              <Divider />
+              <Typography variant="h6">Add Attribute</Typography>
+
+              <Grid container spacing={2}>
+                <Grid item xs={12} md={4}>
+                  <FormControl fullWidth size="small">
+                    <InputLabel>Attribute Code</InputLabel>
+                    <Select
+                      value={attributeDraft.code}
+                      onChange={handleAttributeDraftChange('code')}
+                      label="Attribute Code"
+                    >
+                      <MenuItem value="job_title">Job Title</MenuItem>
+                      <MenuItem value="department">Department</MenuItem>
+                      <MenuItem value="work_location">Work Location</MenuItem>
+                      <MenuItem value="cost_center">Cost Center</MenuItem>
+                      <MenuItem value="badge_number">Badge Number</MenuItem>
+                      <MenuItem value="blood_type">Blood Type</MenuItem>
+                      <MenuItem value="emergency_contact">Emergency Contact</MenuItem>
+                      <MenuItem value="emergency_phone">Emergency Phone</MenuItem>
+                      <MenuItem value="custom">Custom...</MenuItem>
+                    </Select>
+                  </FormControl>
+                </Grid>
+
+                {attributeDraft.code === 'custom' && (
+                  <Grid item xs={12} md={4}>
+                    <TextField
+                      fullWidth
+                      size="small"
+                      label="Custom Attribute Code"
+                      value={attributeDraft.code === 'custom' ? '' : attributeDraft.code}
+                      onChange={(e) =>
+                        setAttributeDraft((prev) => ({ ...prev, code: e.target.value }))
+                      }
+                      placeholder="custom_field"
+                    />
+                  </Grid>
+                )}
+
+                <Grid item xs={12} md={attributeDraft.code === 'custom' ? 4 : 5}>
+                  <TextField
+                    fullWidth
+                    size="small"
+                    label="Attribute Value"
+                    value={attributeDraft.value}
+                    onChange={handleAttributeDraftChange('value')}
+                    placeholder="Enter value"
+                  />
+                </Grid>
+
+                <Grid item xs={12} md={3}>
+                  <Button fullWidth variant="outlined" startIcon={<AddIcon />} onClick={addAttribute}>
                     Add
                   </Button>
                 </Grid>

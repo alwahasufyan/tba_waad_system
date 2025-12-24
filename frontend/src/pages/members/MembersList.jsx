@@ -24,6 +24,7 @@ import VisibilityIcon from '@mui/icons-material/Visibility';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import PeopleAltIcon from '@mui/icons-material/PeopleAlt';
+import UploadFileIcon from '@mui/icons-material/UploadFile';
 
 // Project Components
 import MainCard from 'components/MainCard';
@@ -64,6 +65,10 @@ const MembersList = () => {
 
   const handleNavigateAdd = useCallback(() => {
     navigate('/members/add');
+  }, [navigate]);
+
+  const handleNavigateImport = useCallback(() => {
+    navigate('/members/import');
   }, [navigate]);
 
   const handleNavigateView = useCallback(
@@ -271,9 +276,14 @@ const MembersList = () => {
         icon={PeopleAltIcon}
         breadcrumbs={[{ label: 'الرئيسية', path: '/' }, { label: 'الأعضاء' }]}
         actions={
-          <Button variant="contained" startIcon={<AddIcon />} onClick={handleNavigateAdd}>
-            إضافة عضو جديد
-          </Button>
+          <Stack direction="row" spacing={1}>
+            <Button variant="outlined" startIcon={<UploadFileIcon />} onClick={handleNavigateImport}>
+              استيراد من Excel
+            </Button>
+            <Button variant="contained" startIcon={<AddIcon />} onClick={handleNavigateAdd}>
+              إضافة عضو جديد
+            </Button>
+          </Stack>
         }
       />
 

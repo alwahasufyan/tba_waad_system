@@ -18,6 +18,7 @@ const MembersList = Loadable(lazy(() => import('pages/members/MembersList')));
 const MemberCreate = Loadable(lazy(() => import('pages/members/MemberCreate')));
 const MemberEdit = Loadable(lazy(() => import('pages/members/MemberEdit')));
 const MemberView = Loadable(lazy(() => import('pages/members/MemberView')));
+const MemberImport = Loadable(lazy(() => import('pages/members/MemberImport')));
 
 // ==============================|| LAZY LOADING - EMPLOYERS ||============================== //
 
@@ -186,6 +187,14 @@ const MainRoutes = {
           element: (
             <RouteGuard allowedRoles={['ADMIN', 'EMPLOYER']}>
               <MemberCreate />
+            </RouteGuard>
+          )
+        },
+        {
+          path: 'import',
+          element: (
+            <RouteGuard allowedRoles={['ADMIN']}>
+              <MemberImport />
             </RouteGuard>
           )
         },

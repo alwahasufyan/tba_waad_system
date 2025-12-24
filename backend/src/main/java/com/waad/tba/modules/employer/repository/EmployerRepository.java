@@ -2,6 +2,8 @@ package com.waad.tba.modules.employer.repository;
 
 import com.waad.tba.modules.employer.entity.Employer;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Optional;
@@ -22,5 +24,17 @@ public interface EmployerRepository extends JpaRepository<Employer, Long> {
     Optional<Employer> findByCode(String code);
     
     Optional<Employer> findByEmail(String email);
+    
+    /**
+     * Find employer by name (case-insensitive exact match)
+     */
+    @Query("SELECT e FROM Employer e WHERE LOWER(e.name) = LOWER(:name)")
+    Optional<Employer> findByNameIgnoreCase(@Param("name") String name);
+    
+    /**
+     * Find employers by name containing (partial match for import)
+     */
+    @Query("SELECT e FROM Employer e WHERE LOWER(e.name) LIKE LOWER(CONCAT('%', :name, '%'))")
+    List<Employer> findByNameContainingIgnoreCase(@Param("name") String name);
 }
 

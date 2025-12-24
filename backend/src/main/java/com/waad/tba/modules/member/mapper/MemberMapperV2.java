@@ -8,12 +8,14 @@ import org.springframework.stereotype.Component;
 import com.waad.tba.modules.employer.entity.Employer;
 import com.waad.tba.modules.insurance.entity.InsuranceCompany;
 import com.waad.tba.modules.member.dto.FamilyMemberDto;
+import com.waad.tba.modules.member.dto.MemberAttributeDto;
 import com.waad.tba.modules.member.dto.MemberCreateDto;
 import com.waad.tba.modules.member.dto.MemberSelectorDto;
 import com.waad.tba.modules.member.dto.MemberUpdateDto;
 import com.waad.tba.modules.member.dto.MemberViewDto;
 import com.waad.tba.modules.member.entity.FamilyMember;
 import com.waad.tba.modules.member.entity.Member;
+import com.waad.tba.modules.member.entity.MemberAttribute;
 
 @Component
 public class MemberMapperV2 {
@@ -194,5 +196,39 @@ public class MemberMapperV2 {
                 .notes(dto.getNotes())
                 .active(dto.getActive() != null && dto.getActive())
                 .build();
+    }
+
+    // ========== Attribute Mapping ==========
+    
+    public MemberAttributeDto toAttributeDto(MemberAttribute attr) {
+        if (attr == null) return null;
+        
+        return MemberAttributeDto.builder()
+                .id(attr.getId())
+                .code(attr.getAttributeCode())
+                .value(attr.getAttributeValue())
+                .source(attr.getSource() != null ? attr.getSource().name() : null)
+                .build();
+    }
+    
+    public MemberAttribute toAttributeEntity(MemberAttributeDto dto) {
+        if (dto == null) return null;
+        
+        return MemberAttribute.builder()
+                .id(dto.getId())
+                .attributeCode(dto.getCode())
+                .attributeValue(dto.getValue())
+                .source(dto.getSource() != null 
+                        ? MemberAttribute.AttributeSource.valueOf(dto.getSource()) 
+                        : MemberAttribute.AttributeSource.MANUAL)
+                .build();
+    }
+    
+    public List<MemberAttributeDto> toAttributeDtoList(List<MemberAttribute> attributes) {
+        if (attributes == null || attributes.isEmpty()) return List.of();
+        
+        return attributes.stream()
+                .map(this::toAttributeDto)
+                .collect(Collectors.toList());
     }
 }
