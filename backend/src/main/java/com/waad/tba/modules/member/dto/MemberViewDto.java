@@ -69,6 +69,25 @@ public class MemberViewDto {
     @Schema(description = "Insurance company name", example = "Kuwait Insurance Company")
     private String insuranceCompanyName;
 
+    // Benefit Policy Information
+    @Schema(description = "Benefit Policy ID", example = "1")
+    private Long benefitPolicyId;
+
+    @Schema(description = "Benefit Policy name", example = "Gold Coverage Policy")
+    private String benefitPolicyName;
+
+    @Schema(description = "Benefit Policy code", example = "POL-GOLD-001")
+    private String benefitPolicyCode;
+
+    @Schema(description = "Benefit Policy status", example = "ACTIVE")
+    private String benefitPolicyStatus;
+
+    @Schema(description = "Benefit Policy start date", example = "2024-01-01")
+    private LocalDate benefitPolicyStartDate;
+
+    @Schema(description = "Benefit Policy end date", example = "2025-01-01")
+    private LocalDate benefitPolicyEndDate;
+
     // Employment Information
     @Schema(description = "Employer ID", example = "1")
     private Long employerId;

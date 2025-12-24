@@ -196,6 +196,13 @@ public class MemberService {
             member.setInsuranceCompany(insuranceCompany);
         }
 
+        // Handle BenefitPolicy assignment
+        if (dto.getBenefitPolicyId() != null) {
+            BenefitPolicy benefitPolicy = benefitPolicyRepo.findById(dto.getBenefitPolicyId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Benefit Policy not found: " + dto.getBenefitPolicyId()));
+            member.setBenefitPolicy(benefitPolicy);
+        }
+
         memberRepository.save(member);
 
         List<FamilyMember> existing = familyRepo.findByMemberId(member.getId());

@@ -11,19 +11,28 @@ import {
   Typography,
   Alert,
   Card,
-  CardContent
+  CardContent,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions
 } from '@mui/material';
 import {
   ArrowBack as ArrowBackIcon,
   Edit as EditIcon,
   Business as BusinessIcon,
   CheckCircle as CheckCircleIcon,
-  Cancel as CancelIcon
+  Cancel as CancelIcon,
+  Refresh as RefreshIcon
 } from '@mui/icons-material';
 
 import MainCard from 'components/MainCard';
 import ModernPageHeader from 'components/tba/ModernPageHeader';
 import { getEmployerById } from 'services/api/employers.service';
+import { refreshBenefitPoliciesForEmployer } from 'services/api/members.service';
+import { openSnackbar } from 'api/snackbar';
+import RBACGuard from 'components/tba/RBACGuard';
 
 // Static Arabic labels
 const LABELS = {
@@ -50,7 +59,14 @@ const LABELS = {
   totalMembers: 'إجمالي الأعضاء',
   activePolicies: 'البوليصات النشطة',
   totalClaims: 'إجمالي المطالبات',
-  loadError: 'فشل في تحميل صاحب العمل'
+  loadError: 'فشل في تحميل صاحب العمل',
+  refreshPolicies: 'تعيين وثيقة المنافع للأعضاء',
+  refreshPoliciesTitle: 'تعيين وثيقة المنافع',
+  refreshPoliciesConfirm: 'هل أنت متأكد من تعيين وثيقة المنافع النشطة لجميع أعضاء هذا صاحب العمل؟',
+  refreshPoliciesSuccess: 'تم تحديث وثيقة المنافع لـ {count} عضو',
+  refreshPoliciesError: 'فشل في تعيين وثيقة المنافع',
+  confirm: 'تأكيد',
+  cancel: 'إلغاء'
 };
 
 /**
@@ -64,6 +80,8 @@ const EmployerView = () => {
   const [employer, setEmployer] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [refreshDialogOpen, setRefreshDialogOpen] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     loadEmployer();
@@ -80,6 +98,28 @@ const EmployerView = () => {
       setError(err.response?.data?.message || LABELS.loadError);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleRefreshPolicies = async () => {
+    try {
+      setRefreshing(true);
+      // Use the employer's organization ID (organizationId) for the refresh
+      const orgId = employer?.organizationId || employer?.id;
+      const count = await refreshBenefitPoliciesForEmployer(orgId);
+      openSnackbar({ 
+        message: LABELS.refreshPoliciesSuccess.replace('{count}', count), 
+        variant: 'success' 
+      });
+      setRefreshDialogOpen(false);
+    } catch (err) {
+      console.error('[EmployerView] Failed to refresh policies:', err);
+      openSnackbar({ 
+        message: err.response?.data?.message || LABELS.refreshPoliciesError, 
+        variant: 'error' 
+      });
+    } finally {
+      setRefreshing(false);
     }
   };
 
@@ -287,6 +327,17 @@ const EmployerView = () => {
         {/* Action Buttons at Bottom */}
         <Divider sx={{ my: 3 }} />
         <Stack direction="row" spacing={2} justifyContent="flex-end">
+          {/* Bulk Refresh Benefit Policies Button */}
+          <RBACGuard requiredPermissions={['benefit_policies.update']}>
+            <Button 
+              variant="outlined" 
+              color="secondary"
+              startIcon={<RefreshIcon />} 
+              onClick={() => setRefreshDialogOpen(true)}
+            >
+              {LABELS.refreshPolicies}
+            </Button>
+          </RBACGuard>
           <Button variant="outlined" startIcon={<ArrowBackIcon />} onClick={() => navigate('/employers')}>
             {LABELS.back}
           </Button>
@@ -295,6 +346,39 @@ const EmployerView = () => {
           </Button>
         </Stack>
       </MainCard>
+
+      {/* Refresh Policies Confirmation Dialog */}
+      <Dialog
+        open={refreshDialogOpen}
+        onClose={() => !refreshing && setRefreshDialogOpen(false)}
+      >
+        <DialogTitle>{LABELS.refreshPoliciesTitle}</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            {LABELS.refreshPoliciesConfirm}
+          </DialogContentText>
+          <Alert severity="info" sx={{ mt: 2 }}>
+            سيتم تعيين الوثيقة النشطة الحالية لجميع أعضاء صاحب العمل هذا.
+          </Alert>
+        </DialogContent>
+        <DialogActions>
+          <Button 
+            onClick={() => setRefreshDialogOpen(false)} 
+            disabled={refreshing}
+          >
+            {LABELS.cancel}
+          </Button>
+          <Button 
+            onClick={handleRefreshPolicies} 
+            variant="contained" 
+            color="primary"
+            disabled={refreshing}
+            startIcon={refreshing ? <CircularProgress size={16} /> : <RefreshIcon />}
+          >
+            {LABELS.confirm}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </>
   );
 };

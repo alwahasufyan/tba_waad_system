@@ -220,6 +220,60 @@ const MemberView = () => {
           <InfoRow label="باقة المنافع" value={member?.benefitPackageId} />
         </SectionCard>
 
+        {/* Benefit Policy Information */}
+        <SectionCard title="وثيقة المنافع" icon={<LocalHospitalIcon color="primary" />}>
+          {member?.benefitPolicyId ? (
+            <>
+              <InfoRow label="اسم الوثيقة" value={member?.benefitPolicyName} />
+              <InfoRow label="رمز الوثيقة" value={member?.benefitPolicyCode} />
+              <Grid container spacing={2} sx={{ py: 1 }}>
+                <Grid item xs={12} sm={4}>
+                  <Typography variant="body2" color="text.secondary" fontWeight={500}>
+                    حالة الوثيقة
+                  </Typography>
+                </Grid>
+                <Grid item xs={12} sm={8}>
+                  <Chip
+                    size="small"
+                    label={
+                      member?.benefitPolicyStatus === 'ACTIVE' ? 'نشطة' :
+                      member?.benefitPolicyStatus === 'DRAFT' ? 'مسودة' :
+                      member?.benefitPolicyStatus === 'SUSPENDED' ? 'معلقة' :
+                      member?.benefitPolicyStatus === 'EXPIRED' ? 'منتهية' :
+                      member?.benefitPolicyStatus === 'CANCELLED' ? 'ملغاة' :
+                      member?.benefitPolicyStatus || 'غير محدد'
+                    }
+                    color={
+                      member?.benefitPolicyStatus === 'ACTIVE' ? 'success' :
+                      member?.benefitPolicyStatus === 'DRAFT' ? 'default' :
+                      member?.benefitPolicyStatus === 'SUSPENDED' ? 'warning' :
+                      member?.benefitPolicyStatus === 'EXPIRED' ? 'error' :
+                      member?.benefitPolicyStatus === 'CANCELLED' ? 'error' :
+                      'default'
+                    }
+                  />
+                </Grid>
+              </Grid>
+              <Divider sx={{ my: 1 }} />
+              <InfoRow label="تاريخ بداية الوثيقة" value={member?.benefitPolicyStartDate} />
+              <InfoRow label="تاريخ انتهاء الوثيقة" value={member?.benefitPolicyEndDate} />
+              {/* Warning for expired or suspended policies */}
+              {(member?.benefitPolicyStatus === 'EXPIRED' || member?.benefitPolicyStatus === 'SUSPENDED') && (
+                <Alert severity="warning" sx={{ mt: 2 }}>
+                  {member?.benefitPolicyStatus === 'EXPIRED' 
+                    ? 'وثيقة المنافع المرتبطة بهذا العضو منتهية الصلاحية'
+                    : 'وثيقة المنافع المرتبطة بهذا العضو معلقة مؤقتاً'
+                  }
+                </Alert>
+              )}
+            </>
+          ) : (
+            <Alert severity="info">
+              لم يتم تعيين وثيقة منافع لهذا العضو
+            </Alert>
+          )}
+        </SectionCard>
+
         {/* Membership Period & Status */}
         <SectionCard title="فترة التغطية والحالة" icon={<CalendarMonthIcon color="primary" />}>
           <InfoRow label="حالة العضوية" value={member?.status} />

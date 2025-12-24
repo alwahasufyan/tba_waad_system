@@ -117,4 +117,14 @@ public class MemberController {
         List<MemberViewDto> results = memberService.search(query);
         return ResponseEntity.ok(ApiResponse.success(results));
     }
+
+    @PostMapping("/employer/{employerOrgId}/refresh-policies")
+    @PreAuthorize("hasAuthority('MANAGE_MEMBERS') or hasAuthority('MANAGE_BENEFIT_POLICIES')")
+    @Operation(summary = "Refresh benefit policies for employer", 
+               description = "Re-assigns the active benefit policy to all members of an employer")
+    public ResponseEntity<ApiResponse<Integer>> refreshBenefitPoliciesForEmployer(
+            @Parameter(description = "Employer Organization ID", required = true) @PathVariable Long employerOrgId) {
+        int count = memberService.refreshBenefitPoliciesForEmployer(employerOrgId);
+        return ResponseEntity.ok(ApiResponse.success("Refreshed benefit policies for " + count + " members", count));
+    }
 }

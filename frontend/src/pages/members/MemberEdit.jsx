@@ -63,6 +63,7 @@ const MemberEdit = () => {
     nationality: '',
     policyNumber: '',
     benefitPackageId: '',
+    benefitPolicyId: '',
     insuranceCompanyId: '',
     employeeNumber: '',
     joinDate: null,
@@ -99,6 +100,7 @@ const MemberEdit = () => {
   const [employers, setEmployers] = useState([]);
   // Insurance company is fixed - no dropdown needed (single-tenant mode)
   const [benefitPackages, setBenefitPackages] = useState([]);
+  const [benefitPolicies, setBenefitPolicies] = useState([]);
 
   // Loading & Errors
   const [loading, setLoading] = useState(true);
@@ -133,6 +135,7 @@ const MemberEdit = () => {
         nationality: member.nationality || '',
         policyNumber: member.policyNumber || '',
         benefitPackageId: member.benefitPackageId || '',
+        benefitPolicyId: member.benefitPolicyId || '',
         insuranceCompanyId: getFixedInsuranceCompanyId(), // Fixed single-tenant insurance company
         employeeNumber: member.employeeNumber || '',
         joinDate: member.joinDate || null,
@@ -160,14 +163,17 @@ const MemberEdit = () => {
 
   const loadSelectors = async () => {
     try {
-      const [employersRes, packagesRes] = await Promise.all([
+      const [employersRes, packagesRes, policiesRes] = await Promise.all([
         axiosClient.get('/employers/selector'),
         // Insurance company is fixed in single-tenant mode - no API call needed
-        axiosClient.get('/benefit-packages/selector')
+        axiosClient.get('/benefit-packages/selector'),
+        // Load benefit policies for assignment
+        axiosClient.get('/benefit-policies/selector')
       ]);
 
       setEmployers(employersRes.data?.data || []);
       setBenefitPackages(packagesRes.data?.data || []);
+      setBenefitPolicies(policiesRes.data?.data || []);
     } catch (err) {
       console.error('[MemberEdit] Failed to load selectors:', err);
     }
@@ -317,6 +323,7 @@ const MemberEdit = () => {
         nationality: form.nationality || null,
         policyNumber: form.policyNumber || null,
         benefitPackageId: form.benefitPackageId || null,
+        benefitPolicyId: form.benefitPolicyId || null,
         insuranceCompanyId: form.insuranceCompanyId || null,
         employeeNumber: form.employeeNumber || null,
         joinDate: form.joinDate || null,
@@ -556,6 +563,46 @@ const MemberEdit = () => {
                       </MenuItem>
                     ))}
                   </Select>
+                </FormControl>
+              </Grid>
+
+              {/* Benefit Policy Assignment (Admin) */}
+              <Grid item xs={12} md={6}>
+                <FormControl fullWidth>
+                  <InputLabel>وثيقة المنافع</InputLabel>
+                  <Select 
+                    value={form.benefitPolicyId} 
+                    onChange={handleChange('benefitPolicyId')} 
+                    label="وثيقة المنافع"
+                  >
+                    <MenuItem value="">
+                      <em>بدون وثيقة</em>
+                    </MenuItem>
+                    {Array.isArray(benefitPolicies) && benefitPolicies.map((policy) => {
+                      const isWarning = policy.status !== 'ACTIVE';
+                      return (
+                        <MenuItem 
+                          key={policy.id} 
+                          value={policy.id}
+                          sx={isWarning ? { color: 'warning.main' } : {}}
+                        >
+                          {policy.name} 
+                          {policy.status && policy.status !== 'ACTIVE' && ` (${
+                            policy.status === 'EXPIRED' ? 'منتهية' :
+                            policy.status === 'SUSPENDED' ? 'معلقة' :
+                            policy.status === 'DRAFT' ? 'مسودة' :
+                            policy.status
+                          })`}
+                        </MenuItem>
+                      );
+                    })}
+                  </Select>
+                  <FormHelperText>
+                    {form.benefitPolicyId && benefitPolicies.find(p => p.id === form.benefitPolicyId)?.status !== 'ACTIVE'
+                      ? '⚠️ الوثيقة المختارة ليست نشطة'
+                      : 'اختر وثيقة المنافع للعضو'
+                    }
+                  </FormHelperText>
                 </FormControl>
               </Grid>
             </Grid>

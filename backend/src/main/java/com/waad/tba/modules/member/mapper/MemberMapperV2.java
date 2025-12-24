@@ -5,6 +5,7 @@ import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Component;
 
+import com.waad.tba.modules.benefitpolicy.entity.BenefitPolicy;
 import com.waad.tba.modules.employer.entity.Employer;
 import com.waad.tba.modules.insurance.entity.InsuranceCompany;
 import com.waad.tba.modules.member.dto.FamilyMemberDto;
@@ -134,6 +135,17 @@ public class MemberMapperV2 {
         if (entity.getInsuranceCompany() != null) {
             dto.setInsuranceCompanyId(entity.getInsuranceCompany().getId());
             dto.setInsuranceCompanyName(entity.getInsuranceCompany().getName());
+        }
+
+        // Benefit Policy mapping
+        BenefitPolicy bp = entity.getBenefitPolicy();
+        if (bp != null) {
+            dto.setBenefitPolicyId(bp.getId());
+            dto.setBenefitPolicyName(bp.getName());
+            dto.setBenefitPolicyCode(bp.getCode());
+            dto.setBenefitPolicyStatus(bp.getStatus() != null ? bp.getStatus().name() : null);
+            dto.setBenefitPolicyStartDate(bp.getStartDate());
+            dto.setBenefitPolicyEndDate(bp.getEndDate());
         }
 
         if (familyMembers != null && !familyMembers.isEmpty()) {

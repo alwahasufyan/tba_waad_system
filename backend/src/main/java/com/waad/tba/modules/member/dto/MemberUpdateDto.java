@@ -62,6 +62,10 @@ public class MemberUpdateDto {
     @Schema(description = "Insurance company ID", example = "1")
     private Long insuranceCompanyId;
 
+    // Benefit Policy Assignment (Admin only)
+    @Schema(description = "Benefit Policy ID to assign to member", example = "1")
+    private Long benefitPolicyId;
+
     // Employment Information
     @Schema(description = "Employee number", example = "EMP-001")
     private String employeeNumber;
