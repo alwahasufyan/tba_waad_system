@@ -18,9 +18,17 @@ import com.waad.tba.modules.member.entity.FamilyMember;
 import com.waad.tba.modules.member.entity.Member;
 import com.waad.tba.modules.member.entity.MemberAttribute;
 
+
+/**
+ * Mapper class for converting between Member entities and DTOs.
+ * يوفر عمليات التحويل بين الكيانات (Entities) و DTOs الخاصة بالأعضاء.
+ */
 @Component
 public class MemberMapperV2 {
 
+    /**
+     * تحويل MemberCreateDto إلى كيان Member
+     */
     public Member toEntity(MemberCreateDto dto) {
         if (dto == null) return null;
 
@@ -49,12 +57,14 @@ public class MemberMapperV2 {
                 .active(dto.getActive() != null && dto.getActive())
                 .build();
 
+        // ربط جهة العمل إذا وجدت
         if (dto.getEmployerId() != null) {
             Employer employer = new Employer();
             employer.setId(dto.getEmployerId());
             entity.setEmployer(employer);
         }
 
+        // ربط شركة التأمين إذا وجدت
         if (dto.getInsuranceCompanyId() != null) {
             InsuranceCompany ic = new InsuranceCompany();
             ic.setId(dto.getInsuranceCompanyId());
@@ -64,6 +74,9 @@ public class MemberMapperV2 {
         return entity;
     }
 
+    /**
+     * تحديث كيان Member من MemberUpdateDto
+     */
     public void updateEntityFromDto(Member entity, MemberUpdateDto dto) {
         if (entity == null || dto == null) return;
 
@@ -142,7 +155,7 @@ public class MemberMapperV2 {
         if (bp != null) {
             dto.setBenefitPolicyId(bp.getId());
             dto.setBenefitPolicyName(bp.getName());
-            dto.setBenefitPolicyCode(bp.getCode());
+            dto.setBenefitPolicyCode(bp.getPolicyCode());
             dto.setBenefitPolicyStatus(bp.getStatus() != null ? bp.getStatus().name() : null);
             dto.setBenefitPolicyStartDate(bp.getStartDate());
             dto.setBenefitPolicyEndDate(bp.getEndDate());
