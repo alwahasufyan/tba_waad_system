@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Box,
@@ -8,7 +8,8 @@ import {
   Stack,
   Tooltip,
   Typography,
-  CircularProgress
+  CircularProgress,
+  Alert
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -65,12 +66,32 @@ const BenefitPoliciesList = () => {
     data,
     isLoading,
     isFetching,
+    isError,
+    error,
     refetch
   } = useQuery({
     queryKey: ['benefit-policies', pagination],
     queryFn: () => getBenefitPolicies(pagination),
-    keepPreviousData: true
+    keepPreviousData: true,
+    retry: 1
   });
+
+  // Debug logging - only in development
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[BenefitPoliciesList] Query state:', {
+        isLoading,
+        isFetching,
+        isError,
+        hasData: !!data,
+        recordCount: data?.content?.length ?? 0,
+        totalElements: data?.totalElements ?? 'N/A'
+      });
+      if (isError) {
+        console.error('[BenefitPoliciesList] Error:', error);
+      }
+    }
+  }, [data, isLoading, isFetching, isError, error]);
 
   // Transform data for DataTable
   const tableData = useMemo(() => {
@@ -211,6 +232,48 @@ const BenefitPoliciesList = () => {
         <MainCard>
           <Box display="flex" justifyContent="center" alignItems="center" minHeight={400}>
             <CircularProgress />
+          </Box>
+        </MainCard>
+      ) : isError ? (
+        <MainCard>
+          <Alert 
+            severity="error" 
+            sx={{ mb: 2 }}
+            action={
+              <Button color="inherit" size="small" onClick={() => refetch()}>
+                إعادة المحاولة
+              </Button>
+            }
+          >
+            فشل في تحميل وثائق المنافع: {error?.message || 'خطأ غير معروف'}
+          </Alert>
+        </MainCard>
+      ) : tableData.length === 0 ? (
+        <MainCard>
+          <Box 
+            display="flex" 
+            flexDirection="column" 
+            justifyContent="center" 
+            alignItems="center" 
+            minHeight={300}
+            sx={{ py: 4 }}
+          >
+            <Typography variant="h6" color="text.secondary" gutterBottom>
+              لا توجد وثائق منافع
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+              لم يتم إنشاء أي وثائق منافع بعد. يمكنك إنشاء وثيقة جديدة للبدء.
+            </Typography>
+            <RBACGuard requiredPermissions={['benefit_policies.create']}>
+              <Button
+                variant="contained"
+                color="primary"
+                startIcon={<AddIcon />}
+                onClick={handleAdd}
+              >
+                إنشاء وثيقة جديدة
+              </Button>
+            </RBACGuard>
           </Box>
         </MainCard>
       ) : (
