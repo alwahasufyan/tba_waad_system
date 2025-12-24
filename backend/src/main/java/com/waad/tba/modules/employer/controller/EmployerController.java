@@ -28,7 +28,7 @@ public class EmployerController {
         return ResponseEntity.ok(ApiResponse.success(employers));
     }
 
-    @GetMapping("/selectors")
+    @GetMapping({"/selectors", "/selector"})
     public ResponseEntity<ApiResponse<List<EmployerSelectorDto>>> selectors() {
         List<EmployerSelectorDto> selectors = service.getSelectors();
         return ResponseEntity.ok(ApiResponse.success(selectors));
