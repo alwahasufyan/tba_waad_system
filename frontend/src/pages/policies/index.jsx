@@ -323,7 +323,7 @@ export default function PoliciesList() {
                 <MenuItem value="all">All Employers</MenuItem>
                 {Array.isArray(employers) && employers.map((employer) => (
                   <MenuItem key={employer.id} value={employer.id.toString()}>
-                    {employer.nameAr || employer.nameEn || employer.name}
+                    {employer.label || employer.name || ''}
                   </MenuItem>
                 ))}
               </Select>

@@ -44,7 +44,12 @@ public class MemberImportPreviewDto {
     private int updateCount;
     
     /**
-     * Rows with validation errors
+     * Rows with non-critical warnings (will be imported)
+     */
+    private int warningCount;
+    
+    /**
+     * Rows with validation errors (will be skipped)
      */
     private int errorCount;
     
@@ -92,9 +97,17 @@ public class MemberImportPreviewDto {
         private String fullName;
         private String employerName;
         private String policyNumber;
-        private String status;  // NEW, UPDATE, ERROR
+        /**
+         * Row status:
+         * - NEW: New member will be created
+         * - UPDATE: Existing member will be updated
+         * - WARNING: Row has non-critical issues but can be imported
+         * - ERROR: Row has critical errors and will be skipped
+         */
+        private String status;  // NEW, UPDATE, WARNING, ERROR
         private Map<String, String> attributes;  // Extra columns
-        private List<String> errors;
+        private List<String> errors;    // Critical errors (block import)
+        private List<String> warnings;  // Non-critical warnings (allow import)
     }
     
     /**
@@ -109,5 +122,6 @@ public class MemberImportPreviewDto {
         private String field;
         private String value;
         private String message;
+        private String severity;  // ERROR, WARNING
     }
 }

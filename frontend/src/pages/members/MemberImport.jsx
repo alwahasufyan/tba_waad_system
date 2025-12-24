@@ -86,14 +86,16 @@ const ACCEPTED_FILE_TYPES = '.xlsx,.xls';
 const STATUS_COLORS = {
   NEW: 'success',
   UPDATE: 'info',
+  WARNING: 'warning',  // Has warnings but can be imported
   ERROR: 'error',
-  SKIP: 'warning'
+  SKIP: 'default'
 };
 
 const STATUS_LABELS = {
   NEW: 'جديد',
   UPDATE: 'تحديث',
-  ERROR: 'خطأ',
+  WARNING: 'تحذير',    // Will be imported with warnings
+  ERROR: 'خطأ',        // Will be skipped
   SKIP: 'تخطي'
 };
 
@@ -389,7 +391,7 @@ const MemberImport = () => {
       <Box>
         {/* Summary Cards */}
         <Grid container spacing={2} sx={{ mb: 3 }}>
-          <Grid item xs={6} sm={3}>
+          <Grid item xs={6} sm={2.4}>
             <Card variant="outlined">
               <CardContent sx={{ textAlign: 'center', py: 2 }}>
                 <Typography variant="h4" color="primary.main">
@@ -401,11 +403,11 @@ const MemberImport = () => {
               </CardContent>
             </Card>
           </Grid>
-          <Grid item xs={6} sm={3}>
+          <Grid item xs={6} sm={2.4}>
             <Card variant="outlined">
               <CardContent sx={{ textAlign: 'center', py: 2 }}>
                 <Typography variant="h4" color="success.main">
-                  {previewData.validCount || 0}
+                  {previewData.newCount || 0}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
                   سجلات جديدة
@@ -413,7 +415,7 @@ const MemberImport = () => {
               </CardContent>
             </Card>
           </Grid>
-          <Grid item xs={6} sm={3}>
+          <Grid item xs={6} sm={2.4}>
             <Card variant="outlined">
               <CardContent sx={{ textAlign: 'center', py: 2 }}>
                 <Typography variant="h4" color="info.main">
@@ -425,7 +427,19 @@ const MemberImport = () => {
               </CardContent>
             </Card>
           </Grid>
-          <Grid item xs={6} sm={3}>
+          <Grid item xs={6} sm={2.4}>
+            <Card variant="outlined">
+              <CardContent sx={{ textAlign: 'center', py: 2 }}>
+                <Typography variant="h4" color="warning.main">
+                  {previewData.warningCount || 0}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  تحذيرات
+                </Typography>
+              </CardContent>
+            </Card>
+          </Grid>
+          <Grid item xs={6} sm={2.4}>
             <Card variant="outlined">
               <CardContent sx={{ textAlign: 'center', py: 2 }}>
                 <Typography variant="h4" color="error.main">
@@ -460,7 +474,11 @@ const MemberImport = () => {
                 <TableRow
                   key={row.rowNumber || index}
                   sx={{
-                    bgcolor: row.status === 'ERROR' ? 'error.lighter' : 'inherit'
+                    bgcolor: row.status === 'ERROR' 
+                      ? 'error.lighter' 
+                      : row.status === 'WARNING' 
+                        ? 'warning.lighter' 
+                        : 'inherit'
                   }}
                 >
                   <TableCell align="center">{row.rowNumber || index + 1}</TableCell>
@@ -476,10 +494,18 @@ const MemberImport = () => {
                   <TableCell>{row.employerName || '-'}</TableCell>
                   <TableCell>{row.policyNumber || '-'}</TableCell>
                   <TableCell>
+                    {/* Show errors (critical) */}
                     {row.errors?.length > 0 ? (
                       <Tooltip title={row.errors.join(' | ')}>
                         <Typography variant="body2" color="error" noWrap sx={{ maxWidth: 200 }}>
-                          {row.errors[0]}
+                          ❌ {row.errors[0]}
+                        </Typography>
+                      </Tooltip>
+                    ) : row.warnings?.length > 0 ? (
+                      /* Show warnings (non-critical) */
+                      <Tooltip title={row.warnings.join(' | ')}>
+                        <Typography variant="body2" color="warning.main" noWrap sx={{ maxWidth: 200 }}>
+                          ⚠️ {row.warnings[0]}
                         </Typography>
                       </Tooltip>
                     ) : (

@@ -504,7 +504,7 @@ const MemberCreate = () => {
                     <MenuItem value="">-- اختر جهة العمل --</MenuItem>
                     {Array.isArray(employers) && employers.map((emp) => (
                       <MenuItem key={emp.id} value={emp.id}>
-                        {emp.code} - {emp.nameAr}
+                        {emp.label || ''}
                       </MenuItem>
                     ))}
                   </Select>

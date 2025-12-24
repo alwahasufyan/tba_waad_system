@@ -24,7 +24,7 @@ public class EmployerMapper {
     public EmployerSelectorDto toSelector(Organization org) {
         return EmployerSelectorDto.builder()
                 .id(org.getId())
-                .name(org.getName())
+                .label(org.getName())  // Use 'label' for frontend dropdown
                 .build();
     }
 }
