@@ -10,6 +10,7 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import com.waad.tba.common.entity.Organization;
+import com.waad.tba.modules.benefitpolicy.entity.BenefitPolicy;
 import com.waad.tba.modules.employer.entity.Employer;
 import com.waad.tba.modules.insurance.entity.InsuranceCompany;
 import com.waad.tba.modules.policy.entity.Policy;
@@ -78,6 +79,15 @@ public class Member {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "policy_id")
     private Policy policy;
+
+    /**
+     * NEW: Benefit Policy for coverage rules.
+     * This is the source of truth for what benefits the member is entitled to.
+     * Auto-assigned on creation based on employer's active policy.
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "benefit_policy_id")
+    private BenefitPolicy benefitPolicy;
 
     // Personal Information
     @NotBlank(message = "Full name in Arabic is required")
@@ -203,6 +213,22 @@ public class Member {
     @Transient
     public String getFullName() {
         return fullNameArabic != null ? fullNameArabic : fullNameEnglish;
+    }
+
+    /**
+     * Check if member has an active benefit policy
+     */
+    @Transient
+    public boolean hasActiveBenefitPolicy() {
+        return benefitPolicy != null && benefitPolicy.isEffective();
+    }
+
+    /**
+     * Check if member has an active benefit policy on a specific date
+     */
+    @Transient
+    public boolean hasActiveBenefitPolicyOn(LocalDate date) {
+        return benefitPolicy != null && benefitPolicy.isEffectiveOn(date);
     }
 
     // Enums

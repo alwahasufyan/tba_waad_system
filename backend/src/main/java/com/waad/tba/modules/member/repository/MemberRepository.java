@@ -90,4 +90,34 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
            "LOWER(m.civilId) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
            "LOWER(m.cardNumber) LIKE LOWER(CONCAT('%', :search, '%')))")
     Page<Member> searchByInsuranceCompany(@Param("companyId") Long companyId, @Param("search") String search, Pageable pageable);
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // ORGANIZATION-BASED QUERIES (Canonical Model)
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    /**
+     * Find all members by employer organization ID
+     */
+    List<Member> findByEmployerOrganizationId(Long employerOrgId);
+
+    /**
+     * Find all members by employer organization ID (paginated)
+     */
+    Page<Member> findByEmployerOrganizationId(Long employerOrgId, Pageable pageable);
+
+    /**
+     * Find members without a benefit policy for an employer
+     */
+    @Query("SELECT m FROM Member m WHERE m.employerOrganization.id = :employerOrgId AND m.benefitPolicy IS NULL")
+    List<Member> findMembersWithoutBenefitPolicy(@Param("employerOrgId") Long employerOrgId);
+
+    /**
+     * Find members by benefit policy ID
+     */
+    List<Member> findByBenefitPolicyId(Long benefitPolicyId);
+
+    /**
+     * Count members by benefit policy ID
+     */
+    long countByBenefitPolicyId(Long benefitPolicyId);
 }

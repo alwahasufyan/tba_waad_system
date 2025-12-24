@@ -18,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.waad.tba.common.exception.BusinessRuleException;
 import com.waad.tba.common.exception.ResourceNotFoundException;
+import com.waad.tba.modules.benefitpolicy.service.BenefitPolicyCoverageService;
 import com.waad.tba.modules.claim.dto.ClaimApproveDto;
 import com.waad.tba.modules.claim.dto.ClaimCreateDto;
 import com.waad.tba.modules.claim.dto.ClaimRejectDto;
@@ -95,6 +96,9 @@ public class ClaimService {
     private final CoverageValidationService coverageValidationService;
     private final ClaimStateMachine claimStateMachine;
     
+    // Phase 8: BenefitPolicy-based coverage validation (NEW - Single Source of Truth)
+    private final BenefitPolicyCoverageService benefitPolicyCoverageService;
+    
     // Phase 7: Operational completeness services
     private final ProviderNetworkService providerNetworkService;
     private final AttachmentRulesService attachmentRulesService;
@@ -150,6 +154,9 @@ public class ClaimService {
      * 5. Provider network validation (IN_NETWORK/OUT_OF_NETWORK warning)
      * 6. Cost calculation preview (deductible, co-pay)
      * 7. Audit trail creation
+     * 
+     * PHASE 8 ADDITIONS:
+     * 8. BenefitPolicy validation (new single source of truth)
      */
     public ClaimViewDto createClaim(ClaimCreateDto dto) {
         log.info("📝 Creating claim for member {}", dto.getMemberId());
@@ -163,16 +170,31 @@ public class ClaimService {
         
         LocalDate serviceDate = dto.getVisitDate() != null ? dto.getVisitDate() : LocalDate.now();
         
-        // Validate member has active policy for service date
-        policyValidationService.validateMemberPolicy(member, serviceDate);
+        // ═══════════════════════════════════════════════════════════════════════════
+        // PHASE 8: BenefitPolicy Validation (Single Source of Truth)
+        // ═══════════════════════════════════════════════════════════════════════════
+        // Validate member has active BenefitPolicy for service date
+        // This replaces/supplements the old PolicyValidationService
+        benefitPolicyCoverageService.validateCanCreateClaim(member, serviceDate);
+        log.info("✅ Member {} has valid BenefitPolicy for date {}", member.getCivilId(), serviceDate);
         
-        // Validate coverage if policy exists
+        // Legacy validation (kept for backward compatibility with old Policy system)
+        try {
+            policyValidationService.validateMemberPolicy(member, serviceDate);
+        } catch (Exception e) {
+            // Log but don't block - BenefitPolicy is now the primary validation
+            log.warn("⚠️ Legacy policy validation warning: {}", e.getMessage());
+        }
+        
+        // Validate coverage if policy exists (legacy)
         Policy policy = member.getPolicy();
         if (policy != null && dto.getRequestedAmount() != null) {
-            // Convert DTO lines to entity lines for validation (if available)
-            // For now, validate amount limits
-            coverageValidationService.validateAmountLimits(
-                member, policy, dto.getRequestedAmount(), serviceDate);
+            try {
+                coverageValidationService.validateAmountLimits(
+                    member, policy, dto.getRequestedAmount(), serviceDate);
+            } catch (Exception e) {
+                log.warn("⚠️ Legacy coverage validation warning: {}", e.getMessage());
+            }
         }
         
         // Phase 7: Provider network validation (non-blocking, just warning)
