@@ -20,8 +20,10 @@ import axiosClient from 'utils/axios';
  * NO token in response - browser automatically stores JSESSIONID cookie
  */
 export const login = async (credentials) => {
-  const userInfo = await axiosClient.post('/auth/session/login', credentials);
-  return { status: 'success', data: userInfo };
+  const response = await axiosClient.post('/auth/session/login', credentials);
+  // Backend returns ApiResponse<UserInfo> wrapped in axios response
+  // response.data = { status: 'success', data: UserInfo, message: '...' }
+  return response.data;
 };
 
 /**
@@ -31,8 +33,10 @@ export const login = async (credentials) => {
  */
 export const me = async () => {
   try {
-    const userInfo = await axiosClient.get('/auth/session/me');
-    return { status: 'success', data: userInfo };
+    const response = await axiosClient.get('/auth/session/me');
+    // Backend returns ApiResponse<UserInfo> wrapped in axios response
+    // response.data = { status: 'success', data: UserInfo, message: '...' }
+    return response.data;
   } catch (error) {
     // Expected 401 when no session - return safe response instead of throwing
     if (error.response?.status === 401) {
@@ -48,8 +52,9 @@ export const me = async () => {
  * Clears backend session and JSESSIONID cookie
  */
 export const logout = async () => {
-  const result = await axiosClient.post('/auth/session/logout');
-  return { status: 'success', data: result };
+  const response = await axiosClient.post('/auth/session/logout');
+  // Backend returns ApiResponse<Void> wrapped in axios response
+  return response.data;
 };
 
 /**
