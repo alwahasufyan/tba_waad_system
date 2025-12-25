@@ -29,18 +29,20 @@ export default function DashboardLayout() {
   const { state } = useConfig();
   const isContainer = state.container;
 
-  // Redirect to login if not authenticated
-  if (!user) {
-    return <Navigate to="/login" replace />;
-  }
-
   // set media wise responsive drawer
+  // ✅ FIXED: useEffect MUST be called unconditionally (before any returns)
   useEffect(() => {
     if (state.menuOrientation !== MenuOrientation.MINI_VERTICAL) {
       handlerDrawerOpen(!downXL);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [downXL]);
+
+  // ✅ FIXED: Conditional returns AFTER all hooks
+  // Redirect to login if not authenticated
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
 
   if (menuMasterLoading) return <Loader />;
 
