@@ -106,6 +106,31 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
     Page<Member> findByEmployerOrganizationId(Long employerOrgId, Pageable pageable);
 
     /**
+     * Count members by employer organization ID
+     */
+    long countByEmployerOrganizationId(Long employerOrgId);
+
+    /**
+     * Search members by employer organization ID (paginated)
+     */
+    @Query("SELECT m FROM Member m WHERE m.employerOrganization.id = :employerOrgId AND (" +
+           "LOWER(m.fullNameEnglish) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
+           "LOWER(m.fullNameArabic) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
+           "LOWER(m.civilId) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
+           "LOWER(m.cardNumber) LIKE LOWER(CONCAT('%', :search, '%')))")
+    Page<Member> searchPagedByEmployerOrganizationId(@Param("search") String search, @Param("employerOrgId") Long employerOrgId, Pageable pageable);
+
+    /**
+     * Search members by employer organization ID (non-paginated)
+     */
+    @Query("SELECT m FROM Member m WHERE m.employerOrganization.id = :employerOrgId AND (" +
+           "LOWER(m.fullNameEnglish) LIKE LOWER(CONCAT('%', :query, '%')) OR " +
+           "LOWER(m.fullNameArabic) LIKE LOWER(CONCAT('%', :query, '%')) OR " +
+           "LOWER(m.civilId) LIKE LOWER(CONCAT('%', :query, '%')) OR " +
+           "LOWER(m.cardNumber) LIKE LOWER(CONCAT('%', :query, '%')))")
+    List<Member> searchByEmployerOrganizationId(@Param("query") String query, @Param("employerOrgId") Long employerOrgId);
+
+    /**
      * Find members without a benefit policy for an employer
      */
     @Query("SELECT m FROM Member m WHERE m.employerOrganization.id = :employerOrgId AND m.benefitPolicy IS NULL")

@@ -1,7 +1,6 @@
 package com.waad.tba.modules.member.service;
 
 import java.time.LocalDate;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -15,6 +14,8 @@ import com.waad.tba.common.entity.Organization;
 import com.waad.tba.common.enums.OrganizationType;
 import com.waad.tba.common.exception.ResourceNotFoundException;
 import com.waad.tba.common.repository.OrganizationRepository;
+import com.waad.tba.common.service.OrganizationContextService;
+import com.waad.tba.common.service.OrganizationContextService.OrganizationContext;
 import com.waad.tba.modules.benefitpolicy.entity.BenefitPolicy;
 import com.waad.tba.modules.benefitpolicy.repository.BenefitPolicyRepository;
 import com.waad.tba.modules.employer.entity.Employer;
@@ -55,32 +56,31 @@ public class MemberService {
     private final BenefitPolicyRepository benefitPolicyRepo;
     private final OrganizationRepository organizationRepo;
     private final AuthorizationService authorizationService;
+    private final OrganizationContextService organizationContextService;
 
     /**
-     * Get member selector options with data-level filtering.
+     * Get member selector options with organization context filtering.
      * 
-     * FILTERING:
-     * - SUPER_ADMIN: All members
-     * - INSURANCE_ADMIN: All members
-     * - EMPLOYER_ADMIN: Only members from their employer
+     * ODOO-LIKE BEHAVIOR:
+     * - TPA context (employerIdHeader = null): All members
+     * - Employer context (employerIdHeader = 123): Only that employer's members
+     * - EMPLOYER role: Locked to their own employerId
+     * 
+     * @param employerIdHeader Organization ID from X-Employer-ID header (null = TPA/show all)
+     * @return List of member selector options
      */
-    public List<MemberSelectorDto> getSelectorOptions() {
-        log.debug("📋 Getting member selector options with filtering");
+    public List<MemberSelectorDto> getSelectorOptions(Long employerIdHeader) {
+        log.debug("📋 Getting member selector options with organization context");
         
-        User currentUser = authorizationService.getCurrentUser();
-        if (currentUser == null) {
-            log.warn("⚠️ No authenticated user found");
-            return Collections.emptyList();
-        }
-        
-        Long employerFilter = authorizationService.getEmployerFilterForUser(currentUser);
+        OrganizationContext context = organizationContextService.getOrganizationContext(employerIdHeader);
         List<Member> members;
         
-        if (employerFilter != null) {
-            log.debug("🔒 Filtering members by employerId={}", employerFilter);
-            members = memberRepository.findByEmployerId(employerFilter);
+        if (context.shouldFilter()) {
+            Long employerId = context.getEmployerIdForFiltering();
+            log.debug("🔒 Employer context - filtering members by employerId={}", employerId);
+            members = memberRepository.findByEmployerOrganizationId(employerId);
         } else {
-            log.debug("🔓 No filter - returning all members");
+            log.debug("🔓 TPA context - returning all members");
             members = memberRepository.findAll();
         }
         
@@ -89,34 +89,42 @@ public class MemberService {
                 .collect(Collectors.toList());
     }
 
-    public long count() {
-        User currentUser = authorizationService.getCurrentUser();
-        if (currentUser == null) {
-            return 0;
-        }
+    /**
+     * Count members with organization context filtering.
+     * 
+     * @param employerIdHeader Organization ID from X-Employer-ID header (null = TPA/show all)
+     * @return Total count of members
+     */
+    public long count(Long employerIdHeader) {
+        OrganizationContext context = organizationContextService.getOrganizationContext(employerIdHeader);
         
-        Long employerFilter = authorizationService.getEmployerFilterForUser(currentUser);
-        if (employerFilter != null) {
-            return memberRepository.countByEmployerId(employerFilter);
+        if (context.shouldFilter()) {
+            Long employerId = context.getEmployerIdForFiltering();
+            log.debug("🔒 Employer context - counting members for employerId={}", employerId);
+            return memberRepository.countByEmployerOrganizationId(employerId);
+        } else {
+            log.debug("🔓 TPA context - counting all members");
+            return memberRepository.count();
         }
-        
-        return memberRepository.count();
     }
 
-    public List<MemberViewDto> search(String query) {
-        User currentUser = authorizationService.getCurrentUser();
-        if (currentUser == null) {
-            return Collections.emptyList();
-        }
-        
-        Long employerFilter = authorizationService.getEmployerFilterForUser(currentUser);
+    /**
+     * Search members with organization context filtering.
+     * 
+     * @param employerIdHeader Organization ID from X-Employer-ID header (null = TPA/show all)
+     * @param query Search query string
+     * @return List of matching members
+     */
+    public List<MemberViewDto> search(Long employerIdHeader, String query) {
+        OrganizationContext context = organizationContextService.getOrganizationContext(employerIdHeader);
         List<Member> members;
         
-        if (employerFilter != null) {
-            // Search within employer's members only
-            members = memberRepository.searchByEmployerId(query, employerFilter);
+        if (context.shouldFilter()) {
+            Long employerId = context.getEmployerIdForFiltering();
+            log.debug("🔒 Employer context - searching members for employerId={}", employerId);
+            members = memberRepository.searchByEmployerOrganizationId(query, employerId);
         } else {
-            // Search all members
+            log.debug("🔓 TPA context - searching all members");
             members = memberRepository.search(query);
         }
         
@@ -336,29 +344,35 @@ public class MemberService {
         return viewDto;
     }
 
+    /**
+     * List members with pagination and organization context filtering.
+     * 
+     * ODOO-LIKE BEHAVIOR:
+     * - TPA context: Returns all members across all employers
+     * - Employer context: Returns only members from specified employer
+     * 
+     * @param employerIdHeader Organization ID from X-Employer-ID header (null = TPA/show all)
+     * @param pageable Pagination parameters
+     * @param search Optional search query
+     * @return Paginated list of members
+     */
     @Transactional(readOnly = true)
-    public Page<MemberViewDto> listMembers(Pageable pageable, String search) {
-        log.debug("📋 Listing members with pagination. search={}", search);
+    public Page<MemberViewDto> listMembers(Long employerIdHeader, Pageable pageable, String search) {
+        log.debug("📋 Listing members with organization context. search={}", search);
         
-        User currentUser = authorizationService.getCurrentUser();
-        if (currentUser == null) {
-            return Page.empty(pageable);
-        }
-        
-        Long employerFilter = authorizationService.getEmployerFilterForUser(currentUser);
+        OrganizationContext context = organizationContextService.getOrganizationContext(employerIdHeader);
         Page<Member> memberPage;
         
-        if (employerFilter != null) {
-            // Filter by employer
-            log.debug("🔒 Filtering members by employerId={}", employerFilter);
+        if (context.shouldFilter()) {
+            Long employerId = context.getEmployerIdForFiltering();
+            log.debug("🔒 Employer context - filtering members by employerId={}", employerId);
             if (search != null && !search.isBlank()) {
-                memberPage = memberRepository.searchPagedByEmployerId(search, employerFilter, pageable);
+                memberPage = memberRepository.searchPagedByEmployerOrganizationId(search, employerId, pageable);
             } else {
-                memberPage = memberRepository.findByEmployerId(employerFilter, pageable);
+                memberPage = memberRepository.findByEmployerOrganizationId(employerId, pageable);
             }
         } else {
-            // No filter - return all
-            log.debug("🔓 No filter - returning all members");
+            log.debug("🔓 TPA context - returning all members");
             if (search != null && !search.isBlank()) {
                 memberPage = memberRepository.searchPaged(search, pageable);
             } else {
