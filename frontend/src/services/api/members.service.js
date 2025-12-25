@@ -1,11 +1,11 @@
 import axiosClient from 'utils/axios';
+import { normalizePaginatedResponse } from 'utils/api-response-normalizer';
 
 /**
  * Members API Service
  * Provides CRUD operations for Members module
  * Backend: MemberController.java
  */
-
 const BASE_URL = '/members';
 
 /**
@@ -27,7 +27,7 @@ const unwrap = (response) => response.data?.data || response.data;
  */
 export const getMembers = async (params = {}) => {
   const response = await axiosClient.get(BASE_URL, { params });
-  return unwrap(response);
+  return normalizePaginatedResponse(response);
 };
 
 /**

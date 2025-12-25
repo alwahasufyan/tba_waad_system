@@ -29,6 +29,8 @@ import ReceiptIcon from '@mui/icons-material/Receipt';
 import MainCard from 'components/MainCard';
 import ModernPageHeader from 'components/tba/ModernPageHeader';
 import TbaDataTable from 'components/tba/TbaDataTable';
+import TableErrorBoundary from 'components/TableErrorBoundary';
+import PermissionGuard from 'components/PermissionGuard';
 
 // Insurance UX Components - Phase B2
 import { CardStatusBadge } from 'components/insurance';
@@ -38,6 +40,7 @@ import { useTableRefresh } from 'contexts/TableRefreshContext';
 
 // Services
 import { claimsService } from 'services/api/claims.service';
+import { normalizePaginatedResponse } from 'utils/api-response-normalizer';
 
 // ============================================================================
 // CONSTANTS
@@ -135,25 +138,8 @@ const ClaimsList = () => {
 
   const fetcher = useCallback(async (params) => {
     const data = await claimsService.getAll(params);
-    // If backend returns array, wrap it for TbaDataTable
-    if (Array.isArray(data)) {
-      return {
-        items: data,
-        total: data.length,
-        page: 1,
-        size: data.length
-      };
-    }
-    // Handle Spring Page format
-    if (data?.content) {
-      return {
-        items: data.content,
-        total: data.totalElements || data.content.length,
-        page: (data.number || 0) + 1,
-        size: data.size || 20
-      };
-    }
-    return data;
+    // Use normalizer to handle all response formats safely
+    return normalizePaginatedResponse(data);
   }, []);
 
   // ========================================
@@ -341,17 +327,19 @@ const ClaimsList = () => {
 
       {/* ====== MAIN CARD WITH TABLE ====== */}
       <MainCard>
-        <TbaDataTable
-          columns={columns}
-          fetcher={fetcher}
-          queryKey={QUERY_KEY}
-          refreshKey={refreshKey}
-          enableExport={true}
-          enablePrint={true}
-          enableFilters={true}
-          exportFilename="claims"
-          printTitle="تقرير المطالبات"
-        />
+        <TableErrorBoundary>
+          <TbaDataTable
+            columns={columns}
+            fetcher={fetcher}
+            queryKey={QUERY_KEY}
+            refreshKey={refreshKey}
+            enableExport={true}
+            enablePrint={true}
+            enableFilters={true}
+            exportFilename="claims"
+            printTitle="تقرير المطالبات"
+          />
+        </TableErrorBoundary>
       </MainCard>
     </Box>
   );

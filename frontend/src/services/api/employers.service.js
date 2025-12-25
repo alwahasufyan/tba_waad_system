@@ -1,4 +1,5 @@
 import axiosClient from 'utils/axios';
+import { normalizePaginatedResponse } from 'utils/api-response-normalizer';
 
 /**
  * Employers API Service

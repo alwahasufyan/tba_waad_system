@@ -30,6 +30,8 @@ import UploadFileIcon from '@mui/icons-material/UploadFile';
 import MainCard from 'components/MainCard';
 import ModernPageHeader from 'components/tba/ModernPageHeader';
 import TbaDataTable from 'components/tba/TbaDataTable';
+import TableErrorBoundary from 'components/TableErrorBoundary';
+import PermissionGuard from 'components/PermissionGuard';
 
 // Insurance UX Components - Phase B2
 import { MemberTypeIndicator, CardStatusBadge } from 'components/insurance';
@@ -248,13 +250,15 @@ const MembersList = () => {
             </Tooltip>
 
             <Tooltip title="حذف">
-              <IconButton
-                size="small"
-                color="error"
-                onClick={() => handleDelete(row.original?.id, row.original?.fullNameArabic || row.original?.civilId)}
-              >
-                <DeleteIcon fontSize="small" />
-              </IconButton>
+              <PermissionGuard requires="members.delete">
+                <IconButton
+                  size="small"
+                  color="error"
+                  onClick={() => handleDelete(row.original?.id, row.original?.fullNameArabic || row.original?.civilId)}
+                >
+                  <DeleteIcon fontSize="small" />
+                </IconButton>
+              </PermissionGuard>
             </Tooltip>
           </Stack>
         )
@@ -277,29 +281,35 @@ const MembersList = () => {
         breadcrumbs={[{ label: 'الرئيسية', path: '/' }, { label: 'الأعضاء' }]}
         actions={
           <Stack direction="row" spacing={1}>
-            <Button variant="outlined" startIcon={<UploadFileIcon />} onClick={handleNavigateImport}>
-              استيراد من Excel
-            </Button>
-            <Button variant="contained" startIcon={<AddIcon />} onClick={handleNavigateAdd}>
-              إضافة عضو جديد
-            </Button>
+            <PermissionGuard requires="members.create">
+              <Button variant="outlined" startIcon={<UploadFileIcon />} onClick={handleNavigateImport}>
+                استيراد من Excel
+              </Button>
+            </PermissionGuard>
+            <PermissionGuard requires="members.create">
+              <Button variant="contained" startIcon={<AddIcon />} onClick={handleNavigateAdd}>
+                إضافة عضو جديد
+              </Button>
+            </PermissionGuard>
           </Stack>
         }
       />
 
       {/* ====== MAIN CARD WITH TABLE ====== */}
       <MainCard>
-        <TbaDataTable
-          columns={columns}
-          fetcher={fetcher}
-          queryKey={QUERY_KEY}
-          refreshKey={refreshKey}
-          enableExport={true}
-          enablePrint={true}
-          enableFilters={true}
-          exportFilename="members"
-          printTitle="تقرير الأعضاء"
-        />
+        <TableErrorBoundary>
+          <TbaDataTable
+            columns={columns}
+            fetcher={fetcher}
+            queryKey={QUERY_KEY}
+            refreshKey={refreshKey}
+            enableExport={true}
+            enablePrint={true}
+            enableFilters={true}
+            exportFilename="members"
+            printTitle="تقرير الأعضاء"
+          />
+        </TableErrorBoundary>
       </MainCard>
     </Box>
   );

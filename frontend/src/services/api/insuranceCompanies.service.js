@@ -1,4 +1,4 @@
-import apiClient from './axiosClient';
+import axiosClient from 'utils/axios';
 
 // ==============================|| INSURANCE COMPANIES SERVICE ||============================== //
 
@@ -17,7 +17,7 @@ export const insuranceCompaniesService = {
    * @returns {Promise<Object>} Pagination response {items, total, page, size}
    */
   getAll: async (params = {}) => {
-    const response = await apiClient.get(BASE_URL, { params });
+    const response = await axiosClient.get(BASE_URL, { params });
     return unwrap(response);
   },
 
@@ -27,7 +27,7 @@ export const insuranceCompaniesService = {
    * @returns {Promise<Object>} Insurance company details
    */
   getById: async (id) => {
-    const response = await apiClient.get(`${BASE_URL}/${id}`);
+    const response = await axiosClient.get(`${BASE_URL}/${id}`);
     return unwrap(response);
   },
 
@@ -37,7 +37,7 @@ export const insuranceCompaniesService = {
    * @returns {Promise<Object>} Created insurance company
    */
   create: async (data) => {
-    const response = await apiClient.post(BASE_URL, data);
+    const response = await axiosClient.post(BASE_URL, data);
     return unwrap(response);
   },
 
@@ -48,7 +48,7 @@ export const insuranceCompaniesService = {
    * @returns {Promise<Object>} Updated insurance company
    */
   update: async (id, data) => {
-    const response = await apiClient.put(`${BASE_URL}/${id}`, data);
+    const response = await axiosClient.put(`${BASE_URL}/${id}`, data);
     return unwrap(response);
   },
 
@@ -58,7 +58,7 @@ export const insuranceCompaniesService = {
    * @returns {Promise<void>}
    */
   remove: async (id) => {
-    const response = await apiClient.delete(`${BASE_URL}/${id}`);
+    const response = await axiosClient.delete(`${BASE_URL}/${id}`);
     return unwrap(response);
   },
 
@@ -68,7 +68,7 @@ export const insuranceCompaniesService = {
    * @returns {Promise<Array>} Filtered insurance companies
    */
   search: async (searchTerm) => {
-    const response = await apiClient.get(`${BASE_URL}/search?q=${encodeURIComponent(searchTerm)}`);
+    const response = await axiosClient.get(`${BASE_URL}/search?q=${encodeURIComponent(searchTerm)}`);
     return unwrap(response);
   }
 };

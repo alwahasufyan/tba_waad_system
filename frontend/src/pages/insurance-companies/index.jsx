@@ -11,7 +11,7 @@ import Chip from '@mui/material/Chip';
 import * as Yup from 'yup';
 import { useFormikContext } from 'formik';
 import { DataTable, CrudDrawer, RBACGuard } from 'components/tba';
-import { insuranceService } from 'services/api';
+import { insuranceCompaniesService } from 'services/api';
 import { useSnackbar } from 'notistack';
 
 export default function InsuranceCompaniesPage() {
@@ -26,7 +26,7 @@ export default function InsuranceCompaniesPage() {
   const loadData = async () => {
     try {
       setLoading(true);
-      const data = await insuranceService.getAll();
+      const data = await insuranceCompaniesService.getAll();
       setCompanies(Array.isArray(data) ? data : []);
     } catch (error) {
       enqueueSnackbar('Failed to load insurance companies', { variant: 'error' });
@@ -64,10 +64,10 @@ export default function InsuranceCompaniesPage() {
   const handleSubmit = async (values) => {
     try {
       if (selected) {
-        await insuranceService.update(selected.id, values);
+        await insuranceCompaniesService.update(selected.id, values);
         enqueueSnackbar('تم تحديث شركة التأمين بنجاح', { variant: 'success' });
       } else {
-        await insuranceService.create(values);
+        await insuranceCompaniesService.create(values);
         enqueueSnackbar('تم إضافة شركة التأمين بنجاح', { variant: 'success' });
       }
       loadData();
@@ -79,7 +79,7 @@ export default function InsuranceCompaniesPage() {
 
   const confirmDelete = async () => {
     try {
-      await insuranceService.remove(toDelete.id);
+      await insuranceCompaniesService.remove(toDelete.id);
       enqueueSnackbar('تم حذف شركة التأمين بنجاح', { variant: 'success' });
       loadData();
     } catch (error) {

@@ -29,6 +29,8 @@ import AssignmentTurnedInIcon from '@mui/icons-material/AssignmentTurnedIn';
 import MainCard from 'components/MainCard';
 import ModernPageHeader from 'components/tba/ModernPageHeader';
 import TbaDataTable from 'components/tba/TbaDataTable';
+import TableErrorBoundary from 'components/TableErrorBoundary';
+import PermissionGuard from 'components/PermissionGuard';
 
 // Insurance UX Components - Phase B2
 import { CardStatusBadge, PriorityBadge } from 'components/insurance';
@@ -334,17 +336,19 @@ const PreApprovalsList = () => {
 
       {/* ====== MAIN CARD WITH TABLE ====== */}
       <MainCard>
-        <TbaDataTable
-          columns={columns}
-          fetcher={fetcher}
-          queryKey={QUERY_KEY}
-          refreshKey={refreshKey}
-          enableExport={true}
-          enablePrint={true}
-          enableFilters={true}
-          exportFilename="pre_approvals"
-          printTitle="تقرير الموافقات المسبقة"
-        />
+        <TableErrorBoundary>
+          <TbaDataTable
+            columns={columns}
+            fetcher={fetcher}
+            queryKey={QUERY_KEY}
+            refreshKey={refreshKey}
+            enableExport={true}
+            enablePrint={true}
+            enableFilters={true}
+            exportFilename="pre_approvals"
+            printTitle="تقرير الموافقات المسبقة"
+          />
+        </TableErrorBoundary>
       </MainCard>
     </Box>
   );

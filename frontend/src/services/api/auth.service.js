@@ -12,7 +12,7 @@
  * - More secure against XSS attacks
  */
 
-import apiClient from './axiosClient';
+import axiosClient from 'utils/axios';
 
 /**
  * Login with username/password
@@ -20,7 +20,7 @@ import apiClient from './axiosClient';
  * NO token in response - browser automatically stores JSESSIONID cookie
  */
 export const login = async (credentials) => {
-  const userInfo = await apiClient.post('/auth/session/login', credentials);
+  const userInfo = await axiosClient.post('/auth/session/login', credentials);
   return { status: 'success', data: userInfo };
 };
 
@@ -31,7 +31,7 @@ export const login = async (credentials) => {
  */
 export const me = async () => {
   try {
-    const userInfo = await apiClient.get('/auth/session/me');
+    const userInfo = await axiosClient.get('/auth/session/me');
     return { status: 'success', data: userInfo };
   } catch (error) {
     // Expected 401 when no session - return safe response instead of throwing
@@ -48,7 +48,7 @@ export const me = async () => {
  * Clears backend session and JSESSIONID cookie
  */
 export const logout = async () => {
-  const result = await apiClient.post('/auth/session/logout');
+  const result = await axiosClient.post('/auth/session/logout');
   return { status: 'success', data: result };
 };
 

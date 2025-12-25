@@ -1,6 +1,7 @@
 // ==============================|| TBA API SERVICES - BARREL EXPORT ||============================== //
 
-export { default as apiClient } from './axiosClient';
+// NOTE: All services now use axiosClient from 'utils/axios' directly
+// No need to export apiClient wrapper - removed to prevent double unwrapping
 
 export { default as claimsService } from './claims.service';
 export { default as employersService } from './employers.service';

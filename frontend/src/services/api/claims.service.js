@@ -1,4 +1,4 @@
-import apiClient from './axiosClient';
+import axiosClient from 'utils/axios';
 
 // ==============================|| CLAIMS SERVICE ||============================== //
 
@@ -15,7 +15,7 @@ export const claimsService = {
    * @returns {Promise<Array>} List of claims
    */
   getAll: async () => {
-    const response = await apiClient.get(BASE_URL);
+    const response = await axiosClient.get(BASE_URL);
     return unwrap(response);
   },
 
@@ -25,7 +25,7 @@ export const claimsService = {
    * @returns {Promise<Object>} Claim details
    */
   getById: async (id) => {
-    const response = await apiClient.get(`${BASE_URL}/${id}`);
+    const response = await axiosClient.get(`${BASE_URL}/${id}`);
     return unwrap(response);
   },
 
@@ -35,7 +35,7 @@ export const claimsService = {
    * @returns {Promise<Object>} Claim details
    */
   getByClaimNumber: async (claimNumber) => {
-    const response = await apiClient.get(`${BASE_URL}/number/${claimNumber}`);
+    const response = await axiosClient.get(`${BASE_URL}/number/${claimNumber}`);
     return unwrap(response);
   },
 
@@ -45,7 +45,7 @@ export const claimsService = {
    * @returns {Promise<Object>} Created claim
    */
   create: async (data) => {
-    const response = await apiClient.post(BASE_URL, data);
+    const response = await axiosClient.post(BASE_URL, data);
     return unwrap(response);
   },
 
@@ -56,7 +56,7 @@ export const claimsService = {
    * @returns {Promise<Object>} Updated claim
    */
   update: async (id, data) => {
-    const response = await apiClient.put(`${BASE_URL}/${id}`, data);
+    const response = await axiosClient.put(`${BASE_URL}/${id}`, data);
     return unwrap(response);
   },
 
@@ -66,7 +66,7 @@ export const claimsService = {
    * @returns {Promise<void>}
    */
   remove: async (id) => {
-    const response = await apiClient.delete(`${BASE_URL}/${id}`);
+    const response = await axiosClient.delete(`${BASE_URL}/${id}`);
     return unwrap(response);
   },
 
@@ -76,7 +76,7 @@ export const claimsService = {
    * @returns {Promise<Array>} List of claims
    */
   getByVisit: async (visitId) => {
-    const response = await apiClient.get(`${BASE_URL}/visit/${visitId}`);
+    const response = await axiosClient.get(`${BASE_URL}/visit/${visitId}`);
     return unwrap(response);
   },
 
@@ -86,7 +86,7 @@ export const claimsService = {
    * @returns {Promise<Array>} List of claims
    */
   getByStatus: async (status) => {
-    const response = await apiClient.get(`${BASE_URL}/status/${status}`);
+    const response = await axiosClient.get(`${BASE_URL}/status/${status}`);
     return unwrap(response);
   },
 
@@ -97,7 +97,7 @@ export const claimsService = {
    * @returns {Promise<Object>} Approved claim
    */
   approve: async (id, data) => {
-    const response = await apiClient.post(`${BASE_URL}/${id}/approve`, data);
+    const response = await axiosClient.post(`${BASE_URL}/${id}/approve`, data);
     return unwrap(response);
   },
 
@@ -108,7 +108,7 @@ export const claimsService = {
    * @returns {Promise<Object>} Rejected claim
    */
   reject: async (id, data) => {
-    const response = await apiClient.post(`${BASE_URL}/${id}/reject`, data);
+    const response = await axiosClient.post(`${BASE_URL}/${id}/reject`, data);
     return unwrap(response);
   },
 
@@ -118,7 +118,7 @@ export const claimsService = {
    * @returns {Promise<Array>} Filtered claims
    */
   search: async (searchTerm) => {
-    const response = await apiClient.get(`${BASE_URL}/search?q=${encodeURIComponent(searchTerm)}`);
+    const response = await axiosClient.get(`${BASE_URL}/search?q=${encodeURIComponent(searchTerm)}`);
     return unwrap(response);
   },
 
@@ -136,7 +136,7 @@ export const claimsService = {
     if (params.sortBy) queryParams.append('sortBy', params.sortBy);
     if (params.sortDir) queryParams.append('sortDir', params.sortDir);
     
-    const response = await apiClient.get(`${BASE_URL}/inbox/pending?${queryParams.toString()}`);
+    const response = await axiosClient.get(`${BASE_URL}/inbox/pending?${queryParams.toString()}`);
     return unwrap(response);
   },
 
@@ -152,7 +152,7 @@ export const claimsService = {
     if (params.sortBy) queryParams.append('sortBy', params.sortBy);
     if (params.sortDir) queryParams.append('sortDir', params.sortDir);
     
-    const response = await apiClient.get(`${BASE_URL}/inbox/approved?${queryParams.toString()}`);
+    const response = await axiosClient.get(`${BASE_URL}/inbox/approved?${queryParams.toString()}`);
     return unwrap(response);
   },
 
@@ -162,7 +162,7 @@ export const claimsService = {
    * @returns {Promise<Object>} Cost breakdown {requestedAmount, patientCoPay, netProviderAmount, ...}
    */
   getCostBreakdown: async (id) => {
-    const response = await apiClient.get(`${BASE_URL}/${id}/cost-breakdown`);
+    const response = await axiosClient.get(`${BASE_URL}/${id}/cost-breakdown`);
     return unwrap(response);
   },
 
@@ -172,7 +172,7 @@ export const claimsService = {
    * @returns {Promise<Object>} Updated claim
    */
   submit: async (id) => {
-    const response = await apiClient.post(`${BASE_URL}/${id}/submit`);
+    const response = await axiosClient.post(`${BASE_URL}/${id}/submit`);
     return unwrap(response);
   },
 
@@ -183,7 +183,7 @@ export const claimsService = {
    * @returns {Promise<Object>} Settled claim
    */
   settle: async (id, data) => {
-    const response = await apiClient.post(`${BASE_URL}/${id}/settle`, data);
+    const response = await axiosClient.post(`${BASE_URL}/${id}/settle`, data);
     return unwrap(response);
   },
 
@@ -201,7 +201,7 @@ export const claimsService = {
     if (params.providerId) queryParams.append('providerId', params.providerId);
     if (params.status) queryParams.append('status', params.status);
     
-    const response = await apiClient.get(`/reports/adjudication?${queryParams.toString()}`);
+    const response = await axiosClient.get(`/reports/adjudication?${queryParams.toString()}`);
     return unwrap(response);
   },
 
@@ -216,7 +216,7 @@ export const claimsService = {
     if (params.startDate) queryParams.append('startDate', params.startDate);
     if (params.endDate) queryParams.append('endDate', params.endDate);
     
-    const response = await apiClient.get(`/reports/provider-settlement/${providerId}?${queryParams.toString()}`);
+    const response = await axiosClient.get(`/reports/provider-settlement/${providerId}?${queryParams.toString()}`);
     return unwrap(response);
   },
 
@@ -226,7 +226,7 @@ export const claimsService = {
    * @returns {Promise<Object>} Member claims statement
    */
   getMemberStatement: async (memberId) => {
-    const response = await apiClient.get(`/reports/member-statement/${memberId}`);
+    const response = await axiosClient.get(`/reports/member-statement/${memberId}`);
     return unwrap(response);
   }
 };

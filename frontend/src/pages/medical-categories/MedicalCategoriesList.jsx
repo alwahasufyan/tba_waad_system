@@ -30,6 +30,8 @@ import CategoryIcon from '@mui/icons-material/Category';
 import MainCard from 'components/MainCard';
 import ModernPageHeader from 'components/tba/ModernPageHeader';
 import TbaDataTable from 'components/tba/TbaDataTable';
+import TableErrorBoundary from 'components/TableErrorBoundary';
+import PermissionGuard from 'components/PermissionGuard';
 
 // Contexts
 import { useTableRefresh } from 'contexts/TableRefreshContext';
@@ -233,17 +235,19 @@ const MedicalCategoriesList = () => {
 
       {/* ====== MAIN CARD WITH TABLE ====== */}
       <MainCard>
-        <TbaDataTable
-          columns={columns}
-          fetcher={fetcher}
-          queryKey={QUERY_KEY}
-          refreshKey={refreshKey}
-          enableExport={true}
-          enablePrint={true}
-          enableFilters={true}
-          exportFilename="medical_categories"
-          printTitle="تقرير التصنيفات الطبية"
-        />
+        <TableErrorBoundary>
+          <TbaDataTable
+            columns={columns}
+            fetcher={fetcher}
+            queryKey={QUERY_KEY}
+            refreshKey={refreshKey}
+            enableExport={true}
+            enablePrint={true}
+            enableFilters={true}
+            exportFilename="medical_categories"
+            printTitle="تقرير التصنيفات الطبية"
+          />
+        </TableErrorBoundary>
       </MainCard>
     </Box>
   );

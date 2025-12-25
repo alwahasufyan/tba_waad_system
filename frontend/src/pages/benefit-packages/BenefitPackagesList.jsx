@@ -29,6 +29,8 @@ import CardGiftcardIcon from '@mui/icons-material/CardGiftcard';
 import MainCard from 'components/MainCard';
 import ModernPageHeader from 'components/tba/ModernPageHeader';
 import TbaDataTable from 'components/tba/TbaDataTable';
+import TableErrorBoundary from 'components/TableErrorBoundary';
+import PermissionGuard from 'components/PermissionGuard';
 
 // Contexts
 import { useTableRefresh } from 'contexts/TableRefreshContext';

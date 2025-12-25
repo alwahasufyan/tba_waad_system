@@ -29,6 +29,8 @@ import LocalHospitalIcon from '@mui/icons-material/LocalHospital';
 import MainCard from 'components/MainCard';
 import ModernPageHeader from 'components/tba/ModernPageHeader';
 import TbaDataTable from 'components/tba/TbaDataTable';
+import TableErrorBoundary from 'components/TableErrorBoundary';
+import PermissionGuard from 'components/PermissionGuard';
 
 // Insurance UX Components - Phase B2
 import { NetworkBadge, CardStatusBadge } from 'components/insurance';
@@ -331,17 +333,19 @@ export default function ProvidersList() {
 
       {/* ====== MAIN CARD WITH TABLE ====== */}
       <MainCard>
-        <TbaDataTable
-          columns={columns}
-          fetcher={fetcher}
-          queryKey={QUERY_KEY}
-          refreshKey={refreshKey}
-          enableExport={true}
-          enablePrint={true}
-          enableFilters={true}
-          exportFilename="healthcare_providers"
-          printTitle="تقرير مقدمي الخدمات الصحية"
-        />
+        <TableErrorBoundary>
+          <TbaDataTable
+            columns={columns}
+            fetcher={fetcher}
+            queryKey={QUERY_KEY}
+            refreshKey={refreshKey}
+            enableExport={true}
+            enablePrint={true}
+            enableFilters={true}
+            exportFilename="healthcare_providers"
+            printTitle="تقرير مقدمي الخدمات الصحية"
+          />
+        </TableErrorBoundary>
       </MainCard>
     </Box>
   );

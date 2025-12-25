@@ -2,7 +2,7 @@
 // DOMAIN NOTE: Providers = Hospitals, Clinics, Labs, Pharmacies
 // Used in Kanban board to display provider network
 
-import apiClient from './axiosClient';
+import axiosClient from 'utils/axios';
 
 const BASE_URL = '/providers';
 
@@ -23,7 +23,7 @@ export const providersService = {
    * @returns {Promise<Array>} List of providers
    */
   getAll: async (params = {}) => {
-    const response = await apiClient.get(BASE_URL, { params });
+    const response = await axiosClient.get(BASE_URL, { params });
     return unwrap(response);
   },
 
@@ -33,7 +33,7 @@ export const providersService = {
    * @returns {Promise<Object>} Provider details
    */
   getById: async (id) => {
-    const response = await apiClient.get(`${BASE_URL}/${id}`);
+    const response = await axiosClient.get(`${BASE_URL}/${id}`);
     return unwrap(response);
   },
 
@@ -43,7 +43,7 @@ export const providersService = {
    * @returns {Promise<Object>} Created provider
    */
   create: async (data) => {
-    const response = await apiClient.post(BASE_URL, data);
+    const response = await axiosClient.post(BASE_URL, data);
     return unwrap(response);
   },
 
@@ -54,7 +54,7 @@ export const providersService = {
    * @returns {Promise<Object>} Updated provider
    */
   update: async (id, data) => {
-    const response = await apiClient.put(`${BASE_URL}/${id}`, data);
+    const response = await axiosClient.put(`${BASE_URL}/${id}`, data);
     return unwrap(response);
   },
 
@@ -64,7 +64,7 @@ export const providersService = {
    * @returns {Promise<void>}
    */
   remove: async (id) => {
-    const response = await apiClient.delete(`${BASE_URL}/${id}`);
+    const response = await axiosClient.delete(`${BASE_URL}/${id}`);
     return unwrap(response);
   },
 
@@ -74,7 +74,7 @@ export const providersService = {
    * @returns {Promise<Array>} Matching providers
    */
   search: async (query) => {
-    const response = await apiClient.get(`${BASE_URL}/search`, { params: { query } });
+    const response = await axiosClient.get(`${BASE_URL}/search`, { params: { query } });
     return unwrap(response);
   },
 
@@ -84,7 +84,7 @@ export const providersService = {
    * @returns {Promise<Array>} Filtered providers
    */
   getByType: async (type) => {
-    const response = await apiClient.get(`${BASE_URL}/type/${type}`);
+    const response = await axiosClient.get(`${BASE_URL}/type/${type}`);
     return unwrap(response);
   },
 
@@ -94,7 +94,7 @@ export const providersService = {
    * @returns {Promise<Array>} Providers in region
    */
   getByRegion: async (region) => {
-    const response = await apiClient.get(`${BASE_URL}/region/${region}`);
+    const response = await axiosClient.get(`${BASE_URL}/region/${region}`);
     return unwrap(response);
   }
 };

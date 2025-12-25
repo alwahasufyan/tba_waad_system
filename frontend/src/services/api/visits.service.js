@@ -1,4 +1,4 @@
-import apiClient from './axiosClient';
+import axiosClient from 'utils/axios';
 
 // ==============================|| VISITS SERVICE ||============================== //
 
@@ -15,7 +15,7 @@ export const visitsService = {
    * @returns {Promise<Array>} List of visits
    */
   getAll: async () => {
-    const response = await apiClient.get(BASE_URL);
+    const response = await axiosClient.get(BASE_URL);
     return unwrap(response);
   },
 
@@ -25,7 +25,7 @@ export const visitsService = {
    * @returns {Promise<Object>} Visit details
    */
   getById: async (id) => {
-    const response = await apiClient.get(`${BASE_URL}/${id}`);
+    const response = await axiosClient.get(`${BASE_URL}/${id}`);
     return unwrap(response);
   },
 
@@ -35,7 +35,7 @@ export const visitsService = {
    * @returns {Promise<Object>} Created visit
    */
   create: async (data) => {
-    const response = await apiClient.post(BASE_URL, data);
+    const response = await axiosClient.post(BASE_URL, data);
     return unwrap(response);
   },
 
@@ -46,7 +46,7 @@ export const visitsService = {
    * @returns {Promise<Object>} Updated visit
    */
   update: async (id, data) => {
-    const response = await apiClient.put(`${BASE_URL}/${id}`, data);
+    const response = await axiosClient.put(`${BASE_URL}/${id}`, data);
     return unwrap(response);
   },
 
@@ -56,7 +56,7 @@ export const visitsService = {
    * @returns {Promise<void>}
    */
   remove: async (id) => {
-    const response = await apiClient.delete(`${BASE_URL}/${id}`);
+    const response = await axiosClient.delete(`${BASE_URL}/${id}`);
     return unwrap(response);
   },
 
@@ -66,7 +66,7 @@ export const visitsService = {
    * @returns {Promise<Array>} List of visits
    */
   getByMember: async (memberId) => {
-    const response = await apiClient.get(`${BASE_URL}/member/${memberId}`);
+    const response = await axiosClient.get(`${BASE_URL}/member/${memberId}`);
     return unwrap(response);
   },
 
@@ -76,7 +76,7 @@ export const visitsService = {
    * @returns {Promise<Array>} Filtered visits
    */
   search: async (searchTerm) => {
-    const response = await apiClient.get(`${BASE_URL}/search?q=${encodeURIComponent(searchTerm)}`);
+    const response = await axiosClient.get(`${BASE_URL}/search?q=${encodeURIComponent(searchTerm)}`);
     return unwrap(response);
   }
 };

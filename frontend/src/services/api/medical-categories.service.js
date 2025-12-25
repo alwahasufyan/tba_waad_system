@@ -1,11 +1,11 @@
 import axiosClient from 'utils/axios';
+import { normalizePaginatedResponse } from 'utils/api-response-normalizer';
 
 /**
  * Medical Categories API Service
  * Provides CRUD operations for Medical Categories module
  * Backend: MedicalCategoryController.java
  */
-
 const BASE_URL = '/medical-categories';
 
 /**
@@ -20,7 +20,7 @@ const unwrap = (response) => response.data?.data || response.data;
  */
 export const getMedicalCategories = async (params = {}) => {
   const response = await axiosClient.get(BASE_URL, { params });
-  return unwrap(response);
+  return normalizePaginatedResponse(response);
 };
 
 /**

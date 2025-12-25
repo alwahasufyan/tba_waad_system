@@ -29,6 +29,8 @@ import BusinessIcon from '@mui/icons-material/Business';
 import MainCard from 'components/MainCard';
 import ModernPageHeader from 'components/tba/ModernPageHeader';
 import TbaDataTable from 'components/tba/TbaDataTable';
+import TableErrorBoundary from 'components/TableErrorBoundary';
+import PermissionGuard from 'components/PermissionGuard';
 
 // Contexts
 import { useTableRefresh } from 'contexts/TableRefreshContext';
@@ -224,13 +226,15 @@ const EmployersList = () => {
             </Tooltip>
 
             <Tooltip title="حذف">
-              <IconButton
-                size="small"
-                color="error"
-                onClick={() => handleDelete(row.original?.id, row.original?.nameAr || row.original?.code)}
-              >
-                <DeleteIcon fontSize="small" />
-              </IconButton>
+              <PermissionGuard requires="employers.delete">
+                <IconButton
+                  size="small"
+                  color="error"
+                  onClick={() => handleDelete(row.original?.id, row.original?.nameAr || row.original?.code)}
+                >
+                  <DeleteIcon fontSize="small" />
+                </IconButton>
+              </PermissionGuard>
             </Tooltip>
           </Stack>
         )
@@ -252,25 +256,29 @@ const EmployersList = () => {
         icon={BusinessIcon}
         breadcrumbs={[{ label: 'الرئيسية', path: '/' }, { label: 'أصحاب العمل' }]}
         actions={
-          <Button variant="contained" startIcon={<AddIcon />} onClick={handleNavigateAdd}>
-            إضافة صاحب عمل
-          </Button>
+          <PermissionGuard requires="employers.create">
+            <Button variant="contained" startIcon={<AddIcon />} onClick={handleNavigateAdd}>
+              إضافة صاحب عمل
+            </Button>
+          </PermissionGuard>
         }
       />
 
       {/* ====== MAIN CARD WITH TABLE ====== */}
       <MainCard>
-        <TbaDataTable
-          columns={columns}
-          fetcher={fetcher}
-          queryKey={QUERY_KEY}
-          refreshKey={refreshKey}
-          enableExport={true}
-          enablePrint={true}
-          enableFilters={true}
-          exportFilename="employers"
-          printTitle="تقرير أصحاب العمل"
-        />
+        <TableErrorBoundary>
+          <TbaDataTable
+            columns={columns}
+            fetcher={fetcher}
+            queryKey={QUERY_KEY}
+            refreshKey={refreshKey}
+            enableExport={true}
+            enablePrint={true}
+            enableFilters={true}
+            exportFilename="employers"
+            printTitle="تقرير أصحاب العمل"
+          />
+        </TableErrorBoundary>
       </MainCard>
     </Box>
   );

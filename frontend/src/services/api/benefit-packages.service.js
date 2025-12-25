@@ -1,10 +1,10 @@
 import axiosClient from 'utils/axios';
+import { normalizePaginatedResponse } from 'utils/api-response-normalizer';
 
 /**
  * Benefit Packages API Service
  * Provides CRUD operations for Benefit Packages module
  */
-
 const BASE_URL = '/benefit-packages';
 
 /**
@@ -19,7 +19,7 @@ const unwrap = (response) => response.data?.data || response.data;
  */
 export const getBenefitPackages = async (params = {}) => {
   const response = await axiosClient.get(BASE_URL, { params });
-  return unwrap(response);
+  return normalizePaginatedResponse(response);
 };
 
 /**
