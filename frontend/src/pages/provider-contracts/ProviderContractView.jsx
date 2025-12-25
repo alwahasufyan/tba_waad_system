@@ -88,7 +88,7 @@ import {
 } from 'services/api/provider-contracts.service';
 
 // Snackbar
-import { useSnackbar } from 'api/snackbar';
+import { useSnackbar } from 'notistack';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // HELPER FUNCTIONS
