@@ -196,6 +196,17 @@ export const getImportTemplate = async () => {
   return unwrap(response);
 };
 
+/**
+ * Refresh benefit policies for all members of an employer
+ * Endpoint: POST /api/members/employer/{employerOrgId}/refresh-policies
+ * @param {number} employerOrgId - Employer Organization ID
+ * @returns {Promise<number>} Number of members updated
+ */
+export const refreshBenefitPoliciesForEmployer = async (employerOrgId) => {
+  const response = await axiosClient.post(`${BASE_URL}/employer/${employerOrgId}/refresh-policies`);
+  return unwrap(response);
+};
+
 // Default export for convenient imports
 const membersService = {
   getMembers,
@@ -215,17 +226,6 @@ const membersService = {
   getImportTemplate,
   // Benefit Policy operations
   refreshBenefitPoliciesForEmployer
-};
-
-/**
- * Refresh benefit policies for all members of an employer
- * Endpoint: POST /api/members/employer/{employerOrgId}/refresh-policies
- * @param {number} employerOrgId - Employer Organization ID
- * @returns {Promise<number>} Number of members updated
- */
-export const refreshBenefitPoliciesForEmployer = async (employerOrgId) => {
-  const response = await axiosClient.post(`${BASE_URL}/employer/${employerOrgId}/refresh-policies`);
-  return unwrap(response);
 };
 
 export default membersService;
