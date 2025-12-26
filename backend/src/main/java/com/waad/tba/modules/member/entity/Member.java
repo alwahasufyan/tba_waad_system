@@ -12,7 +12,6 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import com.waad.tba.common.entity.Organization;
 import com.waad.tba.modules.benefitpolicy.entity.BenefitPolicy;
 import com.waad.tba.modules.employer.entity.Employer;
-import com.waad.tba.modules.insurance.entity.InsuranceCompany;
 import com.waad.tba.modules.policy.entity.Policy;
 
 import jakarta.persistence.CascadeType;
@@ -71,11 +70,6 @@ public class Member {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "employer_id", insertable = false, updatable = false)
     private Employer employer;
-
-    @Deprecated
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "insurance_company_id", insertable = false, updatable = false)
-    private InsuranceCompany insuranceCompany;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "policy_id")

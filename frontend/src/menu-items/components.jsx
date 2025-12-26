@@ -10,7 +10,6 @@ import {
   Category as CategoryIcon,
   Inventory as InventoryIcon,
   Assignment as AssignmentIcon,
-  BusinessCenter as BusinessCenterIcon,
   Settings as SettingsIcon,
   Assessment as AssessmentIcon,
   Gavel as GavelIcon,
@@ -44,19 +43,19 @@ export const filterMenuByRoles = (menuItems, userRoles = []) => {
 
   const roleRules = {
     EMPLOYER: {
-      hide: ['employers', 'providers', 'provider-contracts', 'policies', 'audit', 'claims-inbox', 'pre-approvals-inbox', 'settlement-inbox', 'insurance-companies', 'admin-users', 'rbac'],
+      hide: ['employers', 'providers', 'provider-contracts', 'policies', 'audit', 'claims-inbox', 'pre-approvals-inbox', 'settlement-inbox', 'admin-users', 'rbac'],
       show: ['dashboard', 'members', 'claims', 'visits', 'pre-approvals', 'medical-categories', 'medical-services', 'medical-packages', 'benefit-policies', 'settings']
     },
     INSURANCE_COMPANY: {
       hide: ['employers', 'admin-users', 'rbac'],
-      show: ['dashboard', 'members', 'providers', 'claims', 'visits', 'pre-approvals', 'medical-categories', 'medical-services', 'medical-packages', 'benefit-policies', 'provider-contracts', 'insurance-companies', 'audit', 'settings', 'reports']
+      show: ['dashboard', 'members', 'providers', 'claims', 'visits', 'pre-approvals', 'medical-categories', 'medical-services', 'medical-packages', 'benefit-policies', 'provider-contracts', 'audit', 'settings', 'reports']
     },
     REVIEWER: {
-      hide: ['employers', 'providers', 'members', 'visits', 'provider-contracts', 'policies', 'settlement-inbox', 'benefit-policies', 'insurance-companies', 'admin-users', 'rbac'],
+      hide: ['employers', 'providers', 'members', 'visits', 'provider-contracts', 'policies', 'settlement-inbox', 'benefit-policies', 'admin-users', 'rbac'],
       show: ['dashboard', 'claims', 'pre-approvals', 'medical-categories', 'medical-services', 'medical-packages', 'audit', 'settings', 'reports']
     },
     FINANCE: {
-      hide: ['employers', 'providers', 'members', 'visits', 'provider-contracts', 'policies', 'claims-inbox', 'pre-approvals-inbox', 'benefit-policies', 'insurance-companies', 'admin-users', 'rbac'],
+      hide: ['employers', 'providers', 'members', 'visits', 'provider-contracts', 'policies', 'claims-inbox', 'pre-approvals-inbox', 'benefit-policies', 'admin-users', 'rbac'],
       show: ['dashboard', 'claims', 'settlement-inbox', 'audit', 'settings', 'reports']
     }
   };
@@ -153,13 +152,6 @@ const menuItem = [
         type: 'item',
         url: '/employers',
         icon: BusinessIcon
-      },
-      {
-        id: 'insurance-companies',
-        title: 'شركات التأمين',
-        type: 'item',
-        url: '/insurance-companies',
-        icon: BusinessCenterIcon
       },
       {
         id: 'benefit-policies',

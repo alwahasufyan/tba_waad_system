@@ -1,8 +1,8 @@
 package com.waad.tba.modules.insurancepolicy.service;
 
+import com.waad.tba.common.entity.Organization;
 import com.waad.tba.common.exception.ResourceNotFoundException;
-import com.waad.tba.modules.insurance.entity.InsuranceCompany;
-import com.waad.tba.modules.insurance.repository.InsuranceCompanyRepository;
+import com.waad.tba.common.repository.OrganizationRepository;
 import com.waad.tba.modules.insurancepolicy.dto.InsurancePolicyCreateDto;
 import com.waad.tba.modules.insurancepolicy.dto.InsurancePolicyUpdateDto;
 import com.waad.tba.modules.insurancepolicy.dto.InsurancePolicyViewDto;
@@ -22,17 +22,19 @@ import org.springframework.transaction.annotation.Transactional;
 public class InsurancePolicyService {
 
     private final InsurancePolicyRepository insurancePolicyRepository;
-    private final InsuranceCompanyRepository insuranceCompanyRepository;
+    private final OrganizationRepository organizationRepository;
     private final InsurancePolicyMapper insurancePolicyMapper;
 
     @Transactional
     public InsurancePolicyViewDto createPolicy(InsurancePolicyCreateDto dto) {
         log.info("Creating insurance policy: {}", dto.getName());
 
-        InsuranceCompany insuranceCompany = insuranceCompanyRepository.findById(dto.getInsuranceCompanyId())
-                .orElseThrow(() -> new ResourceNotFoundException("Insurance Company not found with ID: " + dto.getInsuranceCompanyId()));
+        Organization insuranceOrg = dto.getInsuranceCompanyId() != null 
+                ? organizationRepository.findById(dto.getInsuranceCompanyId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Insurance Organization not found with ID: " + dto.getInsuranceCompanyId()))
+                : null;
 
-        InsurancePolicy entity = insurancePolicyMapper.toEntity(dto, insuranceCompany);
+        InsurancePolicy entity = insurancePolicyMapper.toEntity(dto, insuranceOrg);
         InsurancePolicy saved = insurancePolicyRepository.save(entity);
         
         return insurancePolicyMapper.toViewDto(saved);
@@ -44,13 +46,13 @@ public class InsurancePolicyService {
 
         InsurancePolicy entity = findEntityById(id);
 
-        InsuranceCompany insuranceCompany = null;
+        Organization insuranceOrg = null;
         if (dto.getInsuranceCompanyId() != null) {
-            insuranceCompany = insuranceCompanyRepository.findById(dto.getInsuranceCompanyId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Insurance Company not found with ID: " + dto.getInsuranceCompanyId()));
+            insuranceOrg = organizationRepository.findById(dto.getInsuranceCompanyId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Insurance Organization not found with ID: " + dto.getInsuranceCompanyId()));
         }
 
-        insurancePolicyMapper.updateEntityFromDto(dto, entity, insuranceCompany);
+        insurancePolicyMapper.updateEntityFromDto(dto, entity, insuranceOrg);
         InsurancePolicy updated = insurancePolicyRepository.save(entity);
         
         return insurancePolicyMapper.toViewDto(updated);

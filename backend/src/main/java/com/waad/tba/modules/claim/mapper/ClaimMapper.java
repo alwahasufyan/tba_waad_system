@@ -4,8 +4,8 @@ import com.waad.tba.modules.claim.dto.*;
 import com.waad.tba.modules.claim.entity.Claim;
 import com.waad.tba.modules.claim.entity.ClaimAttachment;
 import com.waad.tba.modules.claim.entity.ClaimLine;
+import com.waad.tba.common.repository.OrganizationRepository;
 import com.waad.tba.modules.member.repository.MemberRepository;
-import com.waad.tba.modules.insurance.repository.InsuranceCompanyRepository;
 import com.waad.tba.modules.insurancepolicy.repository.InsurancePolicyRepository;
 import com.waad.tba.modules.insurancepolicy.repository.PolicyBenefitPackageRepository;
 import com.waad.tba.modules.preauth.repository.PreApprovalRepository;
@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
 public class ClaimMapper {
 
     private final MemberRepository memberRepository;
-    private final InsuranceCompanyRepository insuranceCompanyRepository;
+    private final OrganizationRepository organizationRepository;
     private final InsurancePolicyRepository insurancePolicyRepository;
     private final PolicyBenefitPackageRepository policyBenefitPackageRepository;
     private final PreApprovalRepository preApprovalRepository;
@@ -30,8 +30,10 @@ public class ClaimMapper {
         Claim claim = Claim.builder()
                 .member(memberRepository.findById(dto.getMemberId())
                         .orElseThrow(() -> new IllegalArgumentException("Member not found")))
-                .insuranceCompany(insuranceCompanyRepository.findById(dto.getInsuranceCompanyId())
-                        .orElseThrow(() -> new IllegalArgumentException("Insurance company not found")))
+                .insuranceOrganization(dto.getInsuranceCompanyId() != null 
+                        ? organizationRepository.findById(dto.getInsuranceCompanyId())
+                                .orElseThrow(() -> new IllegalArgumentException("Insurance organization not found"))
+                        : null)
                 .providerName(dto.getProviderName())
                 .doctorName(dto.getDoctorName())
                 .diagnosis(dto.getDiagnosis())
@@ -164,10 +166,10 @@ public class ClaimMapper {
             dto.setMemberCivilId(claim.getMember().getCivilId());
         }
 
-        if (claim.getInsuranceCompany() != null) {
-            dto.setInsuranceCompanyId(claim.getInsuranceCompany().getId());
-            dto.setInsuranceCompanyName(claim.getInsuranceCompany().getName());
-            dto.setInsuranceCompanyCode(claim.getInsuranceCompany().getCode());
+        if (claim.getInsuranceOrganization() != null) {
+            dto.setInsuranceCompanyId(claim.getInsuranceOrganization().getId());
+            dto.setInsuranceCompanyName(claim.getInsuranceOrganization().getName());
+            dto.setInsuranceCompanyCode(claim.getInsuranceOrganization().getCode());
         }
 
         if (claim.getInsurancePolicy() != null) {

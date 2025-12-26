@@ -1,29 +1,18 @@
 package com.waad.tba.modules.admin.system;
 
-import java.time.LocalDate;
-import java.util.Optional;
-
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.waad.tba.common.dto.ApiResponse;
-import com.waad.tba.modules.claim.entity.Claim;
 import com.waad.tba.modules.claim.repository.ClaimRepository;
-import com.waad.tba.modules.company.entity.Company;
 import com.waad.tba.modules.company.repository.CompanyRepository;
-import com.waad.tba.modules.employer.entity.Employer;
 import com.waad.tba.modules.employer.repository.EmployerRepository;
-import com.waad.tba.modules.insurance.entity.InsuranceCompany;
-import com.waad.tba.modules.insurance.repository.InsuranceCompanyRepository;
-import com.waad.tba.modules.member.entity.Member;
 import com.waad.tba.modules.member.repository.MemberRepository;
 import com.waad.tba.modules.rbac.repository.PermissionRepository;
 import com.waad.tba.modules.rbac.repository.RoleRepository;
 import com.waad.tba.modules.rbac.repository.UserRepository;
-import com.waad.tba.modules.reviewer.entity.ReviewerCompany;
 import com.waad.tba.modules.reviewer.repository.ReviewerCompanyRepository;
-import com.waad.tba.modules.visit.entity.Visit;
 import com.waad.tba.modules.visit.repository.VisitRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -38,7 +27,6 @@ public class SystemAdminService {
     private final VisitRepository visitRepository;
     private final MemberRepository memberRepository;
     private final EmployerRepository employerRepository;
-    private final InsuranceCompanyRepository insuranceCompanyRepository;
     private final ReviewerCompanyRepository reviewerCompanyRepository;
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
@@ -53,7 +41,6 @@ public class SystemAdminService {
         visitRepository.deleteAll();
         memberRepository.deleteAll();
         employerRepository.deleteAll();
-        insuranceCompanyRepository.deleteAll();
         reviewerCompanyRepository.deleteAll();
         log.info("Test data cleared.");
         return ApiResponse.success("Test data cleared", null);

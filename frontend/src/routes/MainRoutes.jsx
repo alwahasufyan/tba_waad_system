@@ -82,11 +82,6 @@ const BenefitPackageView = Loadable(lazy(() => import('pages/benefit-packages/Be
 const BenefitPoliciesList = Loadable(lazy(() => import('pages/benefit-policies/BenefitPoliciesList')));
 const BenefitPolicyView = Loadable(lazy(() => import('pages/benefit-policies/BenefitPolicyView')));
 
-// ==============================|| LAZY LOADING - INSURANCE COMPANIES (LOCKED - SINGLE TENANT) ||============================== //
-
-// All insurance company routes now redirect to locked page - single tenant mode
-const InsuranceCompanyLocked = Loadable(lazy(() => import('pages/insurance-companies/InsuranceCompanyLocked')));
-
 // ==============================|| LAZY LOADING - INSURANCE POLICIES ||============================== //
 
 const InsurancePoliciesList = Loadable(lazy(() => import('pages/insurance-policies/InsurancePoliciesList')));
@@ -481,30 +476,6 @@ const MainRoutes = {
 
     // NOTE: Benefit Packages main routes are defined below (line ~674)
     // This section intentionally left empty to avoid duplicate route
-
-    // Insurance Companies Module - LOCKED (Single Tenant Mode)
-    // All routes redirect to locked page explaining the fixed insurance company
-    {
-      path: 'insurance-companies',
-      children: [
-        {
-          path: '',
-          element: <InsuranceCompanyLocked />
-        },
-        {
-          path: 'add',
-          element: <InsuranceCompanyLocked />
-        },
-        {
-          path: 'edit/:id',
-          element: <InsuranceCompanyLocked />
-        },
-        {
-          path: ':id',
-          element: <InsuranceCompanyLocked />
-        }
-      ]
-    },
 
     // Insurance Policies Module
     {

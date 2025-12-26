@@ -2,7 +2,6 @@ package com.waad.tba.modules.policy.entity;
 
 import com.waad.tba.common.entity.Organization;
 import com.waad.tba.modules.employer.entity.Employer;
-import com.waad.tba.modules.insurance.entity.InsuranceCompany;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -60,11 +59,6 @@ public class Policy {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "employer_id", insertable = false, updatable = false)
     private Employer employer;
-
-    @Deprecated
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "insurance_company_id", insertable = false, updatable = false)
-    private InsuranceCompany insuranceCompany;
 
     @NotNull(message = "Benefit package is required")
     @ManyToOne(fetch = FetchType.LAZY)

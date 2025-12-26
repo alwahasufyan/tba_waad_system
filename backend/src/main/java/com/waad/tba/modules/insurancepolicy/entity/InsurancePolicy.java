@@ -9,7 +9,7 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
-import com.waad.tba.modules.insurance.entity.InsuranceCompany;
+import com.waad.tba.common.entity.Organization;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -43,9 +43,10 @@ public class InsurancePolicy {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    // Organization-based relationship (replaces legacy InsuranceCompany)
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "insurance_company_id", nullable = false)
-    private InsuranceCompany insuranceCompany;
+    @JoinColumn(name = "insurance_org_id")
+    private Organization insuranceOrganization;
 
     @Column(nullable = false)
     private String name;

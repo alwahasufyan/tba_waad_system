@@ -6,11 +6,12 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.waad.tba.common.entity.OrganizationType;
+import com.waad.tba.common.repository.OrganizationRepository;
 import com.waad.tba.modules.claim.repository.ClaimRepository;
 import com.waad.tba.modules.dashboard.dto.ClaimsPerDayDto;
 import com.waad.tba.modules.dashboard.dto.DashboardStatsDto;
 import com.waad.tba.modules.employer.repository.EmployerRepository;
-import com.waad.tba.modules.insurance.repository.InsuranceCompanyRepository;
 import com.waad.tba.modules.member.repository.MemberRepository;
 import com.waad.tba.modules.rbac.entity.User;
 import com.waad.tba.modules.reviewer.repository.ReviewerCompanyRepository;
@@ -27,7 +28,7 @@ public class DashboardService {
     private final MemberRepository memberRepository;
     private final ClaimRepository claimRepository;
     private final EmployerRepository employerRepository;
-    private final InsuranceCompanyRepository insuranceRepository;
+    private final OrganizationRepository organizationRepository;
     private final ReviewerCompanyRepository reviewerRepository;
     private final AuthorizationService authorizationService;
 
@@ -81,7 +82,7 @@ public class DashboardService {
         long rejectedClaims = 0;
         
         long totalEmployers = 1; // Filtered view shows only 1 employer
-        long totalInsurance = insuranceRepository.count();
+        long totalInsurance = organizationRepository.countByTypeAndActiveTrue(OrganizationType.INSURANCE);
         long totalReviewers = reviewerRepository.count();
 
         return DashboardStatsDto.builder()
@@ -109,7 +110,7 @@ public class DashboardService {
         long rejectedClaims = 0;
         
         long totalEmployers = employerRepository.count();
-        long totalInsurance = insuranceRepository.count();
+        long totalInsurance = organizationRepository.countByTypeAndActiveTrue(OrganizationType.INSURANCE);
         long totalReviewers = reviewerRepository.count();
 
         return DashboardStatsDto.builder()
