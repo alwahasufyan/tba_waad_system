@@ -180,7 +180,7 @@ public class InsuranceCompanyController {
      */
     @Deprecated
     @GetMapping("/search")
-    @PreAuthorize("hasAuthority('VIEW_INSURANCE')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('VIEW_INSURANCE')")
     @Operation(summary = "Search insurance companies", description = "Search insurance companies by query string.")
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Search results retrieved successfully"),

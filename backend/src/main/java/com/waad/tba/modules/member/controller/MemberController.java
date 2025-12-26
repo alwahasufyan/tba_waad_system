@@ -33,7 +33,7 @@ public class MemberController {
     private final MemberService memberService;
 
     @GetMapping("/selector")
-    @PreAuthorize("hasAuthority('VIEW_MEMBERS') or hasAuthority('MANAGE_MEMBERS')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('VIEW_MEMBERS') or hasAuthority('MANAGE_MEMBERS')")
     @Operation(summary = "Get member selector options", description = "Returns active members for dropdown/selector (filtered by organization context)")
     public ResponseEntity<ApiResponse<List<MemberSelectorDto>>> getSelectorOptions(
             @Parameter(description = "Employer ID for organization context (null = TPA/show all)")
@@ -43,7 +43,7 @@ public class MemberController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAuthority('MANAGE_MEMBERS')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('MANAGE_MEMBERS')")
     @Operation(summary = "Create member", description = "Creates a new member with optional family members")
     public ResponseEntity<ApiResponse<MemberViewDto>> create(@Valid @RequestBody MemberCreateDto dto) {
         MemberViewDto created = memberService.createMember(dto);
@@ -52,7 +52,7 @@ public class MemberController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAuthority('MANAGE_MEMBERS')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('MANAGE_MEMBERS')")
     @Operation(summary = "Update member", description = "Updates an existing member and syncs family members")
     public ResponseEntity<ApiResponse<MemberViewDto>> update(
             @Parameter(description = "Member ID", required = true) @PathVariable Long id,
@@ -62,7 +62,7 @@ public class MemberController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAuthority('VIEW_MEMBERS') or hasAuthority('MANAGE_MEMBERS')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('VIEW_MEMBERS') or hasAuthority('MANAGE_MEMBERS')")
     @Operation(summary = "Get member by ID", description = "Returns member details with family members")
     public ResponseEntity<ApiResponse<MemberViewDto>> get(
             @Parameter(description = "Member ID", required = true) @PathVariable Long id) {
@@ -71,7 +71,7 @@ public class MemberController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAuthority('VIEW_MEMBERS') or hasAuthority('MANAGE_MEMBERS')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('VIEW_MEMBERS') or hasAuthority('MANAGE_MEMBERS')")
     @Operation(summary = "List members with pagination", description = "Returns paginated list of members (filtered by organization context)")
     public ResponseEntity<ApiResponse<PaginationResponse<MemberViewDto>>> list(
             @Parameter(description = "Employer ID for organization context (null = TPA/show all)")
@@ -98,7 +98,7 @@ public class MemberController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('MANAGE_MEMBERS')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('MANAGE_MEMBERS')")
     @Operation(summary = "Delete member", description = "Soft deletes a member (sets active=false)")
     public ResponseEntity<ApiResponse<Void>> delete(
             @Parameter(description = "Member ID", required = true) @PathVariable Long id) {
@@ -107,7 +107,7 @@ public class MemberController {
     }
 
     @GetMapping("/count")
-    @PreAuthorize("hasAuthority('VIEW_MEMBERS') or hasAuthority('MANAGE_MEMBERS')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('VIEW_MEMBERS') or hasAuthority('MANAGE_MEMBERS')")
     @Operation(summary = "Count members", description = "Returns total count of active members (filtered by organization context)")
     public ResponseEntity<ApiResponse<Long>> count(
             @Parameter(description = "Employer ID for organization context (null = TPA/show all)")
@@ -117,7 +117,7 @@ public class MemberController {
     }
 
     @GetMapping("/search")
-    @PreAuthorize("hasAuthority('VIEW_MEMBERS') or hasAuthority('MANAGE_MEMBERS')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('VIEW_MEMBERS') or hasAuthority('MANAGE_MEMBERS')")
     @Operation(summary = "Search members", description = "Searches members by name, ID, phone, etc. (filtered by organization context)")
     public ResponseEntity<ApiResponse<List<MemberViewDto>>> search(
             @Parameter(description = "Employer ID for organization context (null = TPA/show all)")
@@ -128,7 +128,7 @@ public class MemberController {
     }
 
     @PostMapping("/employer/{employerOrgId}/refresh-policies")
-    @PreAuthorize("hasAuthority('MANAGE_MEMBERS') or hasAuthority('MANAGE_BENEFIT_POLICIES')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('MANAGE_MEMBERS') or hasAuthority('MANAGE_BENEFIT_POLICIES')")
     @Operation(summary = "Refresh benefit policies for employer", 
                description = "Re-assigns the active benefit policy to all members of an employer")
     public ResponseEntity<ApiResponse<Integer>> refreshBenefitPoliciesForEmployer(

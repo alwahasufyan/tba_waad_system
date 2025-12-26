@@ -27,7 +27,7 @@ public class UserController {
     private final UserService userService;
 
     @GetMapping
-    @PreAuthorize("hasAuthority('users.view')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('users.view')")
     @Operation(summary = "List all users", description = "Returns all users.")
     @ApiResponses({
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Users retrieved successfully"),
@@ -43,7 +43,7 @@ public class UserController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAuthority('users.view')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('users.view')")
     @Operation(summary = "Get user by ID", description = "Returns a user by ID.")
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "User retrieved successfully"),
@@ -59,7 +59,7 @@ public class UserController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAuthority('users.manage')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('users.manage')")
     @Operation(summary = "Create user", description = "Creates a new user.")
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "User created successfully"),
@@ -76,7 +76,7 @@ public class UserController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAuthority('users.manage')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('users.manage')")
     @Operation(summary = "Update user", description = "Updates an existing user by ID.")
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "User updated successfully"),
@@ -95,7 +95,7 @@ public class UserController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('users.manage')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('users.manage')")
     @Operation(summary = "Delete user", description = "Deletes a user by ID.")
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "User deleted successfully"),
@@ -111,7 +111,7 @@ public class UserController {
     }
 
     @GetMapping("/search")
-    @PreAuthorize("hasAuthority('users.view')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('users.view')")
     @Operation(summary = "Search users", description = "Search users by query string.")
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Users retrieved successfully"),
@@ -126,7 +126,7 @@ public class UserController {
     }
 
     @GetMapping("/paginate")
-    @PreAuthorize("hasAuthority('users.view')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('users.view')")
     @Operation(summary = "Paginate users", description = "Returns a page of users.")
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Users page retrieved successfully"),
@@ -143,7 +143,7 @@ public class UserController {
     }
 
     @PostMapping("/{id}/assign-roles")
-    @PreAuthorize("hasAuthority('users.assign_roles')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('users.assign_roles')")
     @Operation(summary = "Assign roles to user", description = "Assigns one or more roles to a user.")
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Roles assigned successfully"),

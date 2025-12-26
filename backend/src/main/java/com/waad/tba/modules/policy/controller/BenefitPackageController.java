@@ -20,35 +20,35 @@ public class BenefitPackageController {
     private final BenefitPackageService benefitPackageService;
 
     @GetMapping
-    @PreAuthorize("hasAuthority('VIEW_BENEFIT_PACKAGES')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('VIEW_BENEFIT_PACKAGES')")
     public ResponseEntity<ApiResponse<List<BenefitPackageDto>>> getAllBenefitPackages() {
         List<BenefitPackageDto> benefitPackages = benefitPackageService.getAllBenefitPackages();
         return ResponseEntity.ok(ApiResponse.success(benefitPackages));
     }
 
     @GetMapping("/active")
-    @PreAuthorize("hasAuthority('VIEW_BENEFIT_PACKAGES')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('VIEW_BENEFIT_PACKAGES')")
     public ResponseEntity<ApiResponse<List<BenefitPackageDto>>> getActiveBenefitPackages() {
         List<BenefitPackageDto> benefitPackages = benefitPackageService.getActiveBenefitPackages();
         return ResponseEntity.ok(ApiResponse.success(benefitPackages));
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAuthority('VIEW_BENEFIT_PACKAGES')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('VIEW_BENEFIT_PACKAGES')")
     public ResponseEntity<ApiResponse<BenefitPackageDto>> getBenefitPackageById(@PathVariable Long id) {
         BenefitPackageDto benefitPackage = benefitPackageService.getBenefitPackageById(id);
         return ResponseEntity.ok(ApiResponse.success(benefitPackage));
     }
 
     @GetMapping("/code/{code}")
-    @PreAuthorize("hasAuthority('VIEW_BENEFIT_PACKAGES')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('VIEW_BENEFIT_PACKAGES')")
     public ResponseEntity<ApiResponse<BenefitPackageDto>> getBenefitPackageByCode(@PathVariable String code) {
         BenefitPackageDto benefitPackage = benefitPackageService.getBenefitPackageByCode(code);
         return ResponseEntity.ok(ApiResponse.success(benefitPackage));
     }
 
     @PostMapping
-    @PreAuthorize("hasAuthority('MANAGE_BENEFIT_PACKAGES')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('MANAGE_BENEFIT_PACKAGES')")
     public ResponseEntity<ApiResponse<BenefitPackageDto>> createBenefitPackage(@Valid @RequestBody BenefitPackageDto dto) {
         BenefitPackageDto created = benefitPackageService.createBenefitPackage(dto);
         return ResponseEntity.status(HttpStatus.CREATED)
@@ -56,7 +56,7 @@ public class BenefitPackageController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAuthority('MANAGE_BENEFIT_PACKAGES')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('MANAGE_BENEFIT_PACKAGES')")
     public ResponseEntity<ApiResponse<BenefitPackageDto>> updateBenefitPackage(
             @PathVariable Long id,
             @Valid @RequestBody BenefitPackageDto dto) {
@@ -65,7 +65,7 @@ public class BenefitPackageController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('MANAGE_BENEFIT_PACKAGES')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('MANAGE_BENEFIT_PACKAGES')")
     public ResponseEntity<ApiResponse<Void>> deleteBenefitPackage(@PathVariable Long id) {
         benefitPackageService.deleteBenefitPackage(id);
         return ResponseEntity.ok(ApiResponse.success("Benefit package deleted successfully", null));

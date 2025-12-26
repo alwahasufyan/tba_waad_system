@@ -88,7 +88,7 @@ public class PreApprovalController {
      * Create a new pre-approval request
      */
     @PostMapping
-    @PreAuthorize("hasAnyAuthority('CREATE_PRE_APPROVAL', 'PROVIDER_STAFF', 'TPA_STAFF')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAnyAuthority('CREATE_PRE_APPROVAL', 'PROVIDER_STAFF', 'TPA_STAFF')")
     @Operation(summary = "Create pre-approval request", 
                description = "Create a new pre-approval request")
     public ResponseEntity<ApiResponse<PreApprovalResponseDto>> createPreApproval(
@@ -123,7 +123,7 @@ public class PreApprovalController {
      * Get pre-approval by ID
      */
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyAuthority('VIEW_PRE_APPROVAL', 'PROVIDER_STAFF', 'TPA_STAFF')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAnyAuthority('VIEW_PRE_APPROVAL', 'PROVIDER_STAFF', 'TPA_STAFF')")
     @Operation(summary = "Get pre-approval by ID")
     public ResponseEntity<ApiResponse<PreApprovalResponseDto>> getPreApprovalById(
             @PathVariable Long id) {
@@ -136,7 +136,7 @@ public class PreApprovalController {
      * Get pre-approval by approval number
      */
     @GetMapping("/number/{approvalNumber}")
-    @PreAuthorize("hasAnyAuthority('VIEW_PRE_APPROVAL', 'PROVIDER_STAFF', 'TPA_STAFF')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAnyAuthority('VIEW_PRE_APPROVAL', 'PROVIDER_STAFF', 'TPA_STAFF')")
     @Operation(summary = "Get pre-approval by approval number")
     public ResponseEntity<ApiResponse<PreApprovalResponseDto>> getByApprovalNumber(
             @PathVariable String approvalNumber) {
@@ -149,7 +149,7 @@ public class PreApprovalController {
      * Get all pre-approvals for a member
      */
     @GetMapping("/member/{memberId}")
-    @PreAuthorize("hasAnyAuthority('VIEW_PRE_APPROVAL', 'PROVIDER_STAFF', 'TPA_STAFF')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAnyAuthority('VIEW_PRE_APPROVAL', 'PROVIDER_STAFF', 'TPA_STAFF')")
     @Operation(summary = "Get all pre-approvals for a member")
     public ResponseEntity<ApiResponse<List<PreApprovalResponseDto>>> getByMember(
             @PathVariable Long memberId) {
@@ -162,7 +162,7 @@ public class PreApprovalController {
      * Get valid pre-approvals for a member
      */
     @GetMapping("/member/{memberId}/valid")
-    @PreAuthorize("hasAnyAuthority('VIEW_PRE_APPROVAL', 'PROVIDER_STAFF', 'TPA_STAFF')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAnyAuthority('VIEW_PRE_APPROVAL', 'PROVIDER_STAFF', 'TPA_STAFF')")
     @Operation(summary = "Get valid pre-approvals for a member")
     public ResponseEntity<ApiResponse<List<PreApprovalResponseDto>>> getValidApprovals(
             @PathVariable Long memberId) {
@@ -180,7 +180,7 @@ public class PreApprovalController {
      * Approve a pre-approval request
      */
     @PostMapping("/{id}/approve")
-    @PreAuthorize("hasAnyAuthority('APPROVE_PRE_APPROVAL', 'MEDICAL_REVIEWER', 'TPA_MANAGER')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAnyAuthority('APPROVE_PRE_APPROVAL', 'MEDICAL_REVIEWER', 'TPA_MANAGER')")
     @Operation(summary = "Approve pre-approval request")
     public ResponseEntity<ApiResponse<PreApprovalResponseDto>> approvePreApproval(
             @PathVariable Long id,
@@ -205,7 +205,7 @@ public class PreApprovalController {
      * Reject a pre-approval request
      */
     @PostMapping("/{id}/reject")
-    @PreAuthorize("hasAnyAuthority('APPROVE_PRE_APPROVAL', 'MEDICAL_REVIEWER', 'TPA_MANAGER')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAnyAuthority('APPROVE_PRE_APPROVAL', 'MEDICAL_REVIEWER', 'TPA_MANAGER')")
     @Operation(summary = "Reject pre-approval request")
     public ResponseEntity<ApiResponse<PreApprovalResponseDto>> rejectPreApproval(
             @PathVariable Long id,
@@ -229,7 +229,7 @@ public class PreApprovalController {
      * Get all pre-approvals (with pagination)
      */
     @GetMapping
-    @PreAuthorize("hasAnyAuthority('VIEW_PRE_APPROVAL', 'TPA_STAFF')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAnyAuthority('VIEW_PRE_APPROVAL', 'TPA_STAFF')")
     @Operation(summary = "Get all pre-approvals with pagination")
     public ResponseEntity<ApiResponse<Page<PreApprovalResponseDto>>> getAllPreApprovals(
             Pageable pageable) {
@@ -243,7 +243,7 @@ public class PreApprovalController {
      * Returns pre-approvals with status PENDING, ordered by creation date (FIFO)
      */
     @GetMapping("/inbox/pending")
-    @PreAuthorize("hasAnyAuthority('APPROVE_PRE_APPROVAL', 'MEDICAL_REVIEWER', 'TPA_MANAGER', 'TPA_STAFF')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAnyAuthority('APPROVE_PRE_APPROVAL', 'MEDICAL_REVIEWER', 'TPA_MANAGER', 'TPA_STAFF')")
     @Operation(summary = "Get pending pre-approvals for inbox")
     public ResponseEntity<ApiResponse<Page<PreApprovalResponseDto>>> getPendingForInbox(
             Pageable pageable) {

@@ -32,7 +32,7 @@ public class DashboardController {
     private final DashboardService service;
 
     @GetMapping("/stats")
-    @PreAuthorize("hasAuthority('VIEW_REPORTS')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('VIEW_REPORTS')")
     @Operation(summary = "Get dashboard stats", description = "Returns aggregate statistics for the dashboard overview. Accepts optional X-Employer-ID header for filtering.")
     @ApiResponses({
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Stats retrieved successfully"),
@@ -50,7 +50,7 @@ public class DashboardController {
     }
 
     @GetMapping("/claims-per-day")
-    @PreAuthorize("hasAuthority('VIEW_REPORTS')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('VIEW_REPORTS')")
     @Operation(summary = "Get claims per day", description = "Returns claims count per day for the given date range. Accepts optional X-Employer-ID header for filtering.")
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Data retrieved successfully"),

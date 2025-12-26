@@ -55,7 +55,7 @@ public class MemberImportController {
      * Returns parsed data for user confirmation.
      */
     @PostMapping(value = "/preview", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @PreAuthorize("hasAuthority('members.import')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('members.import')")
     @Operation(
         summary = "Preview Excel import",
         description = "Upload Excel file and preview data before import. Returns validation errors and mapping."
@@ -97,7 +97,7 @@ public class MemberImportController {
      * Creates/updates members and returns result.
      */
     @PostMapping(value = "/execute", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @PreAuthorize("hasAuthority('members.import')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('members.import')")
     @Operation(
         summary = "Execute Excel import",
         description = "Import members from Excel file. Creates new members or updates existing by national ID."
@@ -149,7 +149,7 @@ public class MemberImportController {
      * GET /api/members/import/logs
      */
     @GetMapping("/logs")
-    @PreAuthorize("hasAuthority('members.import_logs')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('members.import_logs')")
     @Operation(summary = "Get import history", description = "List all import logs with pagination")
     public ResponseEntity<ApiResponse<Page<MemberImportLog>>> getImportLogs(
             @RequestParam(defaultValue = "0") int page,
@@ -167,7 +167,7 @@ public class MemberImportController {
      * GET /api/members/import/logs/{batchId}
      */
     @GetMapping("/logs/{batchId}")
-    @PreAuthorize("hasAuthority('members.import_logs')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('members.import_logs')")
     @Operation(summary = "Get import log by batch ID")
     public ResponseEntity<ApiResponse<MemberImportLog>> getImportLog(
             @PathVariable String batchId) {
@@ -183,7 +183,7 @@ public class MemberImportController {
      * GET /api/members/import/logs/{batchId}/errors
      */
     @GetMapping("/logs/{batchId}/errors")
-    @PreAuthorize("hasAuthority('members.import_logs')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('members.import_logs')")
     @Operation(summary = "Get errors for import batch")
     public ResponseEntity<ApiResponse<?>> getImportErrors(
             @PathVariable String batchId) {
@@ -198,7 +198,7 @@ public class MemberImportController {
      * GET /api/members/import/template
      */
     @GetMapping("/template")
-    @PreAuthorize("hasAuthority('members.import')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('members.import')")
     @Operation(summary = "Get import template info", description = "Returns expected column mappings")
     public ResponseEntity<ApiResponse<?>> getTemplate() {
         var template = java.util.Map.of(

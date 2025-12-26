@@ -46,7 +46,7 @@ public class InsurancePolicyController {
     private final PolicyBenefitPackageService benefitPackageService;
 
     @PostMapping
-    @PreAuthorize("hasAuthority('MANAGE_POLICIES')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('MANAGE_POLICIES')")
     @Operation(summary = "Create insurance policy", description = "Creates a new insurance policy template.")
     public ResponseEntity<ApiResponse<InsurancePolicyViewDto>> createPolicy(
             @Valid @RequestBody InsurancePolicyCreateDto dto) {
@@ -56,7 +56,7 @@ public class InsurancePolicyController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAuthority('MANAGE_POLICIES')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('MANAGE_POLICIES')")
     @Operation(summary = "Update insurance policy", description = "Updates an existing insurance policy template.")
     public ResponseEntity<ApiResponse<InsurancePolicyViewDto>> updatePolicy(
             @Parameter(name = "id", description = "Policy ID", required = true)
@@ -67,7 +67,7 @@ public class InsurancePolicyController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAuthority('VIEW_POLICIES')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('VIEW_POLICIES')")
     @Operation(summary = "Get insurance policy by ID", description = "Returns an insurance policy by ID.")
     public ResponseEntity<ApiResponse<InsurancePolicyViewDto>> getPolicy(
             @Parameter(name = "id", description = "Policy ID", required = true)
@@ -77,7 +77,7 @@ public class InsurancePolicyController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAuthority('VIEW_POLICIES')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('VIEW_POLICIES')")
     @Operation(summary = "List insurance policies", description = "Returns a paginated list of insurance policies with optional search.")
     public ResponseEntity<ApiResponse<PaginationResponse<InsurancePolicyViewDto>>> listPolicies(
             @Parameter(name = "page", description = "Page number (1-based)")
@@ -107,7 +107,7 @@ public class InsurancePolicyController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('MANAGE_POLICIES')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('MANAGE_POLICIES')")
     @Operation(summary = "Delete insurance policy", description = "Soft deletes an insurance policy by ID.")
     public ResponseEntity<ApiResponse<Void>> deletePolicy(
             @Parameter(name = "id", description = "Policy ID", required = true)
@@ -117,7 +117,7 @@ public class InsurancePolicyController {
     }
 
     @GetMapping("/count")
-    @PreAuthorize("hasAuthority('VIEW_POLICIES')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('VIEW_POLICIES')")
     @Operation(summary = "Count insurance policies", description = "Returns total number of insurance policies")
     public ResponseEntity<ApiResponse<Long>> count() {
         long total = insurancePolicyService.count();
@@ -127,7 +127,7 @@ public class InsurancePolicyController {
     // ==================== Benefit Package Endpoints ====================
 
     @PostMapping("/{policyId}/packages")
-    @PreAuthorize("hasAuthority('MANAGE_POLICIES')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('MANAGE_POLICIES')")
     @Operation(summary = "Add benefit package to policy", description = "Creates a new benefit package for a policy.")
     public ResponseEntity<ApiResponse<PolicyBenefitPackageViewDto>> createBenefitPackage(
             @Parameter(name = "policyId", description = "Policy ID", required = true)
@@ -139,7 +139,7 @@ public class InsurancePolicyController {
     }
 
     @GetMapping("/{policyId}/packages")
-    @PreAuthorize("hasAuthority('VIEW_POLICIES')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('VIEW_POLICIES')")
     @Operation(summary = "List benefit packages for policy", description = "Returns all benefit packages for a policy.")
     public ResponseEntity<ApiResponse<List<PolicyBenefitPackageViewDto>>> listBenefitPackages(
             @Parameter(name = "policyId", description = "Policy ID", required = true)
@@ -149,7 +149,7 @@ public class InsurancePolicyController {
     }
 
     @PutMapping("/packages/{id}")
-    @PreAuthorize("hasAuthority('MANAGE_POLICIES')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('MANAGE_POLICIES')")
     @Operation(summary = "Update benefit package", description = "Updates an existing benefit package.")
     public ResponseEntity<ApiResponse<PolicyBenefitPackageViewDto>> updateBenefitPackage(
             @Parameter(name = "id", description = "Benefit package ID", required = true)
@@ -160,7 +160,7 @@ public class InsurancePolicyController {
     }
 
     @DeleteMapping("/packages/{id}")
-    @PreAuthorize("hasAuthority('MANAGE_POLICIES')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('MANAGE_POLICIES')")
     @Operation(summary = "Delete benefit package", description = "Soft deletes a benefit package by ID.")
     public ResponseEntity<ApiResponse<Void>> deleteBenefitPackage(
             @Parameter(name = "id", description = "Benefit package ID", required = true)

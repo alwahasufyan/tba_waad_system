@@ -37,7 +37,7 @@ public class MedicalPackageController {
     private final MedicalPackageService service;
 
     @GetMapping("/selector")
-    @PreAuthorize("hasAuthority('MEDICAL_PACKAGE_READ')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('MEDICAL_PACKAGE_READ')")
     @Operation(summary = "Get medical package selector options", description = "Returns active medical packages for dropdown/selector")
     public ResponseEntity<ApiResponse<List<MedicalPackageSelectorDto>>> getSelectorOptions() {
         List<MedicalPackageSelectorDto> options = service.getSelectorOptions();
@@ -49,7 +49,7 @@ public class MedicalPackageController {
      * Get all medical packages with pagination
      */
     @GetMapping
-    @PreAuthorize("hasAuthority('MEDICAL_PACKAGE_READ')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('MEDICAL_PACKAGE_READ')")
     @Operation(summary = "List medical packages with pagination", description = "Returns paginated list of medical packages with optional search")
     public ResponseEntity<ApiResponse<PaginationResponse<MedicalPackage>>> list(
             @Parameter(description = "Page number (1-based)") @RequestParam(defaultValue = "1") int page,
@@ -78,7 +78,7 @@ public class MedicalPackageController {
      * Get medical package by ID
      */
     @GetMapping("/{id}")
-    @PreAuthorize("hasAuthority('MEDICAL_PACKAGE_READ')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('MEDICAL_PACKAGE_READ')")
     public ResponseEntity<ApiResponse<MedicalPackage>> getById(@PathVariable Long id) {
         try {
             MedicalPackage medicalPackage = service.findById(id);
@@ -97,7 +97,7 @@ public class MedicalPackageController {
      * Get medical package by code
      */
     @GetMapping("/code/{code}")
-    @PreAuthorize("hasAuthority('MEDICAL_PACKAGE_READ')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('MEDICAL_PACKAGE_READ')")
     public ResponseEntity<ApiResponse<MedicalPackage>> getByCode(@PathVariable String code) {
         try {
             MedicalPackage medicalPackage = service.findByCode(code);
@@ -116,7 +116,7 @@ public class MedicalPackageController {
      * Get active medical packages only
      */
     @GetMapping("/active")
-    @PreAuthorize("hasAuthority('MEDICAL_PACKAGE_READ')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('MEDICAL_PACKAGE_READ')")
     public ResponseEntity<ApiResponse<List<MedicalPackage>>> getActive() {
         try {
             List<MedicalPackage> packages = service.findActive();
@@ -135,7 +135,7 @@ public class MedicalPackageController {
      * Create new medical package
      */
     @PostMapping
-    @PreAuthorize("hasAuthority('MEDICAL_PACKAGE_CREATE')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('MEDICAL_PACKAGE_CREATE')")
     @Operation(summary = "Create medical package")
     public ResponseEntity<ApiResponse<MedicalPackage>> create(@Valid @RequestBody MedicalPackageDTO dto) {
         MedicalPackage created = service.create(dto);
@@ -149,7 +149,7 @@ public class MedicalPackageController {
      * Update existing medical package
      */
     @PutMapping("/{id}")
-    @PreAuthorize("hasAuthority('MEDICAL_PACKAGE_UPDATE')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('MEDICAL_PACKAGE_UPDATE')")
     @Operation(summary = "Update medical package")
     public ResponseEntity<ApiResponse<MedicalPackage>> update(@PathVariable Long id, @Valid @RequestBody MedicalPackageDTO dto) {
         MedicalPackage updated = service.update(id, dto);
@@ -163,7 +163,7 @@ public class MedicalPackageController {
      * Delete medical package
      */
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('MEDICAL_PACKAGE_DELETE')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('MEDICAL_PACKAGE_DELETE')")
     @Operation(summary = "Delete medical package")
     public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {
         service.delete(id);
@@ -177,7 +177,7 @@ public class MedicalPackageController {
      * Get total count of medical packages
      */
     @GetMapping("/count")
-    @PreAuthorize("hasAuthority('MEDICAL_PACKAGE_READ')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('MEDICAL_PACKAGE_READ')")
     @Operation(summary = "Count medical packages")
     public ResponseEntity<ApiResponse<Long>> count() {
         Long count = service.count();
@@ -187,7 +187,7 @@ public class MedicalPackageController {
     }
 
     @GetMapping("/search")
-    @PreAuthorize("hasAuthority('MEDICAL_PACKAGE_READ')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('MEDICAL_PACKAGE_READ')")
     @Operation(summary = "Search medical packages")
     public ResponseEntity<ApiResponse<List<MedicalPackage>>> search(@RequestParam String query) {
         List<MedicalPackage> results = service.search(query);

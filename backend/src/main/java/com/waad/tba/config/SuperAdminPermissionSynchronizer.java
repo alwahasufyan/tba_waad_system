@@ -52,6 +52,8 @@ public class SuperAdminPermissionSynchronizer {
     /**
      * List of all permission names used in @PreAuthorize annotations.
      * These MUST exist in the database for hasAuthority() to work.
+     * 
+     * AUDIT v1.2: Added all missing permissions found during RBAC audit
      */
     private static final List<String> REQUIRED_PERMISSIONS = Arrays.asList(
         // System permissions
@@ -65,6 +67,11 @@ public class SuperAdminPermissionSynchronizer {
         // Provider permissions
         "MANAGE_PROVIDERS", "VIEW_PROVIDERS",
         
+        // Provider Contract permissions (NEW - AUDIT FIX)
+        "provider_contracts.view", "provider_contracts.create",
+        "provider_contracts.update", "provider_contracts.delete",
+        "provider_contracts.activate", "provider_contracts.pricing.manage",
+        
         // Insurance permissions
         "MANAGE_INSURANCE", "VIEW_INSURANCE",
         
@@ -73,10 +80,12 @@ public class SuperAdminPermissionSynchronizer {
         
         // Member permissions
         "MANAGE_MEMBERS", "VIEW_MEMBERS",
+        "members.import", "members.import_logs", // NEW - AUDIT FIX
         
         // Claims permissions  
         "MANAGE_CLAIMS", "VIEW_CLAIMS", "CREATE_CLAIM", "UPDATE_CLAIM",
         "APPROVE_CLAIMS", "REJECT_CLAIMS", "VIEW_CLAIM_STATUS",
+        "SETTLE_CLAIMS", // NEW - AUDIT FIX
         
         // Visit permissions
         "MANAGE_VISITS", "VIEW_VISITS",
@@ -106,6 +115,10 @@ public class SuperAdminPermissionSynchronizer {
         // Policy permissions
         "VIEW_POLICIES", "MANAGE_POLICIES",
         "VIEW_BENEFIT_PACKAGES", "MANAGE_BENEFIT_PACKAGES",
+        "MANAGE_BENEFIT_POLICIES", // NEW - AUDIT FIX
+        
+        // Eligibility permissions (NEW - AUDIT FIX)
+        "eligibility.check", "eligibility.view_logs",
         
         // Basic access
         "VIEW_BASIC_DATA",

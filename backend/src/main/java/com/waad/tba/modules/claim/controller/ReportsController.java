@@ -47,7 +47,7 @@ public class ReportsController {
      * - المبالغ المستحقة للدفع
      */
     @GetMapping("/adjudication")
-    @PreAuthorize("hasAuthority('VIEW_REPORTS')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('VIEW_REPORTS')")
     @Operation(
         summary = "تقرير التدقيق المالي",
         description = "يُظهر: المطلوب | المستقطع (تحمل المريض) | المستحق للمستشفى"
@@ -78,7 +78,7 @@ public class ReportsController {
      * - المطالبات الموافق عليها والجاهزة للدفع
      */
     @GetMapping("/provider-settlement")
-    @PreAuthorize("hasAuthority('VIEW_REPORTS')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('VIEW_REPORTS')")
     @Operation(
         summary = "تقرير تسوية مقدم الخدمة",
         description = "المطالبات الموافق عليها والجاهزة للتسوية"
@@ -99,7 +99,7 @@ public class ReportsController {
      * - إجمالي المدفوعات والتحملات
      */
     @GetMapping("/member-statement/{memberId}")
-    @PreAuthorize("hasAuthority('VIEW_REPORTS')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('VIEW_REPORTS')")
     @Operation(
         summary = "كشف حساب العضو",
         description = "جميع مطالبات العضو مع الإجماليات"
@@ -131,7 +131,7 @@ public class ReportsController {
      * Get Summary Statistics for Dashboard.
      */
     @GetMapping("/summary")
-    @PreAuthorize("hasAuthority('VIEW_REPORTS')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('VIEW_REPORTS')")
     @Operation(
         summary = "ملخص الإحصائيات",
         description = "إحصائيات سريعة للوحة التحكم"

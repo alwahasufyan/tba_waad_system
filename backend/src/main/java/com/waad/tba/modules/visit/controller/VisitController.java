@@ -33,7 +33,7 @@ public class VisitController {
      */
     @Deprecated
     @GetMapping("/all")
-    @PreAuthorize("hasAuthority('VIEW_VISITS')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('VIEW_VISITS')")
     @Operation(summary = "List all visits", description = "Returns a list of all visit records.")
     @ApiResponses({
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Visits retrieved successfully"),
@@ -49,7 +49,7 @@ public class VisitController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAuthority('VIEW_VISITS')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('VIEW_VISITS')")
     @Operation(summary = "Get visit by ID", description = "Returns a visit record by its ID.")
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Visit retrieved successfully"),
@@ -65,7 +65,7 @@ public class VisitController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAuthority('MANAGE_VISITS')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('MANAGE_VISITS')")
     @Operation(
         summary = "Create visit", 
         description = "Creates a new visit record. If providerId is specified, the provider must have an active contract with the member's company."
@@ -85,7 +85,7 @@ public class VisitController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAuthority('MANAGE_VISITS')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('MANAGE_VISITS')")
     @Operation(summary = "Update visit", description = "Updates an existing visit record by ID.")
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Visit updated successfully"),
@@ -104,7 +104,7 @@ public class VisitController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('MANAGE_VISITS')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('MANAGE_VISITS')")
     @Operation(summary = "Delete visit", description = "Deletes a visit record by ID.")
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Visit deleted successfully"),
@@ -124,7 +124,7 @@ public class VisitController {
      */
     @Deprecated
     @GetMapping("/search")
-    @PreAuthorize("hasAuthority('VIEW_VISITS')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('VIEW_VISITS')")
     @Operation(summary = "Search visits", description = "Search visits by query string.")
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Visits retrieved successfully"),
@@ -139,7 +139,7 @@ public class VisitController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAuthority('VIEW_VISITS')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('VIEW_VISITS')")
     @Operation(summary = "Paginate visits", description = "Returns a page of visits with pagination parameters")
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Visits page retrieved successfully"),
@@ -165,7 +165,7 @@ public class VisitController {
     }
 
     @GetMapping("/count")
-    @PreAuthorize("hasAuthority('VIEW_VISITS')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('VIEW_VISITS')")
     @Operation(summary = "Count visits", description = "Returns total number of visits")
     public ResponseEntity<ApiResponse<Long>> count() {
         long total = service.count();

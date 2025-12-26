@@ -38,7 +38,7 @@ public class PermissionController {
     private final PermissionService permissionService;
 
     @GetMapping
-    @PreAuthorize("hasAuthority('permissions.view')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('permissions.view')")
     @Operation(summary = "List all permissions", description = "Returns all permissions.")
     @ApiResponses({
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Permissions retrieved successfully"),
@@ -54,7 +54,7 @@ public class PermissionController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAuthority('permissions.view')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('permissions.view')")
     @Operation(summary = "Get permission by ID", description = "Returns a permission by ID.")
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Permission retrieved successfully"),
@@ -70,7 +70,7 @@ public class PermissionController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAuthority('permissions.manage')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('permissions.manage')")
     @Operation(summary = "Create permission", description = "Creates a new permission.")
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "Permission created successfully"),
@@ -87,7 +87,7 @@ public class PermissionController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAuthority('permissions.manage')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('permissions.manage')")
     @Operation(summary = "Update permission", description = "Updates an existing permission by ID.")
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Permission updated successfully"),
@@ -106,7 +106,7 @@ public class PermissionController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('permissions.manage')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('permissions.manage')")
     @Operation(summary = "Delete permission", description = "Deletes a permission by ID.")
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Permission deleted successfully"),
@@ -122,7 +122,7 @@ public class PermissionController {
     }
 
     @GetMapping("/search")
-    @PreAuthorize("hasAuthority('permissions.view')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('permissions.view')")
     @Operation(summary = "Search permissions", description = "Search permissions by query string.")
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Permissions retrieved successfully"),
@@ -137,7 +137,7 @@ public class PermissionController {
     }
 
     @GetMapping("/paginate")
-    @PreAuthorize("hasAuthority('permissions.view')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('permissions.view')")
     @Operation(summary = "Paginate permissions", description = "Returns a page of permissions.")
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Permissions page retrieved successfully"),

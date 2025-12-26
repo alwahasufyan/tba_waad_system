@@ -27,7 +27,7 @@ public class SystemAdminController {
     private final SystemAdminService service;
 
     @DeleteMapping("/reset")
-    @PreAuthorize("hasAuthority('MANAGE_SYSTEM_SETTINGS')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('MANAGE_SYSTEM_SETTINGS')")
     @Operation(summary = "Reset test data", description = "Deletes non-RBAC domain data: claims, visits, members, employers, insurance companies, reviewer companies. RBAC roles/users are preserved.")
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Test data cleared successfully"),
@@ -40,7 +40,7 @@ public class SystemAdminController {
     }
 
     @PostMapping("/init-defaults")
-    @PreAuthorize("hasAuthority('MANAGE_SYSTEM_SETTINGS')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('MANAGE_SYSTEM_SETTINGS')")
     @Operation(summary = "Initialize defaults", description = "Ensures base permissions, roles, and admin user exist. Adds system.manage if missing.")
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Defaults initialized"),
@@ -53,7 +53,7 @@ public class SystemAdminController {
     }
 
     @PostMapping("/seed-test-data")
-    @PreAuthorize("hasAuthority('MANAGE_SYSTEM_SETTINGS')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('MANAGE_SYSTEM_SETTINGS')")
     @Operation(summary = "Insert sample test data", description = "Inserts representative sample domain data for demo/testing (employer, member, reviewer company, insurance company, claim, visit).")
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Sample data inserted"),

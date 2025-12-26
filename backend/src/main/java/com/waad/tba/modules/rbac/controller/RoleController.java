@@ -27,7 +27,7 @@ public class RoleController {
     private final RoleService roleService;
 
     @GetMapping
-    @PreAuthorize("hasAuthority('roles.view')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('roles.view')")
     @Operation(summary = "List all roles", description = "Returns all roles.")
     @ApiResponses({
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Roles retrieved successfully"),
@@ -43,7 +43,7 @@ public class RoleController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAuthority('roles.view')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('roles.view')")
     @Operation(summary = "Get role by ID", description = "Returns a role by ID.")
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Role retrieved successfully"),
@@ -59,7 +59,7 @@ public class RoleController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAuthority('roles.manage')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('roles.manage')")
     @Operation(summary = "Create role", description = "Creates a new role.")
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "Role created successfully"),
@@ -76,7 +76,7 @@ public class RoleController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAuthority('roles.manage')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('roles.manage')")
     @Operation(summary = "Update role", description = "Updates an existing role by ID.")
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Role updated successfully"),
@@ -95,7 +95,7 @@ public class RoleController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('roles.manage')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('roles.manage')")
     @Operation(summary = "Delete role", description = "Deletes a role by ID.")
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Role deleted successfully"),
@@ -111,7 +111,7 @@ public class RoleController {
     }
 
     @GetMapping("/search")
-    @PreAuthorize("hasAuthority('roles.view')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('roles.view')")
     @Operation(summary = "Search roles", description = "Search roles by query string.")
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Roles retrieved successfully"),
@@ -126,7 +126,7 @@ public class RoleController {
     }
 
     @GetMapping("/paginate")
-    @PreAuthorize("hasAuthority('roles.view')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('roles.view')")
     @Operation(summary = "Paginate roles", description = "Returns a page of roles.")
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Roles page retrieved successfully"),
@@ -143,7 +143,7 @@ public class RoleController {
     }
 
     @PostMapping("/{id}/assign-permissions")
-    @PreAuthorize("hasAuthority('roles.assign_permissions')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('roles.assign_permissions')")
     @Operation(summary = "Assign permissions to role", description = "Assigns one or more permissions to a role.")
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Permissions assigned successfully"),

@@ -41,7 +41,7 @@ public class ClaimController {
     private final ClaimService claimService;
 
     @PostMapping
-    @PreAuthorize("hasAuthority('MANAGE_CLAIMS')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('MANAGE_CLAIMS')")
     public ResponseEntity<ApiResponse<ClaimViewDto>> createClaim(@Valid @RequestBody ClaimCreateDto dto) {
         ClaimViewDto claim = claimService.createClaim(dto);
         return ResponseEntity.status(HttpStatus.CREATED)
@@ -49,7 +49,7 @@ public class ClaimController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAuthority('MANAGE_CLAIMS')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('MANAGE_CLAIMS')")
     public ResponseEntity<ApiResponse<ClaimViewDto>> updateClaim(
             @PathVariable Long id,
             @Valid @RequestBody ClaimUpdateDto dto) {
@@ -58,14 +58,14 @@ public class ClaimController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAuthority('VIEW_CLAIMS')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('VIEW_CLAIMS')")
     public ResponseEntity<ApiResponse<ClaimViewDto>> getClaim(@PathVariable Long id) {
         ClaimViewDto claim = claimService.getClaim(id);
         return ResponseEntity.ok(ApiResponse.success("Claim retrieved successfully", claim));
     }
 
     @GetMapping
-    @PreAuthorize("hasAuthority('VIEW_CLAIMS')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('VIEW_CLAIMS')")
     public ResponseEntity<ApiResponse<PaginationResponse<ClaimViewDto>>> listClaims(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "20") int size,
@@ -86,35 +86,35 @@ public class ClaimController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('MANAGE_CLAIMS')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('MANAGE_CLAIMS')")
     public ResponseEntity<ApiResponse<Void>> deleteClaim(@PathVariable Long id) {
         claimService.deleteClaim(id);
         return ResponseEntity.ok(ApiResponse.success("Claim deleted successfully", null));
     }
 
     @GetMapping("/count")
-    @PreAuthorize("hasAuthority('VIEW_CLAIMS')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('VIEW_CLAIMS')")
     public ResponseEntity<ApiResponse<Long>> countClaims() {
         long count = claimService.countClaims();
         return ResponseEntity.ok(ApiResponse.success("Claims counted successfully", count));
     }
 
     @GetMapping("/search")
-    @PreAuthorize("hasAuthority('VIEW_CLAIMS')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('VIEW_CLAIMS')")
     public ResponseEntity<ApiResponse<List<ClaimViewDto>>> search(@RequestParam String query) {
         List<ClaimViewDto> results = claimService.search(query);
         return ResponseEntity.ok(ApiResponse.success(results));
     }
 
     @GetMapping("/member/{memberId}")
-    @PreAuthorize("hasAuthority('VIEW_CLAIMS')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('VIEW_CLAIMS')")
     public ResponseEntity<ApiResponse<List<ClaimViewDto>>> getClaimsByMember(@PathVariable Long memberId) {
         List<ClaimViewDto> claims = claimService.getClaimsByMember(memberId);
         return ResponseEntity.ok(ApiResponse.success("Member claims retrieved successfully", claims));
     }
 
     @GetMapping("/pre-approval/{preApprovalId}")
-    @PreAuthorize("hasAuthority('VIEW_CLAIMS')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('VIEW_CLAIMS')")
     public ResponseEntity<ApiResponse<List<ClaimViewDto>>> getClaimsByPreApproval(@PathVariable Long preApprovalId) {
         List<ClaimViewDto> claims = claimService.getClaimsByPreApproval(preApprovalId);
         return ResponseEntity.ok(ApiResponse.success("Pre-approval claims retrieved successfully", claims));
@@ -129,7 +129,7 @@ public class ClaimController {
      * Transitions: DRAFT → SUBMITTED
      */
     @PostMapping("/{id}/submit")
-    @PreAuthorize("hasAuthority('MANAGE_CLAIMS')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('MANAGE_CLAIMS')")
     @Operation(summary = "Submit claim for review", 
                description = "Submit a draft claim for review. Validates required attachments.")
     public ResponseEntity<ApiResponse<ClaimViewDto>> submitClaim(@PathVariable Long id) {
@@ -146,7 +146,7 @@ public class ClaimController {
      * - Financial snapshot equation: RequestedAmount = PatientCoPay + NetProviderAmount
      */
     @PostMapping("/{id}/approve")
-    @PreAuthorize("hasAuthority('APPROVE_CLAIMS')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('APPROVE_CLAIMS')")
     @Operation(summary = "Approve claim", 
                description = "Approve a claim with automatic cost calculation. Validates coverage limits and calculates patient co-pay.")
     public ResponseEntity<ApiResponse<ClaimViewDto>> approveClaim(
@@ -161,7 +161,7 @@ public class ClaimController {
      * Transitions: SUBMITTED/UNDER_REVIEW → REJECTED (terminal)
      */
     @PostMapping("/{id}/reject")
-    @PreAuthorize("hasAuthority('APPROVE_CLAIMS')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('APPROVE_CLAIMS')")
     @Operation(summary = "Reject claim", 
                description = "Reject a claim. Rejection reason is mandatory.")
     public ResponseEntity<ApiResponse<ClaimViewDto>> rejectClaim(
@@ -176,7 +176,7 @@ public class ClaimController {
      * Transitions: APPROVED → SETTLED (terminal)
      */
     @PostMapping("/{id}/settle")
-    @PreAuthorize("hasAuthority('SETTLE_CLAIMS')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('SETTLE_CLAIMS')")
     @Operation(summary = "Settle claim", 
                description = "Settle an approved claim. Requires payment reference number.")
     public ResponseEntity<ApiResponse<ClaimViewDto>> settleClaim(
@@ -191,7 +191,7 @@ public class ClaimController {
      * Shows: RequestedAmount | PatientCoPay | NetProviderAmount
      */
     @GetMapping("/{id}/cost-breakdown")
-    @PreAuthorize("hasAuthority('VIEW_CLAIMS')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('VIEW_CLAIMS')")
     @Operation(summary = "Get cost breakdown", 
                description = "Get detailed cost breakdown including deductible, co-pay, and insurance amount.")
     public ResponseEntity<ApiResponse<CostBreakdownDto>> getCostBreakdown(@PathVariable Long id) {
@@ -208,7 +208,7 @@ public class ClaimController {
      * Returns claims in SUBMITTED or UNDER_REVIEW status.
      */
     @GetMapping("/inbox/pending")
-    @PreAuthorize("hasAuthority('VIEW_CLAIMS')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('VIEW_CLAIMS')")
     @Operation(summary = "Claims pending review", 
                description = "Get claims awaiting review (SUBMITTED or UNDER_REVIEW status)")
     public ResponseEntity<ApiResponse<PaginationResponse<ClaimViewDto>>> getPendingClaims(
@@ -234,7 +234,7 @@ public class ClaimController {
      * Get approved claims ready for settlement (Inbox for finance).
      */
     @GetMapping("/inbox/approved")
-    @PreAuthorize("hasAuthority('VIEW_CLAIMS')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('VIEW_CLAIMS')")
     @Operation(summary = "Claims ready for settlement", 
                description = "Get approved claims awaiting settlement (APPROVED status)")
     public ResponseEntity<ApiResponse<PaginationResponse<ClaimViewDto>>> getApprovedClaims(

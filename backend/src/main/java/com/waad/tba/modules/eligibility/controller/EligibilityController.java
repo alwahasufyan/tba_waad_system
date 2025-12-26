@@ -81,7 +81,7 @@ public class EligibilityController {
             )
     })
     @PostMapping("/check")
-    @PreAuthorize("hasAuthority('eligibility.check')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('eligibility.check')")
     public ResponseEntity<ApiResponse<EligibilityCheckResponse>> checkEligibility(
             @Valid @RequestBody EligibilityCheckRequest request) {
 
@@ -113,7 +113,7 @@ public class EligibilityController {
             description = "View audit trail of eligibility checks. Filterable by member, policy, and date range."
     )
     @GetMapping("/logs")
-    @PreAuthorize("hasAuthority('eligibility.view_logs')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('eligibility.view_logs')")
     public ResponseEntity<ApiResponse<Page<EligibilityCheck>>> getLogs(
             @Parameter(description = "Filter by member ID")
             @RequestParam(required = false) Long memberId,
@@ -152,7 +152,7 @@ public class EligibilityController {
             description = "Retrieve a specific eligibility check record by its unique request ID."
     )
     @GetMapping("/logs/{requestId}")
-    @PreAuthorize("hasAuthority('eligibility.view_logs')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('eligibility.view_logs')")
     public ResponseEntity<ApiResponse<EligibilityCheck>> getLogByRequestId(
             @PathVariable String requestId) {
 
@@ -170,7 +170,7 @@ public class EligibilityController {
             description = "List all active eligibility rules in evaluation order."
     )
     @GetMapping("/rules")
-    @PreAuthorize("hasAuthority('eligibility.check')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('eligibility.check')")
     public ResponseEntity<ApiResponse<List<String>>> getActiveRules() {
         List<String> rules = eligibilityService.getActiveRules();
         return ResponseEntity.ok(ApiResponse.success("قواعد التحقق من الأهلية النشطة", rules));
