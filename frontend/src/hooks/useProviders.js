@@ -11,7 +11,7 @@ export const useProvidersList = (initialParams = { page: 0, size: 10 }) => {
     setLoading(true);
     setError(null);
     try {
-      const result = await getProviders(params);
+      const result = await providersService.getAll(params);
       setData(result);
     } catch (err) {
       setError(err.message || 'فشل تحميل المزودين');
@@ -44,7 +44,7 @@ export const useProviderDetails = (id) => {
     setLoading(true);
     setError(null);
     try {
-      const result = await getProviderById(id);
+      const result = await providersService.getById(id);
       setProvider(result);
     } catch (err) {
       setError(err.message || 'فشل تحميل تفاصيل المزود');
@@ -73,7 +73,7 @@ export const useCreateProvider = () => {
     setCreating(true);
     setError(null);
     try {
-      const result = await createProvider(data);
+      const result = await providersService.create(data);
       return { success: true, data: result };
     } catch (err) {
       const errorMsg = err.message || 'فشل إنشاء المزود';
@@ -95,7 +95,7 @@ export const useUpdateProvider = () => {
     setUpdating(true);
     setError(null);
     try {
-      const result = await updateProvider(id, data);
+      const result = await providersService.update(id, data);
       return { success: true, data: result };
     } catch (err) {
       const errorMsg = err.message || 'فشل تحديث المزود';
@@ -117,7 +117,7 @@ export const useDeleteProvider = () => {
     setDeleting(true);
     setError(null);
     try {
-      await deleteProvider(id);
+      await providersService.remove(id);
       return { success: true };
     } catch (err) {
       const errorMsg = err.message || 'فشل حذف المزود';
