@@ -4,6 +4,7 @@ import com.waad.tba.common.dto.ApiResponse;
 import com.waad.tba.modules.employer.dto.EmployerCreateDto;
 import com.waad.tba.modules.employer.dto.EmployerResponseDto;
 import com.waad.tba.modules.employer.dto.EmployerSelectorDto;
+import com.waad.tba.modules.employer.dto.EmployerUpdateDto;
 import com.waad.tba.modules.employer.service.EmployerService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -29,9 +30,17 @@ public class EmployerController {
     }
 
     @GetMapping({"/selectors", "/selector"})
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('VIEW_EMPLOYERS')")
     public ResponseEntity<ApiResponse<List<EmployerSelectorDto>>> selectors() {
         List<EmployerSelectorDto> selectors = service.getSelectors();
         return ResponseEntity.ok(ApiResponse.success(selectors));
+    }
+
+    @GetMapping("/{id:\\d+}")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('VIEW_EMPLOYERS')")
+    public ResponseEntity<ApiResponse<EmployerResponseDto>> getById(@PathVariable Long id) {
+        EmployerResponseDto employer = service.getById(id);
+        return ResponseEntity.ok(ApiResponse.success("Employer retrieved successfully", employer));
     }
 
     @PostMapping
@@ -39,5 +48,28 @@ public class EmployerController {
     public ResponseEntity<ApiResponse<EmployerResponseDto>> create(@Valid @RequestBody EmployerCreateDto dto) {
         EmployerResponseDto created = service.create(dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success("Employer created successfully", created));
+    }
+
+    @PutMapping("/{id:\\d+}")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('MANAGE_EMPLOYERS')")
+    public ResponseEntity<ApiResponse<EmployerResponseDto>> update(
+            @PathVariable Long id,
+            @Valid @RequestBody EmployerUpdateDto dto) {
+        EmployerResponseDto updated = service.update(id, dto);
+        return ResponseEntity.ok(ApiResponse.success("Employer updated successfully", updated));
+    }
+
+    @DeleteMapping("/{id:\\d+}")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('MANAGE_EMPLOYERS')")
+    public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {
+        service.delete(id);
+        return ResponseEntity.ok(ApiResponse.success("Employer deleted successfully", null));
+    }
+
+    @GetMapping("/count")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('VIEW_EMPLOYERS')")
+    public ResponseEntity<ApiResponse<Long>> count() {
+        long total = service.count();
+        return ResponseEntity.ok(ApiResponse.success(total));
     }
 }

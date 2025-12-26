@@ -6,9 +6,12 @@ import com.waad.tba.common.repository.OrganizationRepository;
 import com.waad.tba.modules.employer.dto.EmployerCreateDto;
 import com.waad.tba.modules.employer.dto.EmployerResponseDto;
 import com.waad.tba.modules.employer.dto.EmployerSelectorDto;
+import com.waad.tba.modules.employer.dto.EmployerUpdateDto;
 import com.waad.tba.modules.employer.mapper.EmployerMapper;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -46,6 +49,14 @@ public class EmployerService {
                 .toList();
     }
 
+    public EmployerResponseDto getById(Long id) {
+        Organization org = organizationRepository.findById(id)
+                .filter(o -> o.getType() == OrganizationType.EMPLOYER)
+                .orElseThrow(() -> new EntityNotFoundException("Employer not found with id: " + id));
+        return mapper.toResponse(org);
+    }
+
+    @Transactional
     public EmployerResponseDto create(EmployerCreateDto dto) {
         Organization org = Organization.builder()
                 .name(dto.getName())
@@ -56,6 +67,37 @@ public class EmployerService {
                 .build();
 
         return mapper.toResponse(organizationRepository.save(org));
+    }
+
+    @Transactional
+    public EmployerResponseDto update(Long id, EmployerUpdateDto dto) {
+        Organization org = organizationRepository.findById(id)
+                .filter(o -> o.getType() == OrganizationType.EMPLOYER)
+                .orElseThrow(() -> new EntityNotFoundException("Employer not found with id: " + id));
+        
+        org.setName(dto.getName());
+        org.setNameEn(dto.getNameEn());
+        org.setCode(dto.getCode());
+        if (dto.getActive() != null) {
+            org.setActive(dto.getActive());
+        }
+        
+        return mapper.toResponse(organizationRepository.save(org));
+    }
+
+    @Transactional
+    public void delete(Long id) {
+        Organization org = organizationRepository.findById(id)
+                .filter(o -> o.getType() == OrganizationType.EMPLOYER)
+                .orElseThrow(() -> new EntityNotFoundException("Employer not found with id: " + id));
+        
+        // Soft delete - set active to false
+        org.setActive(false);
+        organizationRepository.save(org);
+    }
+
+    public long count() {
+        return organizationRepository.countByTypeAndActiveTrue(OrganizationType.EMPLOYER);
     }
 }
 

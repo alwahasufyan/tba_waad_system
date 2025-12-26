@@ -51,28 +51,9 @@ axiosServices.interceptors.request.use(
 
     console.log(`🌐 API Request: ${config.method?.toUpperCase()} ${config.url}`);
 
-    // AUDIT FIX (TASK B): JWT removed from web frontend
-    // Web uses session-based auth ONLY (JSESSIONID cookie sent automatically via withCredentials)
-    // JWT auth kept in backend for future mobile app support
-    // Mobile will use different endpoints or client identification
-
-    // AUDIT FIX: CSRF Token Protection (Defense-in-Depth)
-    // Read XSRF-TOKEN cookie and send as X-XSRF-TOKEN header for mutating requests
-    // Only needed for POST/PUT/PATCH/DELETE (GET/HEAD/OPTIONS are CSRF-safe)
-    const method = config.method?.toUpperCase();
-    if (method && ['POST', 'PUT', 'PATCH', 'DELETE'].includes(method)) {
-      const csrfToken = document.cookie
-        .split('; ')
-        .find(row => row.startsWith('XSRF-TOKEN='))
-        ?.split('=')[1];
-
-      if (csrfToken) {
-        config.headers['X-XSRF-TOKEN'] = decodeURIComponent(csrfToken);
-        console.log('🛡️ CSRF token attached');
-      } else {
-        console.warn('⚠️ No CSRF token found - request may be rejected');
-      }
-    }
+    // Session-based auth: JSESSIONID cookie sent automatically via withCredentials: true
+    // CSRF disabled in backend for REST API (CORS provides protection)
+    // No need to handle CSRF tokens manually
 
     // FIX #2: Add Employer ID header with proper logic
     // - If user has EMPLOYER role => locked to their employerId

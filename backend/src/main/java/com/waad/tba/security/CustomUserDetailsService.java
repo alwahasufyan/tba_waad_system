@@ -51,17 +51,13 @@ public class CustomUserDetailsService implements UserDetailsService {
         log.debug("LOGIN: Found user: {}", user.getUsername());
         log.debug("LOGIN: Active Status: {}", user.getActive());
 
-        // FORCE FIX: Temporarily return a known valid hash for 'Admin@123'
-        // This effectively ignores the database password and forces 'Admin@123' to work.
-        String forcedHash = new org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder().encode("Admin@123");
-
         Collection<? extends GrantedAuthority> authorities = getAuthorities(user);
         
         log.debug("LOGIN: User {} loaded with {} authorities", user.getUsername(), authorities.size());
 
         return new org.springframework.security.core.userdetails.User(
                 user.getUsername(),
-                forcedHash, // user.getPassword(),
+                user.getPassword(),
                 (user.getActive() == null || user.getActive()),
                 true,
                 true,

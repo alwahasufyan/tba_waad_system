@@ -1,6 +1,7 @@
 package com.waad.tba.security;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -12,7 +13,9 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+import com.waad.tba.modules.rbac.entity.Permission;
 import com.waad.tba.modules.rbac.entity.User;
+import com.waad.tba.modules.rbac.repository.PermissionRepository;
 import com.waad.tba.modules.rbac.repository.UserRepository;
 
 import jakarta.servlet.FilterChain;
@@ -26,6 +29,7 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * SessionAuthenticationFilter - Phase B: Dual Auth Support
  * AUDIT FIX (TASK A): Load roles from DB on each request, not from session
+ * CRITICAL FIX: SUPER_ADMIN users get ALL permissions automatically
  * 
  * This filter runs BEFORE JwtAuthenticationFilter to check for session-based authentication.
  * If a valid HTTP session exists with user data, it authenticates the request.
@@ -41,7 +45,10 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class SessionAuthenticationFilter extends OncePerRequestFilter {
 
+    private static final String SUPER_ADMIN_ROLE = "SUPER_ADMIN";
+    
     private final UserRepository userRepository;
+    private final PermissionRepository permissionRepository;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -70,22 +77,36 @@ public class SessionAuthenticationFilter extends OncePerRequestFilter {
                     User user = userRepository.findByUsername(username)
                             .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
                     
-                    // SECURITY FIX: Include both roles and permissions as authorities
                     // 1. Get role names (e.g., SUPER_ADMIN, EMPLOYER_ADMIN)
                     List<String> roleNames = user.getRoles().stream()
                             .map(role -> role.getName())
                             .collect(Collectors.toList());
                     
-                    // 2. Get all permissions from roles (e.g., MANAGE_EMPLOYERS, VIEW_MEMBERS)
-                    List<String> permissionNames = user.getRoles().stream()
-                            .flatMap(role -> role.getPermissions().stream())
-                            .map(permission -> permission.getName())
-                            .distinct()
-                            .collect(Collectors.toList());
+                    // CRITICAL FIX: Check if user is SUPER_ADMIN
+                    boolean isSuperAdmin = roleNames.contains(SUPER_ADMIN_ROLE);
+                    
+                    // 2. Get permissions - SUPER_ADMIN gets ALL, others get role-based
+                    List<String> permissionNames;
+                    if (isSuperAdmin) {
+                        // SUPER_ADMIN bypass: Load ALL permissions from database
+                        List<Permission> allPermissions = permissionRepository.findAll();
+                        permissionNames = allPermissions.stream()
+                                .map(Permission::getName)
+                                .collect(Collectors.toList());
+                        log.info("🔓 SUPER_ADMIN {} loaded with ALL {} permissions (unrestricted access)", 
+                                username, permissionNames.size());
+                    } else {
+                        // Regular users: Get permissions from their assigned roles
+                        permissionNames = user.getRoles().stream()
+                                .flatMap(role -> role.getPermissions().stream())
+                                .map(Permission::getName)
+                                .distinct()
+                                .collect(Collectors.toList());
+                    }
                     
                     // 3. Combine both roles and permissions into authorities
                     // CRITICAL: Add "ROLE_" prefix for roles (required for @PreAuthorize hasRole() checks)
-                    List<SimpleGrantedAuthority> authorities = new java.util.ArrayList<>();
+                    List<SimpleGrantedAuthority> authorities = new ArrayList<>();
                     roleNames.forEach(role -> authorities.add(new SimpleGrantedAuthority("ROLE_" + role)));
                     permissionNames.forEach(perm -> authorities.add(new SimpleGrantedAuthority(perm)));
                     
