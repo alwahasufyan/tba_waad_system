@@ -3,27 +3,25 @@ import { create } from 'zustand';
 // ==============================|| RBAC STORE - ROLE-BASED ACCESS CONTROL ||============================== //
 
 /**
- * Zustand store for RBAC (Role-Based Access Control) and Employer Context
- * This store manages:
- * - User roles and permissions
- * - Current employer context (multi-employer switching)
- * - User information
- * - Access control for routes and menu items
+ * Zustand store for RBAC (Role-Based Access Control)
+ * 
+ * SIMPLIFIED: Employer context removed. No auto-loading of employers.
+ * - Employers are added manually through Create Employer screen
+ * - No global employer filtering
+ * - No employer switcher in header
  */
 
 const STORAGE_KEYS = {
   ROLES: 'userRoles',
   USER: 'userData',
-  EMPLOYER_ID: 'selectedEmployerId',
   TOKEN: 'serviceToken',
   PERMISSIONS: 'userPermissions'
 };
 
 export const useRBACStore = create((set, get) => ({
-  // State
+  // State - SIMPLIFIED (no employerId)
   roles: [],
   permissions: [],
-  employerId: null,
   user: null,
   isInitialized: false,
 
@@ -42,26 +40,6 @@ export const useRBACStore = create((set, get) => ({
     }
   },
 
-  setEmployerId: (employerId) => {
-    const { user, roles } = get();
-
-    // EMPLOYER role cannot switch companies - locked to their own employerId
-    if (roles.includes('EMPLOYER') && user?.employerId) {
-      console.warn('EMPLOYER role cannot switch companies. Using locked employerId:', user.employerId);
-      set({ employerId: user.employerId });
-      localStorage.setItem(STORAGE_KEYS.EMPLOYER_ID, user.employerId.toString());
-      return;
-    }
-
-    // For other roles, allow switching
-    set({ employerId });
-    if (employerId) {
-      localStorage.setItem(STORAGE_KEYS.EMPLOYER_ID, employerId.toString());
-    } else {
-      localStorage.removeItem(STORAGE_KEYS.EMPLOYER_ID);
-    }
-  },
-
   setPermissions: (permissions) => {
     set({ permissions });
     if (permissions) {
@@ -72,13 +50,13 @@ export const useRBACStore = create((set, get) => ({
   /**
    * Initialize RBAC state from backend user data or localStorage
    * Called after login or on app startup
+   * SIMPLIFIED: No employer context initialization
    * @param {Object} userData - User data from backend (optional)
    */
   initialize: (userData = null) => {
     try {
       let roles = [];
       let user = null;
-      let employerId = null;
       let permissions = [];
 
       if (userData) {
@@ -91,20 +69,6 @@ export const useRBACStore = create((set, get) => ({
         localStorage.setItem(STORAGE_KEYS.ROLES, JSON.stringify(roles));
         localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(user));
         localStorage.setItem(STORAGE_KEYS.PERMISSIONS, JSON.stringify(permissions));
-
-        // Set employer context
-        if (roles.includes('EMPLOYER') && user.employerId) {
-          // EMPLOYER role locked to their company
-          employerId = user.employerId;
-        } else {
-          // Other roles: try to restore from localStorage
-          const storedEmployerId = localStorage.getItem(STORAGE_KEYS.EMPLOYER_ID);
-          employerId = storedEmployerId ? parseInt(storedEmployerId, 10) : null;
-        }
-
-        if (employerId) {
-          localStorage.setItem(STORAGE_KEYS.EMPLOYER_ID, employerId.toString());
-        }
       } else {
         // Initialize from localStorage (page refresh)
         const rolesStr = localStorage.getItem(STORAGE_KEYS.ROLES);
@@ -113,28 +77,18 @@ export const useRBACStore = create((set, get) => ({
         const userStr = localStorage.getItem(STORAGE_KEYS.USER);
         user = userStr ? JSON.parse(userStr) : null;
 
-        const employerIdStr = localStorage.getItem(STORAGE_KEYS.EMPLOYER_ID);
-        employerId = employerIdStr ? parseInt(employerIdStr, 10) : null;
-
         const permissionsStr = localStorage.getItem(STORAGE_KEYS.PERMISSIONS);
         permissions = permissionsStr ? JSON.parse(permissionsStr) : [];
-
-        // EMPLOYER role MUST use their own employerId (locked)
-        if (roles.includes('EMPLOYER') && user?.employerId) {
-          employerId = user.employerId;
-          localStorage.setItem(STORAGE_KEYS.EMPLOYER_ID, user.employerId.toString());
-        }
       }
 
       set({
         roles,
         permissions,
         user,
-        employerId,
         isInitialized: true
       });
 
-      console.log('🔒 RBAC Initialized:', { roles, employerId, user: user?.username || user?.name });
+      console.log('🔒 RBAC Initialized:', { roles, user: user?.username || user?.name });
     } catch (error) {
       console.error('Failed to initialize RBAC:', error);
       set({ isInitialized: true });
@@ -147,14 +101,15 @@ export const useRBACStore = create((set, get) => ({
   clear: () => {
     localStorage.removeItem(STORAGE_KEYS.ROLES);
     localStorage.removeItem(STORAGE_KEYS.USER);
-    localStorage.removeItem(STORAGE_KEYS.EMPLOYER_ID);
     localStorage.removeItem(STORAGE_KEYS.TOKEN);
     localStorage.removeItem(STORAGE_KEYS.PERMISSIONS);
+    // Also clean up legacy employer keys
+    localStorage.removeItem('selectedEmployerId');
+    localStorage.removeItem('selectedEmployerName');
 
     set({
       roles: [],
       permissions: [],
-      employerId: null,
       user: null,
       isInitialized: false
     });
@@ -198,22 +153,12 @@ export const useRBACStore = create((set, get) => ({
   },
 
   /**
-   * Check if user is EMPLOYER role (locked to their company)
+   * Check if user is EMPLOYER role
    * @returns {boolean}
    */
   isEmployerRole: () => {
     const { roles } = get();
     return roles[0] === 'EMPLOYER';
-  },
-
-  /**
-   * Check if employer switcher should be visible
-   * EMPLOYER role cannot switch companies
-   * @returns {boolean}
-   */
-  canSwitchEmployer: () => {
-    const { roles } = get();
-    return roles[0] !== 'EMPLOYER';
   }
 }));
 
@@ -237,18 +182,17 @@ export const useRoles = () => {
 };
 
 /**
- * Hook to get employer context (current selected employer)
- * @returns {{ employerId: number|null, setEmployerId: function, canSwitch: boolean }}
+ * Hook to get employer context - DEPRECATED / NO-OP
+ * Kept for backward compatibility but returns empty/disabled state
+ * @returns {{ employerId: null, setEmployerId: function, canSwitch: false }}
+ * @deprecated Employer filtering removed - do not use
  */
 export const useEmployerContext = () => {
-  const employerId = useRBACStore((state) => state.employerId);
-  const setEmployerId = useRBACStore((state) => state.setEmployerId);
-  const canSwitchEmployer = useRBACStore((state) => state.canSwitchEmployer);
-
+  // NO-OP: Employer context disabled
   return {
-    employerId,
-    setEmployerId,
-    canSwitch: canSwitchEmployer()
+    employerId: null,
+    setEmployerId: () => console.warn('⚠️ setEmployerId is disabled - employer filtering removed'),
+    canSwitch: false
   };
 };
 
@@ -261,32 +205,31 @@ export const useUser = () => {
 };
 
 /**
- * Hook to get simplified RBAC state (no complex permission logic)
+ * Hook to get simplified RBAC state (no employer context)
  * @returns {Object}
  */
 export const useRBAC = () => {
   const roles = useRBACStore((state) => state.roles);
-  const employerId = useRBACStore((state) => state.employerId);
   const user = useRBACStore((state) => state.user);
   const isInitialized = useRBACStore((state) => state.isInitialized);
   const hasRole = useRBACStore((state) => state.hasRole);
   const getPrimaryRole = useRBACStore((state) => state.getPrimaryRole);
   const isSuperAdmin = useRBACStore((state) => state.isSuperAdmin);
   const isEmployerRole = useRBACStore((state) => state.isEmployerRole);
-  const canSwitchEmployer = useRBACStore((state) => state.canSwitchEmployer);
   const permissions = useRBACStore((state) => state.permissions);
 
   return {
     roles,
     permissions,
     primaryRole: getPrimaryRole(),
-    employerId,
     user,
     isInitialized,
     hasRole,
     isSuperAdmin: isSuperAdmin(),
     isEmployerRole: isEmployerRole(),
-    canSwitch: canSwitchEmployer()
+    // Disabled - for compatibility only
+    employerId: null,
+    canSwitch: false
   };
 };
 

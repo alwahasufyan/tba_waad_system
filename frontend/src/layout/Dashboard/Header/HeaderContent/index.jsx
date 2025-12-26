@@ -8,12 +8,11 @@ import Box from '@mui/material/Box';
 // project imports
 import Profile from './Profile';
 import Localization from './Localization';
-import CompanySwitcher from './CompanySwitcher';
 import Notification from './Notification';
 import FullScreen from './FullScreen';
 import Customization from './Customization';
 import MobileSection from './MobileSection';
-// MegaMenuSection removed - Phase D0 (No demo pages)
+// CompanySwitcher REMOVED - Employers are not auto-loaded or filtered
 
 import useConfig from 'hooks/useConfig';
 import { MenuOrientation } from 'config';
@@ -27,9 +26,6 @@ export default function HeaderContent() {
   const downLG = useMediaQuery((theme) => theme.breakpoints.down('lg'));
 
   const localization = useMemo(() => <Localization />, []);
-  const companySwitcher = useMemo(() => <CompanySwitcher />, []);
-
-  // MegaMenuSection removed - Phase D0
 
   return (
     <>
@@ -37,9 +33,7 @@ export default function HeaderContent() {
       <Box sx={{ width: 1, ml: 1 }} />
 
       <Stack direction="row" sx={{ alignItems: 'center', gap: 0.75 }}>
-        {/* MegaMenu removed - No demo pages in production */}
-        {!downLG && companySwitcher}
-        {!downLG && <Divider orientation="vertical" flexItem sx={{ mx: 0.5 }} />}
+        {/* CompanySwitcher REMOVED - No employer filtering */}
         {localization}
         <Notification />
         {!downLG && <FullScreen />}

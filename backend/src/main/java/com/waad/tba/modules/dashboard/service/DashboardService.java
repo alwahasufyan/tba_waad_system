@@ -33,13 +33,13 @@ public class DashboardService {
     private final AuthorizationService authorizationService;
 
     /**
-     * Get dashboard statistics with data-level filtering.
+     * Get dashboard statistics.
      * 
-     * NOTE: The employerId parameter from frontend is for UI filtering ONLY.
-     * Backend applies filtering based on user's actual permissions.
+     * SIMPLIFIED: No employer filtering - shows global stats.
+     * Employers are NOT auto-loaded or used for filtering.
      * 
-     * @param requestedEmployerId Employer ID from frontend (UI filter) - may be ignored
-     * @return Dashboard statistics
+     * @param requestedEmployerId IGNORED - kept for API compatibility
+     * @return Dashboard statistics (global)
      */
     @Transactional(readOnly = true)
     public DashboardStatsDto getStats(Long requestedEmployerId) {
@@ -49,56 +49,13 @@ public class DashboardService {
             return createEmptyStats();
         }
         
-        // Get actual employer filter based on user's permissions
-        // This OVERRIDES the frontend filter for EMPLOYER_ADMIN users
-        Long employerFilter = authorizationService.getEmployerFilterForUser(currentUser);
-        
-        if (employerFilter != null) {
-            // EMPLOYER_ADMIN: Show only their employer's stats
-            log.debug("🔒 Dashboard filtered by employerId={}", employerFilter);
-            return getStatsForEmployer(employerFilter);
-        } else {
-            // SUPER_ADMIN / INSURANCE_ADMIN: Show stats based on UI filter
-            if (requestedEmployerId != null) {
-                log.debug("🔓 Dashboard showing stats for requested employerId={}", requestedEmployerId);
-                return getStatsForEmployer(requestedEmployerId);
-            } else {
-                log.debug("🔓 Dashboard showing global stats");
-                return getGlobalStats();
-            }
-        }
+        // SIMPLIFIED: Always return global stats - no employer filtering
+        log.debug("📊 Dashboard showing global stats (employer filtering disabled)");
+        return getGlobalStats();
     }
     
     /**
-     * Get stats for a specific employer.
-     */
-    private DashboardStatsDto getStatsForEmployer(Long employerId) {
-        long totalMembers = memberRepository.countByEmployerId(employerId);
-        long totalClaims = claimRepository.countByMemberEmployerId(employerId);
-        
-        // TODO: Add specific query methods for status-based counts
-        long pendingClaims = 0;
-        long approvedClaims = 0;
-        long rejectedClaims = 0;
-        
-        long totalEmployers = 1; // Filtered view shows only 1 employer
-        long totalInsurance = organizationRepository.countByTypeAndActiveTrue(OrganizationType.INSURANCE);
-        long totalReviewers = reviewerRepository.count();
-
-        return DashboardStatsDto.builder()
-                .totalMembers(totalMembers)
-                .totalClaims(totalClaims)
-                .pendingClaims(pendingClaims)
-                .approvedClaims(approvedClaims)
-                .rejectedClaims(rejectedClaims)
-                .totalEmployers(totalEmployers)
-                .totalInsuranceCompanies(totalInsurance)
-                .totalReviewerCompanies(totalReviewers)
-                .build();
-    }
-    
-    /**
-     * Get global stats (all employers).
+     * Get global stats (all data).
      */
     private DashboardStatsDto getGlobalStats() {
         long totalMembers = memberRepository.count();
@@ -149,12 +106,9 @@ public class DashboardService {
             return new java.util.ArrayList<>();
         }
         
-        // Get actual employer filter based on user's permissions
-        Long employerFilter = authorizationService.getEmployerFilterForUser(currentUser);
-        Long effectiveEmployerId = employerFilter != null ? employerFilter : requestedEmployerId;
-        
-        log.debug("📊 Fetching claims per day from {} to {} for employerId: {}", 
-                startDate, endDate, effectiveEmployerId);
+        // SIMPLIFIED: No employer filtering
+        log.debug("📊 Fetching claims per day from {} to {} (employer filtering disabled)", 
+                startDate, endDate);
         
         // TODO: Add daily statistics query methods to ClaimRepository
         return new java.util.ArrayList<>();

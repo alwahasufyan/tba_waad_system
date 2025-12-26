@@ -39,7 +39,7 @@ const axiosServices = axios.create({
   withCredentials: true
 });
 
-// ==============================|| REQUEST INTERCEPTOR - FIXED ||============================== //
+// ==============================|| REQUEST INTERCEPTOR - SIMPLIFIED ||============================== //
 
 axiosServices.interceptors.request.use(
   (config) => {
@@ -55,19 +55,9 @@ axiosServices.interceptors.request.use(
     // CSRF disabled in backend for REST API (CORS provides protection)
     // No need to handle CSRF tokens manually
 
-    // FIX #2: Add Employer ID header with proper logic
-    // - If user has EMPLOYER role => locked to their employerId
-    // - Else (TBA staff) => use selectedEmployerId from switcher
-    const { employerId, roles, user } = useRBACStore.getState();
-
-    if (employerId) {
-      config.headers['X-Employer-ID'] = employerId.toString();
-      console.log('✅ X-Employer-ID header:', employerId);
-    } else if (roles?.includes('EMPLOYER') && user?.employerId) {
-      // Fallback: if RBAC store not initialized but user data exists
-      config.headers['X-Employer-ID'] = user.employerId.toString();
-      console.log('✅ X-Employer-ID header (fallback):', user.employerId);
-    }
+    // NOTE: X-Employer-ID header REMOVED
+    // Employers are not auto-loaded or used for filtering
+    // All data access is based on user authentication only
 
     return config;
   },

@@ -19,7 +19,9 @@ import Loader from 'components/Loader';
 
 // auth-provider
 import { AuthProvider } from 'contexts/AuthContext';
-import { CompanyProvider } from 'contexts/CompanyContext';
+
+// NOTE: CompanyProvider removed - employers no longer auto-loaded into global context
+// Employer data is fetched on-demand in specific pages (EmployerList, EmployerEdit, etc.)
 
 // ==============================|| APP - THEME, ROUTER, LOCAL ||============================== //
 
@@ -32,14 +34,12 @@ export default function App() {
             <LocalizationProvider dateAdapter={AdapterDayjs}>
               <ScrollTop>
                 <AuthProvider>
-                  <CompanyProvider>
-                    <Notistack>
-                      <Suspense fallback={<Loader />}>
-                        <RouterProvider router={router} />
-                      </Suspense>
-                      <Snackbar />
-                    </Notistack>
-                  </CompanyProvider>
+                  <Notistack>
+                    <Suspense fallback={<Loader />}>
+                      <RouterProvider router={router} />
+                    </Suspense>
+                    <Snackbar />
+                  </Notistack>
                 </AuthProvider>
               </ScrollTop>
             </LocalizationProvider>
