@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.waad.tba.common.exception.ResourceNotFoundException;
+import com.waad.tba.modules.benefitpolicy.service.BenefitPolicyCoverageService;
 import com.waad.tba.modules.member.entity.Member;
 import com.waad.tba.modules.member.repository.MemberRepository;
 import com.waad.tba.modules.policy.service.PolicyValidationService;
@@ -69,9 +70,11 @@ public class VisitService {
     private final AuthorizationService authorizationService;
     private final AuditLogService auditLogService;
     
-    // Phase 6: Policy validation service
+    // Phase 6: Policy validation service (legacy - kept for fallback)
     private final PolicyValidationService policyValidationService;
-
+    
+    // Phase 8: BenefitPolicy validation (canonical source)
+    private final BenefitPolicyCoverageService benefitPolicyCoverageService;
 
     @Transactional(readOnly = true)
     public List<VisitResponseDto> findAll() {
@@ -177,9 +180,20 @@ public class VisitService {
         Member member = memberRepository.findById(dto.getMemberId())
                 .orElseThrow(() -> new ResourceNotFoundException("Member", "id", dto.getMemberId()));
 
-        // Phase 6: Validate member has active policy for visit date
+        // Validate member has active policy for visit date
+        // PRIMARY: Use BenefitPolicy validation (canonical source)
+        // FALLBACK: Legacy Policy validation (temporary)
         LocalDate visitDate = dto.getVisitDate() != null ? dto.getVisitDate() : LocalDate.now();
-        policyValidationService.validateMemberPolicy(member, visitDate);
+        
+        if (member.getBenefitPolicy() != null) {
+            // Use canonical BenefitPolicy validation
+            benefitPolicyCoverageService.validateCanCreateClaim(member, visitDate);
+            log.debug("✅ BenefitPolicy validation passed for visit");
+        } else {
+            // Fallback to legacy Policy validation
+            policyValidationService.validateMemberPolicy(member, visitDate);
+            log.debug("✅ Legacy Policy validation passed (fallback)");
+        }
 
         Visit entity = mapper.toEntity(dto, member);
         Visit saved = repository.save(entity);

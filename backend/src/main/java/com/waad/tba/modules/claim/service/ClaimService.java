@@ -180,26 +180,37 @@ public class ClaimService {
         // PHASE 8: BenefitPolicy Validation (Single Source of Truth)
         // ═══════════════════════════════════════════════════════════════════════════
         // Validate member has active BenefitPolicy for service date
-        // This replaces/supplements the old PolicyValidationService
-        benefitPolicyCoverageService.validateCanCreateClaim(member, serviceDate);
-        log.info("✅ Member {} has valid BenefitPolicy for date {}", member.getCivilId(), serviceDate);
+        // PRIMARY: Use BenefitPolicy validation (canonical source)
+        // FALLBACK: Legacy Policy validation (temporary until policy module removed)
         
-        // Legacy validation (kept for backward compatibility with old Policy system)
-        try {
-            policyValidationService.validateMemberPolicy(member, serviceDate);
-        } catch (Exception e) {
-            // Log but don't block - BenefitPolicy is now the primary validation
-            log.warn("⚠️ Legacy policy validation warning: {}", e.getMessage());
-        }
-        
-        // Validate coverage if policy exists (legacy)
-        Policy policy = member.getPolicy();
-        if (policy != null && dto.getRequestedAmount() != null) {
+        if (member.getBenefitPolicy() != null) {
+            // Use canonical BenefitPolicy validation
+            benefitPolicyCoverageService.validateCanCreateClaim(member, serviceDate);
+            log.info("✅ Member {} has valid BenefitPolicy for date {}", member.getCivilId(), serviceDate);
+            
+            // Validate amount limits using BenefitPolicy
+            if (dto.getRequestedAmount() != null) {
+                benefitPolicyCoverageService.validateAmountLimits(
+                    member, member.getBenefitPolicy(), dto.getRequestedAmount(), serviceDate);
+            }
+        } else {
+            // Fallback to legacy Policy validation
             try {
-                coverageValidationService.validateAmountLimits(
-                    member, policy, dto.getRequestedAmount(), serviceDate);
+                policyValidationService.validateMemberPolicy(member, serviceDate);
+                log.debug("✅ Legacy Policy validation passed (fallback)");
             } catch (Exception e) {
-                log.warn("⚠️ Legacy coverage validation warning: {}", e.getMessage());
+                log.warn("⚠️ Legacy policy validation warning: {}", e.getMessage());
+            }
+            
+            // Validate coverage using legacy Policy
+            Policy policy = member.getPolicy();
+            if (policy != null && dto.getRequestedAmount() != null) {
+                try {
+                    coverageValidationService.validateAmountLimits(
+                        member, policy, dto.getRequestedAmount(), serviceDate);
+                } catch (Exception e) {
+                    log.warn("⚠️ Legacy coverage validation warning: {}", e.getMessage());
+                }
             }
         }
         
