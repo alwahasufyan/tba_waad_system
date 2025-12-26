@@ -66,15 +66,16 @@ public class MemberService {
      * - Employer context (employerIdHeader = 123): Only that employer's members
      * - EMPLOYER role: Locked to their own employerId
      * 
-     * @param employerIdHeader Organization ID from X-Employer-ID header (null = TPA/show all)
+     * @param employerIdHeader Organization ID from X-Employer-ID header (null =
+     *                         TPA/show all)
      * @return List of member selector options
      */
     public List<MemberSelectorDto> getSelectorOptions(Long employerIdHeader) {
         log.debug("📋 Getting member selector options with organization context");
-        
+
         OrganizationContext context = organizationContextService.getOrganizationContext(employerIdHeader);
         List<Member> members;
-        
+
         if (context.shouldFilter()) {
             Long employerId = context.getEmployerIdForFiltering();
             log.debug("🔒 Employer context - filtering members by employerId={}", employerId);
@@ -83,7 +84,7 @@ public class MemberService {
             log.debug("🔓 TPA context - returning all members");
             members = memberRepository.findAll();
         }
-        
+
         return members.stream()
                 .map(mapper::toSelectorDto)
                 .collect(Collectors.toList());
@@ -92,12 +93,13 @@ public class MemberService {
     /**
      * Count members with organization context filtering.
      * 
-     * @param employerIdHeader Organization ID from X-Employer-ID header (null = TPA/show all)
+     * @param employerIdHeader Organization ID from X-Employer-ID header (null =
+     *                         TPA/show all)
      * @return Total count of members
      */
     public long count(Long employerIdHeader) {
         OrganizationContext context = organizationContextService.getOrganizationContext(employerIdHeader);
-        
+
         if (context.shouldFilter()) {
             Long employerId = context.getEmployerIdForFiltering();
             log.debug("🔒 Employer context - counting members for employerId={}", employerId);
@@ -111,14 +113,15 @@ public class MemberService {
     /**
      * Search members with organization context filtering.
      * 
-     * @param employerIdHeader Organization ID from X-Employer-ID header (null = TPA/show all)
-     * @param query Search query string
+     * @param employerIdHeader Organization ID from X-Employer-ID header (null =
+     *                         TPA/show all)
+     * @param query            Search query string
      * @return List of matching members
      */
     public List<MemberViewDto> search(Long employerIdHeader, String query) {
         OrganizationContext context = organizationContextService.getOrganizationContext(employerIdHeader);
         List<Member> members;
-        
+
         if (context.shouldFilter()) {
             Long employerId = context.getEmployerIdForFiltering();
             log.debug("🔒 Employer context - searching members for employerId={}", employerId);
@@ -127,7 +130,7 @@ public class MemberService {
             log.debug("🔓 TPA context - searching all members");
             members = memberRepository.search(query);
         }
-        
+
         return members.stream()
                 .map(member -> {
                     List<FamilyMember> family = familyRepo.findByMemberId(member.getId());
@@ -142,8 +145,12 @@ public class MemberService {
     @Transactional
     public MemberViewDto createMember(MemberCreateDto dto) {
 
-        Employer employer = employerRepo.findById(dto.getEmployerId())
-                .orElseThrow(() -> new ResourceNotFoundException("Employer not found with id: " + dto.getEmployerId()));
+        // Phase 1 Enterprise Fix: Require Organization (via employerId)
+        Organization employerOrg = organizationRepo.findById(dto.getEmployerId())
+                .or(() -> organizationRepo.findByCodeAndType(String.valueOf(dto.getEmployerId()),
+                        OrganizationType.EMPLOYER)) // Fallback if ID is code
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Employer organization not found with id: " + dto.getEmployerId()));
 
         InsuranceCompany insuranceCompany = null;
         if (dto.getInsuranceCompanyId() != null) {
@@ -152,11 +159,17 @@ public class MemberService {
         }
 
         Member member = mapper.toEntity(dto);
-        member.setEmployer(employer);
+
+        // Phase 1 Enterprise Fix: Mandatory Organization Link
+        member.setEmployerOrganization(employerOrg);
+        member.setEmployer(null); // Legacy ignored as per decision
+
         member.setInsuranceCompany(insuranceCompany);
 
         // Auto-assign active BenefitPolicy for employer (if exists)
-        autoAssignBenefitPolicy(member, employer);
+        // Note: autoAssignBenefitPolicy method might need update to use Organization
+        // directly if it doesn't already
+        autoAssignBenefitPolicy(member, employerOrg);
 
         Member savedMember = memberRepository.save(member);
 
@@ -186,7 +199,7 @@ public class MemberService {
         List<MemberAttribute> savedAttrs = attributeRepo.findByMemberId(savedMember.getId());
         MemberViewDto viewDto = mapper.toViewDto(savedMember, family);
         viewDto.setAttributes(mapper.toAttributeDtoList(savedAttrs));
-        
+
         return viewDto;
     }
 
@@ -207,7 +220,8 @@ public class MemberService {
         // Handle BenefitPolicy assignment
         if (dto.getBenefitPolicyId() != null) {
             BenefitPolicy benefitPolicy = benefitPolicyRepo.findById(dto.getBenefitPolicyId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Benefit Policy not found: " + dto.getBenefitPolicyId()));
+                    .orElseThrow(() -> new ResourceNotFoundException(
+                            "Benefit Policy not found: " + dto.getBenefitPolicyId()));
             member.setBenefitPolicy(benefitPolicy);
         }
 
@@ -236,7 +250,8 @@ public class MemberService {
                     fm = existing.stream()
                             .filter(e -> e.getId().equals(fmd.getId()))
                             .findFirst()
-                            .orElseThrow(() -> new ResourceNotFoundException("Family member not found: " + fmd.getId()));
+                            .orElseThrow(
+                                    () -> new ResourceNotFoundException("Family member not found: " + fmd.getId()));
                 } else {
                     fm = new FamilyMember();
                     fm.setMember(member);
@@ -258,10 +273,10 @@ public class MemberService {
         List<MemberAttribute> updatedAttrs = attributeRepo.findByMemberId(member.getId());
         MemberViewDto viewDto = mapper.toViewDto(member, updatedFamily);
         viewDto.setAttributes(mapper.toAttributeDtoList(updatedAttrs));
-        
+
         return viewDto;
     }
-    
+
     /**
      * Sync member attributes: add new, update existing, delete removed.
      */
@@ -270,28 +285,28 @@ public class MemberService {
             // Null means don't touch attributes
             return;
         }
-        
+
         List<MemberAttribute> existingAttrs = attributeRepo.findByMemberId(member.getId());
-        
+
         // Get incoming IDs (for existing attributes being updated)
         List<Long> incomingIds = incomingAttrs.stream()
                 .map(MemberAttributeDto::getId)
                 .filter(id -> id != null)
                 .collect(Collectors.toList());
-        
+
         // Delete attributes not in incoming list
         for (MemberAttribute attr : existingAttrs) {
             if (!incomingIds.contains(attr.getId())) {
                 attributeRepo.delete(attr);
             }
         }
-        
+
         // Add or update attributes
         for (MemberAttributeDto attrDto : incomingAttrs) {
             if (attrDto.getCode() == null || attrDto.getValue() == null) {
                 continue; // Skip incomplete attributes
             }
-            
+
             MemberAttribute attr;
             if (attrDto.getId() != null) {
                 // Update existing
@@ -319,16 +334,16 @@ public class MemberService {
     @Transactional(readOnly = true)
     public MemberViewDto getMember(Long id) {
         log.debug("📋 Getting member by id: {}", id);
-        
+
         User currentUser = authorizationService.getCurrentUser();
         if (currentUser == null) {
             throw new ResourceNotFoundException("Authentication required");
         }
-        
+
         // Check access authorization
         if (!authorizationService.canAccessMember(currentUser, id)) {
-            log.warn("❌ Access denied: user {} attempted to access member {}", 
-                currentUser.getUsername(), id);
+            log.warn("❌ Access denied: user {} attempted to access member {}",
+                    currentUser.getUsername(), id);
             throw new ResourceNotFoundException("Member not found: " + id);
         }
 
@@ -340,7 +355,7 @@ public class MemberService {
 
         MemberViewDto viewDto = mapper.toViewDto(member, family);
         viewDto.setAttributes(mapper.toAttributeDtoList(attrs));
-        
+
         return viewDto;
     }
 
@@ -351,18 +366,19 @@ public class MemberService {
      * - TPA context: Returns all members across all employers
      * - Employer context: Returns only members from specified employer
      * 
-     * @param employerIdHeader Organization ID from X-Employer-ID header (null = TPA/show all)
-     * @param pageable Pagination parameters
-     * @param search Optional search query
+     * @param employerIdHeader Organization ID from X-Employer-ID header (null =
+     *                         TPA/show all)
+     * @param pageable         Pagination parameters
+     * @param search           Optional search query
      * @return Paginated list of members
      */
     @Transactional(readOnly = true)
     public Page<MemberViewDto> listMembers(Long employerIdHeader, Pageable pageable, String search) {
         log.debug("📋 Listing members with organization context. search={}", search);
-        
+
         OrganizationContext context = organizationContextService.getOrganizationContext(employerIdHeader);
         Page<Member> memberPage;
-        
+
         if (context.shouldFilter()) {
             Long employerId = context.getEmployerIdForFiltering();
             log.debug("🔒 Employer context - filtering members by employerId={}", employerId);
@@ -379,7 +395,7 @@ public class MemberService {
                 memberPage = memberRepository.findAll(pageable);
             }
         }
-        
+
         return memberPage.map(member -> {
             List<FamilyMember> family = familyRepo.findByMemberId(member.getId());
             List<MemberAttribute> attrs = attributeRepo.findByMemberId(member.getId());
@@ -407,21 +423,14 @@ public class MemberService {
      * This ensures all new members are automatically enrolled in their employer's
      * current coverage plan.
      * 
-     * @param member The member being created
-     * @param employer The member's employer
+     * @param member      The member being created
+     * @param employerOrg The member's employer organization
      */
-    private void autoAssignBenefitPolicy(Member member, Employer employer) {
-        // Look up the Organization corresponding to this legacy Employer
-        Optional<Organization> orgOpt = organizationRepo.findByCodeAndType(
-                employer.getCode(), OrganizationType.EMPLOYER);
-
-        if (orgOpt.isEmpty()) {
-            log.warn("⚠️ No Organization found for Employer code '{}', cannot auto-assign BenefitPolicy", 
-                    employer.getCode());
+    private void autoAssignBenefitPolicy(Member member, Organization employerOrg) {
+        if (employerOrg == null)
             return;
-        }
 
-        Long employerOrgId = orgOpt.get().getId();
+        Long employerOrgId = employerOrg.getId();
         LocalDate today = LocalDate.now();
 
         // Find active effective policy for employer
@@ -432,7 +441,7 @@ public class MemberService {
             BenefitPolicy activePolicy = activePolicyOpt.get();
             member.setBenefitPolicy(activePolicy);
             log.info("✅ Auto-assigned BenefitPolicy '{}' (ID={}) to member {}",
-                    activePolicy.getName(), activePolicy.getId(), member.getCivilId());
+                    activePolicy.getName(), activePolicy.getId(), member.getFullName());
         } else {
             log.info("ℹ️ No active BenefitPolicy found for employer org {}. Member will have no coverage.",
                     employerOrgId);
@@ -443,7 +452,7 @@ public class MemberService {
      * Manually assign or change a member's BenefitPolicy.
      * Use this when a member needs to be moved to a different policy.
      * 
-     * @param memberId The member ID
+     * @param memberId        The member ID
      * @param benefitPolicyId The new BenefitPolicy ID (null to remove)
      * @return Updated member view
      */
@@ -458,18 +467,18 @@ public class MemberService {
         } else {
             BenefitPolicy policy = benefitPolicyRepo.findById(benefitPolicyId)
                     .orElseThrow(() -> new ResourceNotFoundException("BenefitPolicy not found: " + benefitPolicyId));
-            
+
             member.setBenefitPolicy(policy);
             log.info("🔄 Assigned BenefitPolicy '{}' to member {}", policy.getName(), memberId);
         }
 
         memberRepository.save(member);
-        
+
         List<FamilyMember> family = familyRepo.findByMemberId(member.getId());
         List<MemberAttribute> attrs = attributeRepo.findByMemberId(member.getId());
         MemberViewDto viewDto = mapper.toViewDto(member, family);
         viewDto.setAttributes(mapper.toAttributeDtoList(attrs));
-        
+
         return viewDto;
     }
 
@@ -483,24 +492,24 @@ public class MemberService {
     @Transactional
     public int refreshBenefitPoliciesForEmployer(Long employerOrgId) {
         LocalDate today = LocalDate.now();
-        
+
         Optional<BenefitPolicy> activePolicyOpt = benefitPolicyRepo
                 .findActiveEffectivePolicyForEmployer(employerOrgId, today);
 
         List<Member> members = memberRepository.findByEmployerOrganizationId(employerOrgId);
-        
+
         BenefitPolicy activePolicy = activePolicyOpt.orElse(null);
-        
+
         for (Member member : members) {
             member.setBenefitPolicy(activePolicy);
         }
-        
+
         memberRepository.saveAll(members);
-        
+
         log.info("🔄 Refreshed BenefitPolicy for {} members of employer org {}. Policy: {}",
-                members.size(), employerOrgId, 
+                members.size(), employerOrgId,
                 activePolicy != null ? activePolicy.getName() : "NONE");
-        
+
         return members.size();
     }
 }

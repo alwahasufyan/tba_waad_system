@@ -104,13 +104,13 @@ const useRBACSidebar = () => {
     const isItemVisible = (item) => {
       // SUPER_ADMIN bypasses ALL checks - sees everything
       if (roles.includes('SUPER_ADMIN')) return true;
-      
+
       // Check role access
       const hasRoleAccess = item.roles.some((role) => roles.includes(role));
       if (!hasRoleAccess) return false;
 
       // Check permissions (if any permission matches OR no permissions required)
-      const hasPermissionAccess = item.permissions.length === 0 || 
+      const hasPermissionAccess = item.permissions.length === 0 ||
         item.permissions.some((perm) => permissions.includes(perm));
 
       if (!hasPermissionAccess) return false;
@@ -186,7 +186,6 @@ const useRBACSidebar = () => {
             type: 'item',
             url: '/benefit-policies',
             icon: Policy,
-            permission: ['benefit_policies.view'],
             roles: ['SUPER_ADMIN', 'INSURANCE_ADMIN', 'EMPLOYER_ADMIN'],
             permissions: ['VIEW_BENEFIT_POLICIES', 'MANAGE_BENEFIT_POLICIES']
           },
@@ -353,9 +352,8 @@ const useRBACSidebar = () => {
             type: 'item',
             url: '/admin/users',
             icon: ManageAccounts,
-            permission: ['admin.users.view'],
             roles: ['SUPER_ADMIN'],
-            permissions: []
+            permissions: ['MANAGE_USERS', 'VIEW_USERS']
           },
           {
             id: 'rbac',
@@ -363,9 +361,8 @@ const useRBACSidebar = () => {
             type: 'item',
             url: '/rbac',
             icon: Security,
-            permission: ['rbac.view'],
             roles: ['SUPER_ADMIN'],
-            permissions: []
+            permissions: ['VIEW_ROLES', 'MANAGE_ROLES']
           },
           {
             id: 'settings',
@@ -373,9 +370,8 @@ const useRBACSidebar = () => {
             type: 'item',
             url: '/settings',
             icon: Settings,
-            permission: ['settings.view'],
             roles: ['SUPER_ADMIN', 'INSURANCE_ADMIN'],
-            permissions: []
+            permissions: ['MANAGE_SETTINGS']
           }
         ]
       }
@@ -386,7 +382,7 @@ const useRBACSidebar = () => {
       .map((group) => {
         // Filter children based on visibility
         const visibleChildren = group.children.filter(isItemVisible);
-        
+
         // Only include group if it has visible children
         if (visibleChildren.length === 0) {
           return null;

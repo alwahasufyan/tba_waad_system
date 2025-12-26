@@ -36,8 +36,7 @@ public class MemberController {
     @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('VIEW_MEMBERS') or hasAuthority('MANAGE_MEMBERS')")
     @Operation(summary = "Get member selector options", description = "Returns active members for dropdown/selector (filtered by organization context)")
     public ResponseEntity<ApiResponse<List<MemberSelectorDto>>> getSelectorOptions(
-            @Parameter(description = "Employer ID for organization context (null = TPA/show all)")
-            @RequestHeader(value = "X-Employer-ID", required = false) Long employerIdHeader) {
+            @Parameter(description = "Employer ID for organization context (null = TPA/show all)") @RequestHeader(value = "X-Employer-ID", required = false) Long employerIdHeader) {
         List<MemberSelectorDto> options = memberService.getSelectorOptions(employerIdHeader);
         return ResponseEntity.ok(ApiResponse.success(options));
     }
@@ -51,7 +50,7 @@ public class MemberController {
                 .body(ApiResponse.success("Member created successfully", created));
     }
 
-    @PutMapping("/{id}")
+    @PutMapping("/{id:\\d+}")
     @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('MANAGE_MEMBERS')")
     @Operation(summary = "Update member", description = "Updates an existing member and syncs family members")
     public ResponseEntity<ApiResponse<MemberViewDto>> update(
@@ -61,7 +60,7 @@ public class MemberController {
         return ResponseEntity.ok(ApiResponse.success("Member updated successfully", updated));
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/{id:\\d+}")
     @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('VIEW_MEMBERS') or hasAuthority('MANAGE_MEMBERS')")
     @Operation(summary = "Get member by ID", description = "Returns member details with family members")
     public ResponseEntity<ApiResponse<MemberViewDto>> get(
@@ -74,30 +73,29 @@ public class MemberController {
     @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('VIEW_MEMBERS') or hasAuthority('MANAGE_MEMBERS')")
     @Operation(summary = "List members with pagination", description = "Returns paginated list of members (filtered by organization context)")
     public ResponseEntity<ApiResponse<PaginationResponse<MemberViewDto>>> list(
-            @Parameter(description = "Employer ID for organization context (null = TPA/show all)")
-            @RequestHeader(value = "X-Employer-ID", required = false) Long employerIdHeader,
+            @Parameter(description = "Employer ID for organization context (null = TPA/show all)") @RequestHeader(value = "X-Employer-ID", required = false) Long employerIdHeader,
             @Parameter(description = "Page number (1-based)") @RequestParam(defaultValue = "1") int page,
             @Parameter(description = "Page size") @RequestParam(defaultValue = "20") int size,
             @Parameter(description = "Sort by field") @RequestParam(defaultValue = "createdAt") String sortBy,
             @Parameter(description = "Sort direction (asc/desc)") @RequestParam(defaultValue = "desc") String sortDir,
             @Parameter(description = "Search query") @RequestParam(required = false) String search) {
-        
+
         Sort sort = Sort.by(Sort.Direction.fromString(sortDir), sortBy);
         PageRequest pageRequest = PageRequest.of(Math.max(0, page - 1), size, sort);
-        
+
         Page<MemberViewDto> pageResult = memberService.listMembers(employerIdHeader, pageRequest, search);
-        
+
         PaginationResponse<MemberViewDto> response = PaginationResponse.<MemberViewDto>builder()
                 .items(pageResult.getContent())
                 .total(pageResult.getTotalElements())
                 .page(page)
                 .size(size)
                 .build();
-        
+
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/{id:\\d+}")
     @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('MANAGE_MEMBERS')")
     @Operation(summary = "Delete member", description = "Soft deletes a member (sets active=false)")
     public ResponseEntity<ApiResponse<Void>> delete(
@@ -110,8 +108,7 @@ public class MemberController {
     @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('VIEW_MEMBERS') or hasAuthority('MANAGE_MEMBERS')")
     @Operation(summary = "Count members", description = "Returns total count of active members (filtered by organization context)")
     public ResponseEntity<ApiResponse<Long>> count(
-            @Parameter(description = "Employer ID for organization context (null = TPA/show all)")
-            @RequestHeader(value = "X-Employer-ID", required = false) Long employerIdHeader) {
+            @Parameter(description = "Employer ID for organization context (null = TPA/show all)") @RequestHeader(value = "X-Employer-ID", required = false) Long employerIdHeader) {
         long total = memberService.count(employerIdHeader);
         return ResponseEntity.ok(ApiResponse.success(total));
     }
@@ -120,8 +117,7 @@ public class MemberController {
     @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('VIEW_MEMBERS') or hasAuthority('MANAGE_MEMBERS')")
     @Operation(summary = "Search members", description = "Searches members by name, ID, phone, etc. (filtered by organization context)")
     public ResponseEntity<ApiResponse<List<MemberViewDto>>> search(
-            @Parameter(description = "Employer ID for organization context (null = TPA/show all)")
-            @RequestHeader(value = "X-Employer-ID", required = false) Long employerIdHeader,
+            @Parameter(description = "Employer ID for organization context (null = TPA/show all)") @RequestHeader(value = "X-Employer-ID", required = false) Long employerIdHeader,
             @RequestParam String query) {
         List<MemberViewDto> results = memberService.search(employerIdHeader, query);
         return ResponseEntity.ok(ApiResponse.success(results));
@@ -129,8 +125,7 @@ public class MemberController {
 
     @PostMapping("/employer/{employerOrgId}/refresh-policies")
     @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('MANAGE_MEMBERS') or hasAuthority('MANAGE_BENEFIT_POLICIES')")
-    @Operation(summary = "Refresh benefit policies for employer", 
-               description = "Re-assigns the active benefit policy to all members of an employer")
+    @Operation(summary = "Refresh benefit policies for employer", description = "Re-assigns the active benefit policy to all members of an employer")
     public ResponseEntity<ApiResponse<Integer>> refreshBenefitPoliciesForEmployer(
             @Parameter(description = "Employer Organization ID", required = true) @PathVariable Long employerOrgId) {
         int count = memberService.refreshBenefitPoliciesForEmployer(employerOrgId);

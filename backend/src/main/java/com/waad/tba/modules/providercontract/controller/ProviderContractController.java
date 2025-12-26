@@ -57,7 +57,7 @@ public class ProviderContractController {
     @Operation(summary = "List all contracts", description = "Get paginated list of all provider contracts")
     public ResponseEntity<ApiResponse<Page<ProviderContractResponseDto>>> getAll(
             @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
-        
+
         log.debug("REST request to get all provider contracts");
         Page<ProviderContractResponseDto> result = contractService.findAll(pageable);
         return ResponseEntity.ok(ApiResponse.success("Contracts retrieved successfully", result));
@@ -74,7 +74,7 @@ public class ProviderContractController {
             @Parameter(description = "Search query") @RequestParam(required = false) String q,
             @Parameter(description = "Filter by status") @RequestParam(required = false) ContractStatus status,
             @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
-        
+
         log.debug("REST request to search contracts: q={}, status={}", q, status);
         Page<ProviderContractResponseDto> result = contractService.search(q, status, pageable);
         return ResponseEntity.ok(ApiResponse.success("Search completed", result));
@@ -102,7 +102,7 @@ public class ProviderContractController {
     @Operation(summary = "Get expiring contracts", description = "List contracts expiring within specified days")
     public ResponseEntity<ApiResponse<List<ProviderContractResponseDto>>> getExpiring(
             @Parameter(description = "Days until expiration") @RequestParam(defaultValue = "30") int days) {
-        
+
         log.debug("REST request to get contracts expiring within {} days", days);
         List<ProviderContractResponseDto> result = contractService.findExpiringWithinDays(days);
         return ResponseEntity.ok(ApiResponse.success("Expiring contracts retrieved", result));
@@ -118,7 +118,7 @@ public class ProviderContractController {
     public ResponseEntity<ApiResponse<Page<ProviderContractResponseDto>>> getByStatus(
             @Parameter(description = "Contract status") @PathVariable ContractStatus status,
             @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
-        
+
         log.debug("REST request to get contracts with status: {}", status);
         Page<ProviderContractResponseDto> result = contractService.findByStatus(status, pageable);
         return ResponseEntity.ok(ApiResponse.success("Contracts retrieved", result));
@@ -128,12 +128,12 @@ public class ProviderContractController {
      * GET /api/provider-contracts/{id}
      * Get contract by ID
      */
-    @GetMapping("/{id}")
+    @GetMapping("/{id:\\d+}")
     @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('provider_contracts.view')")
     @Operation(summary = "Get contract by ID", description = "Get detailed contract information")
     public ResponseEntity<ApiResponse<ProviderContractResponseDto>> getById(
             @Parameter(description = "Contract ID") @PathVariable Long id) {
-        
+
         log.debug("REST request to get contract: {}", id);
         ProviderContractResponseDto result = contractService.findById(id);
         return ResponseEntity.ok(ApiResponse.success("Contract retrieved", result));
@@ -148,7 +148,7 @@ public class ProviderContractController {
     @Operation(summary = "Get contract by code", description = "Get contract by contract code")
     public ResponseEntity<ApiResponse<ProviderContractResponseDto>> getByCode(
             @Parameter(description = "Contract code") @PathVariable String code) {
-        
+
         log.debug("REST request to get contract by code: {}", code);
         ProviderContractResponseDto result = contractService.findByCode(code);
         return ResponseEntity.ok(ApiResponse.success("Contract retrieved", result));
@@ -164,7 +164,7 @@ public class ProviderContractController {
     public ResponseEntity<ApiResponse<Page<ProviderContractResponseDto>>> getByProvider(
             @Parameter(description = "Provider ID") @PathVariable Long providerId,
             @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
-        
+
         log.debug("REST request to get contracts for provider: {}", providerId);
         Page<ProviderContractResponseDto> result = contractService.findByProvider(providerId, pageable);
         return ResponseEntity.ok(ApiResponse.success("Contracts retrieved", result));
@@ -179,10 +179,11 @@ public class ProviderContractController {
     @Operation(summary = "Get active contract", description = "Get the active contract for a provider")
     public ResponseEntity<ApiResponse<ProviderContractResponseDto>> getActiveByProvider(
             @Parameter(description = "Provider ID") @PathVariable Long providerId) {
-        
+
         log.debug("REST request to get active contract for provider: {}", providerId);
         ProviderContractResponseDto result = contractService.findActiveByProvider(providerId);
-        return ResponseEntity.ok(ApiResponse.success(result != null ? "Active contract found" : "No active contract", result));
+        return ResponseEntity
+                .ok(ApiResponse.success(result != null ? "Active contract found" : "No active contract", result));
     }
 
     /**
@@ -194,7 +195,7 @@ public class ProviderContractController {
     @Operation(summary = "Create contract", description = "Create a new provider contract")
     public ResponseEntity<ApiResponse<ProviderContractResponseDto>> create(
             @Valid @RequestBody ProviderContractCreateDto dto) {
-        
+
         log.debug("REST request to create contract for provider: {}", dto.getProviderId());
         ProviderContractResponseDto result = contractService.create(dto);
         return ResponseEntity.status(HttpStatus.CREATED)
@@ -205,13 +206,13 @@ public class ProviderContractController {
      * PUT /api/provider-contracts/{id}
      * Update contract
      */
-    @PutMapping("/{id}")
+    @PutMapping("/{id:\\d+}")
     @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('provider_contracts.update')")
     @Operation(summary = "Update contract", description = "Update an existing contract")
     public ResponseEntity<ApiResponse<ProviderContractResponseDto>> update(
             @Parameter(description = "Contract ID") @PathVariable Long id,
             @Valid @RequestBody ProviderContractUpdateDto dto) {
-        
+
         log.debug("REST request to update contract: {}", id);
         ProviderContractResponseDto result = contractService.update(id, dto);
         return ResponseEntity.ok(ApiResponse.success("Contract updated successfully", result));
@@ -221,12 +222,12 @@ public class ProviderContractController {
      * DELETE /api/provider-contracts/{id}
      * Delete contract (soft delete)
      */
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/{id:\\d+}")
     @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('provider_contracts.delete')")
     @Operation(summary = "Delete contract", description = "Soft delete a contract")
     public ResponseEntity<ApiResponse<Void>> delete(
             @Parameter(description = "Contract ID") @PathVariable Long id) {
-        
+
         log.debug("REST request to delete contract: {}", id);
         contractService.delete(id);
         return ResponseEntity.ok(ApiResponse.success("Contract deleted successfully", null));
@@ -240,12 +241,12 @@ public class ProviderContractController {
      * POST /api/provider-contracts/{id}/activate
      * Activate a contract
      */
-    @PostMapping("/{id}/activate")
+    @PostMapping("/{id:\\d+}/activate")
     @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('provider_contracts.activate')")
     @Operation(summary = "Activate contract", description = "Activate a draft or suspended contract")
     public ResponseEntity<ApiResponse<ProviderContractResponseDto>> activate(
             @Parameter(description = "Contract ID") @PathVariable Long id) {
-        
+
         log.debug("REST request to activate contract: {}", id);
         ProviderContractResponseDto result = contractService.activate(id);
         return ResponseEntity.ok(ApiResponse.success("Contract activated successfully", result));
@@ -255,13 +256,13 @@ public class ProviderContractController {
      * POST /api/provider-contracts/{id}/suspend
      * Suspend a contract
      */
-    @PostMapping("/{id}/suspend")
+    @PostMapping("/{id:\\d+}/suspend")
     @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('provider_contracts.activate')")
     @Operation(summary = "Suspend contract", description = "Suspend an active contract")
     public ResponseEntity<ApiResponse<ProviderContractResponseDto>> suspend(
             @Parameter(description = "Contract ID") @PathVariable Long id,
             @Parameter(description = "Suspension reason") @RequestParam(required = false) String reason) {
-        
+
         log.debug("REST request to suspend contract: {}", id);
         ProviderContractResponseDto result = contractService.suspend(id, reason);
         return ResponseEntity.ok(ApiResponse.success("Contract suspended successfully", result));
@@ -271,13 +272,13 @@ public class ProviderContractController {
      * POST /api/provider-contracts/{id}/terminate
      * Terminate a contract
      */
-    @PostMapping("/{id}/terminate")
+    @PostMapping("/{id:\\d+}/terminate")
     @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('provider_contracts.activate')")
     @Operation(summary = "Terminate contract", description = "Terminate a contract permanently")
     public ResponseEntity<ApiResponse<ProviderContractResponseDto>> terminate(
             @Parameter(description = "Contract ID") @PathVariable Long id,
             @Parameter(description = "Termination reason") @RequestParam(required = false) String reason) {
-        
+
         log.debug("REST request to terminate contract: {}", id);
         ProviderContractResponseDto result = contractService.terminate(id, reason);
         return ResponseEntity.ok(ApiResponse.success("Contract terminated successfully", result));
@@ -297,7 +298,7 @@ public class ProviderContractController {
     public ResponseEntity<ApiResponse<Page<ProviderContractPricingItemResponseDto>>> getPricing(
             @Parameter(description = "Contract ID") @PathVariable Long contractId,
             @PageableDefault(size = 50, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
-        
+
         log.debug("REST request to get pricing for contract: {}", contractId);
         Page<ProviderContractPricingItemResponseDto> result = pricingService.findByContract(contractId, pageable);
         return ResponseEntity.ok(ApiResponse.success("Pricing items retrieved", result));
@@ -314,7 +315,7 @@ public class ProviderContractController {
             @Parameter(description = "Contract ID") @PathVariable Long contractId,
             @Parameter(description = "Search query") @RequestParam(required = false) String q,
             @PageableDefault(size = 50, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
-        
+
         log.debug("REST request to search pricing in contract: {}, query: {}", contractId, q);
         Page<ProviderContractPricingItemResponseDto> result = pricingService.searchInContract(contractId, q, pageable);
         return ResponseEntity.ok(ApiResponse.success("Search completed", result));
@@ -329,7 +330,7 @@ public class ProviderContractController {
     @Operation(summary = "Get pricing stats", description = "Get pricing statistics for a contract")
     public ResponseEntity<ApiResponse<ProviderContractPricingItemService.PricingStatsDto>> getPricingStats(
             @Parameter(description = "Contract ID") @PathVariable Long contractId) {
-        
+
         log.debug("REST request to get pricing stats for contract: {}", contractId);
         ProviderContractPricingItemService.PricingStatsDto stats = pricingService.getPricingStats(contractId);
         return ResponseEntity.ok(ApiResponse.success("Pricing stats retrieved", stats));
@@ -344,7 +345,7 @@ public class ProviderContractController {
     @Operation(summary = "Get pricing item", description = "Get pricing item by ID")
     public ResponseEntity<ApiResponse<ProviderContractPricingItemResponseDto>> getPricingById(
             @Parameter(description = "Pricing item ID") @PathVariable Long pricingId) {
-        
+
         log.debug("REST request to get pricing item: {}", pricingId);
         ProviderContractPricingItemResponseDto result = pricingService.findById(pricingId);
         return ResponseEntity.ok(ApiResponse.success("Pricing item retrieved", result));
@@ -360,7 +361,7 @@ public class ProviderContractController {
     public ResponseEntity<ApiResponse<ProviderContractPricingItemResponseDto>> addPricing(
             @Parameter(description = "Contract ID") @PathVariable Long contractId,
             @Valid @RequestBody ProviderContractPricingItemCreateDto dto) {
-        
+
         log.debug("REST request to add pricing to contract: {}", contractId);
         ProviderContractPricingItemResponseDto result = pricingService.create(contractId, dto);
         return ResponseEntity.status(HttpStatus.CREATED)
@@ -377,7 +378,7 @@ public class ProviderContractController {
     public ResponseEntity<ApiResponse<List<ProviderContractPricingItemResponseDto>>> addBulkPricing(
             @Parameter(description = "Contract ID") @PathVariable Long contractId,
             @Valid @RequestBody List<ProviderContractPricingItemCreateDto> dtos) {
-        
+
         log.debug("REST request to bulk add {} pricing items to contract: {}", dtos.size(), contractId);
         List<ProviderContractPricingItemResponseDto> result = pricingService.createBulk(contractId, dtos);
         return ResponseEntity.status(HttpStatus.CREATED)
@@ -394,7 +395,7 @@ public class ProviderContractController {
     public ResponseEntity<ApiResponse<ProviderContractPricingItemResponseDto>> updatePricing(
             @Parameter(description = "Pricing item ID") @PathVariable Long pricingId,
             @Valid @RequestBody ProviderContractPricingItemUpdateDto dto) {
-        
+
         log.debug("REST request to update pricing item: {}", pricingId);
         ProviderContractPricingItemResponseDto result = pricingService.update(pricingId, dto);
         return ResponseEntity.ok(ApiResponse.success("Pricing item updated successfully", result));
@@ -409,7 +410,7 @@ public class ProviderContractController {
     @Operation(summary = "Delete pricing item", description = "Delete a pricing item")
     public ResponseEntity<ApiResponse<Void>> deletePricing(
             @Parameter(description = "Pricing item ID") @PathVariable Long pricingId) {
-        
+
         log.debug("REST request to delete pricing item: {}", pricingId);
         pricingService.delete(pricingId);
         return ResponseEntity.ok(ApiResponse.success("Pricing item deleted successfully", null));
@@ -424,7 +425,7 @@ public class ProviderContractController {
     @Operation(summary = "Delete all pricing", description = "Delete all pricing items for a draft contract")
     public ResponseEntity<ApiResponse<Integer>> deleteAllPricing(
             @Parameter(description = "Contract ID") @PathVariable Long contractId) {
-        
+
         log.debug("REST request to delete all pricing for contract: {}", contractId);
         int count = pricingService.deleteByContract(contractId);
         return ResponseEntity.ok(ApiResponse.success("Deleted " + count + " pricing items", count));

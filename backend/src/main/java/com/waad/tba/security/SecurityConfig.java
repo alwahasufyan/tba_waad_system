@@ -50,26 +50,27 @@ public class SecurityConfig {
                 // - Ignore CSRF for login/logout (chicken-and-egg problem)
                 // - Frontend reads XSRF-TOKEN cookie and sends X-XSRF-TOKEN header
                 .csrf(csrf -> csrf
-                    .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
-                    .ignoringRequestMatchers(
-                        // Authentication endpoints (no CSRF token yet)
-                        "/api/auth/session/login",
-                        "/api/auth/session/logout",
-                        // JWT endpoints (for future mobile clients - stateless)
-                        "/api/auth/login",
-                        "/api/auth/register",
-                        "/api/auth/refresh",
-                        // Member import endpoints (multipart file upload)
-                        "/api/members/import/**",
-                        // Public endpoints (no authentication required)
-                        "/v3/api-docs/**",
-                        "/swagger-ui/**"
-                    )
-                )
-                
+                        .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+                        .ignoringRequestMatchers(
+                                // Authentication endpoints (no CSRF token yet)
+                                "/api/auth/session/login",
+                                "/api/auth/session/logout",
+                                // JWT endpoints (for future mobile clients - stateless)
+                                "/api/auth/login",
+                                "/api/auth/register",
+                                "/api/auth/refresh",
+                                "/api/auth/refresh",
+                                // Member endpoints (Phase 1 Fix: Explicitly allow POST/PUT/DELETE for Members)
+                                "/api/members/**",
+                                // Member import endpoints (multipart file upload)
+                                "/api/members/import/**",
+                                // Public endpoints (no authentication required)
+                                "/v3/api-docs/**",
+                                "/swagger-ui/**"))
+
                 // CORS configuration with credentials support (required for session cookies)
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-                
+
                 // Authorization rules
                 .authorizeHttpRequests(auth -> auth
                         // Public endpoints - Authentication
@@ -81,28 +82,30 @@ public class SecurityConfig {
                                 "/swagger-ui.html",
                                 "/swagger-resources/**",
                                 "/webjars/**",
-                                "/error"
-                        ).permitAll()
+                                "/error")
+                        .permitAll()
                         // All other endpoints require authentication
-                        .anyRequest().authenticated()
-                )
-                
+                        .anyRequest().authenticated())
+
                 // Session management configuration
                 .sessionManagement(session -> session
                         // Phase C.1: Session Policy Review
                         // IF_REQUIRED allows Spring to create sessions when needed (session auth)
                         // while still supporting stateless requests (JWT auth)
                         // This enables dual authentication support (Session OR JWT)
-                        .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
-                )
-                
+                        .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
+
                 .authenticationProvider(authenticationProvider())
-                
+
                 // Phase C.1: Filter Chain Order (CRITICAL for security)
-                // Order matters: SessionAuthenticationFilter → JwtAuthenticationFilter → UsernamePasswordAuthenticationFilter
-                // 1. SessionAuthenticationFilter checks for valid HTTP session first (preferred)
-                // 2. If no session, JwtAuthenticationFilter checks for Bearer token (legacy fallback)
-                // 3. UsernamePasswordAuthenticationFilter handles form-based login (not used in our API)
+                // Order matters: SessionAuthenticationFilter → JwtAuthenticationFilter →
+                // UsernamePasswordAuthenticationFilter
+                // 1. SessionAuthenticationFilter checks for valid HTTP session first
+                // (preferred)
+                // 2. If no session, JwtAuthenticationFilter checks for Bearer token (legacy
+                // fallback)
+                // 3. UsernamePasswordAuthenticationFilter handles form-based login (not used in
+                // our API)
                 .addFilterBefore(sessionAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
@@ -118,7 +121,7 @@ public class SecurityConfig {
         // AUDIT FIX: Expose CSRF token cookie to frontend
         configuration.setExposedHeaders(Arrays.asList("Authorization", "X-Employer-ID", "X-XSRF-TOKEN"));
         configuration.setAllowCredentials(true);
-        
+
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;

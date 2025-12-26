@@ -5,6 +5,8 @@ import { Box, Button, Grid, TextField, MenuItem, Typography } from '@mui/materia
 import { ArrowBack, Save, LocalHospital as ProviderIcon } from '@mui/icons-material';
 import MainCard from 'components/MainCard';
 import ModernPageHeader from 'components/tba/ModernPageHeader';
+import RBACGuard from 'components/tba/RBACGuard';
+import { PERMISSIONS } from 'constants/permissions.constants';
 import { useCreateProvider } from 'hooks/useProviders';
 
 const PROVIDER_TYPES = [
@@ -91,159 +93,161 @@ const ProviderCreate = () => {
         }
       />
 
-    <MainCard>
-      <Box component="form" onSubmit={handleSubmit}>
-        <Grid container spacing={3}>
-          {/* Basic Information */}
-          <Grid item xs={12}>
-            <Typography variant="h5" gutterBottom>
-              البيانات الأساسية لمقدم الخدمة
-            </Typography>
-          </Grid>
+      <MainCard>
+        <Box component="form" onSubmit={handleSubmit}>
+          <Grid container spacing={3}>
+            {/* Basic Information */}
+            <Grid item xs={12}>
+              <Typography variant="h5" gutterBottom>
+                البيانات الأساسية لمقدم الخدمة
+              </Typography>
+            </Grid>
 
-          <Grid item xs={12} md={6}>
-            <TextField
-              fullWidth
-              required
-              label="الاسم بالعربية"
-              value={formData.nameArabic}
-              onChange={handleChange('nameArabic')}
-              error={!!errors.nameArabic}
-              helperText={errors.nameArabic}
-            />
-          </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                required
+                label="الاسم بالعربية"
+                value={formData.nameArabic}
+                onChange={handleChange('nameArabic')}
+                error={!!errors.nameArabic}
+                helperText={errors.nameArabic}
+              />
+            </Grid>
 
-          <Grid item xs={12} md={6}>
-            <TextField
-              fullWidth
-              required
-              label="الاسم بالإنجليزية"
-              value={formData.nameEnglish}
-              onChange={handleChange('nameEnglish')}
-              error={!!errors.nameEnglish}
-              helperText={errors.nameEnglish}
-            />
-          </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                required
+                label="الاسم بالإنجليزية"
+                value={formData.nameEnglish}
+                onChange={handleChange('nameEnglish')}
+                error={!!errors.nameEnglish}
+                helperText={errors.nameEnglish}
+              />
+            </Grid>
 
-          <Grid item xs={12} md={6}>
-            <TextField
-              fullWidth
-              required
-              label="رقم الترخيص"
-              value={formData.licenseNumber}
-              onChange={handleChange('licenseNumber')}
-              error={!!errors.licenseNumber}
-              helperText={errors.licenseNumber}
-            />
-          </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                required
+                label="رقم الترخيص"
+                value={formData.licenseNumber}
+                onChange={handleChange('licenseNumber')}
+                error={!!errors.licenseNumber}
+                helperText={errors.licenseNumber}
+              />
+            </Grid>
 
-          <Grid item xs={12} md={6}>
-            <TextField fullWidth label="الرقم الضريبي" value={formData.taxNumber} onChange={handleChange('taxNumber')} />
-          </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField fullWidth label="الرقم الضريبي" value={formData.taxNumber} onChange={handleChange('taxNumber')} />
+            </Grid>
 
-          <Grid item xs={12} md={6}>
-            <TextField
-              fullWidth
-              required
-              select
-              label="نوع مقدم الخدمة"
-              value={formData.providerType}
-              onChange={handleChange('providerType')}
-              error={!!errors.providerType}
-              helperText={errors.providerType}
-            >
-              {PROVIDER_TYPES.map((option) => (
-                <MenuItem key={option.value} value={option.value}>
-                  {option.label}
-                </MenuItem>
-              ))}
-            </TextField>
-          </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                required
+                select
+                label="نوع مقدم الخدمة"
+                value={formData.providerType}
+                onChange={handleChange('providerType')}
+                error={!!errors.providerType}
+                helperText={errors.providerType}
+              >
+                {PROVIDER_TYPES.map((option) => (
+                  <MenuItem key={option.value} value={option.value}>
+                    {option.label}
+                  </MenuItem>
+                ))}
+              </TextField>
+            </Grid>
 
-          {/* Location Information */}
-          <Grid item xs={12}>
-            <Typography variant="h5" gutterBottom sx={{ mt: 2 }}>
-              معلومات الموقع
-            </Typography>
-          </Grid>
+            {/* Location Information */}
+            <Grid item xs={12}>
+              <Typography variant="h5" gutterBottom sx={{ mt: 2 }}>
+                معلومات الموقع
+              </Typography>
+            </Grid>
 
-          <Grid item xs={12} md={6}>
-            <TextField fullWidth label="المدينة" value={formData.city} onChange={handleChange('city')} />
-          </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField fullWidth label="المدينة" value={formData.city} onChange={handleChange('city')} />
+            </Grid>
 
-          <Grid item xs={12} md={6}>
-            <TextField fullWidth label="العنوان" value={formData.address} onChange={handleChange('address')} multiline rows={1} />
-          </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField fullWidth label="العنوان" value={formData.address} onChange={handleChange('address')} multiline rows={1} />
+            </Grid>
 
-          {/* Contact Information */}
-          <Grid item xs={12}>
-            <Typography variant="h5" gutterBottom sx={{ mt: 2 }}>
-              معلومات الاتصال
-            </Typography>
-          </Grid>
+            {/* Contact Information */}
+            <Grid item xs={12}>
+              <Typography variant="h5" gutterBottom sx={{ mt: 2 }}>
+                معلومات الاتصال
+              </Typography>
+            </Grid>
 
-          <Grid item xs={12} md={6}>
-            <TextField fullWidth label="رقم الهاتف" value={formData.phone} onChange={handleChange('phone')} />
-          </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField fullWidth label="رقم الهاتف" value={formData.phone} onChange={handleChange('phone')} />
+            </Grid>
 
-          <Grid item xs={12} md={6}>
-            <TextField fullWidth type="email" label="البريد الإلكتروني" value={formData.email} onChange={handleChange('email')} />
-          </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField fullWidth type="email" label="البريد الإلكتروني" value={formData.email} onChange={handleChange('email')} />
+            </Grid>
 
-          {/* Contract Information */}
-          <Grid item xs={12}>
-            <Typography variant="h5" gutterBottom sx={{ mt: 2 }}>
-              معلومات العقد
-            </Typography>
-          </Grid>
+            {/* Contract Information */}
+            <Grid item xs={12}>
+              <Typography variant="h5" gutterBottom sx={{ mt: 2 }}>
+                معلومات العقد
+              </Typography>
+            </Grid>
 
-          <Grid item xs={12} md={4}>
-            <TextField
-              fullWidth
-              type="date"
-              label="تاريخ بداية العقد"
-              value={formData.contractStartDate}
-              onChange={handleChange('contractStartDate')}
-              InputLabelProps={{ shrink: true }}
-            />
-          </Grid>
+            <Grid item xs={12} md={4}>
+              <TextField
+                fullWidth
+                type="date"
+                label="تاريخ بداية العقد"
+                value={formData.contractStartDate}
+                onChange={handleChange('contractStartDate')}
+                InputLabelProps={{ shrink: true }}
+              />
+            </Grid>
 
-          <Grid item xs={12} md={4}>
-            <TextField
-              fullWidth
-              type="date"
-              label="تاريخ نهاية العقد"
-              value={formData.contractEndDate}
-              onChange={handleChange('contractEndDate')}
-              InputLabelProps={{ shrink: true }}
-            />
-          </Grid>
+            <Grid item xs={12} md={4}>
+              <TextField
+                fullWidth
+                type="date"
+                label="تاريخ نهاية العقد"
+                value={formData.contractEndDate}
+                onChange={handleChange('contractEndDate')}
+                InputLabelProps={{ shrink: true }}
+              />
+            </Grid>
 
-          <Grid item xs={12} md={4}>
-            <TextField
-              fullWidth
-              type="number"
-              label="نسبة الخصم الافتراضية (%)"
-              value={formData.defaultDiscountRate}
-              onChange={handleChange('defaultDiscountRate')}
-              inputProps={{ min: 0, max: 100, step: 0.01 }}
-            />
-          </Grid>
+            <Grid item xs={12} md={4}>
+              <TextField
+                fullWidth
+                type="number"
+                label="نسبة الخصم الافتراضية (%)"
+                value={formData.defaultDiscountRate}
+                onChange={handleChange('defaultDiscountRate')}
+                inputProps={{ min: 0, max: 100, step: 0.01 }}
+              />
+            </Grid>
 
-          {/* Actions */}
-          <Grid item xs={12}>
-            <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
-              <Button variant="outlined" onClick={() => navigate('/providers')} disabled={creating}>
-                إلغاء
-              </Button>
-              <Button type="submit" variant="contained" startIcon={<Save />} disabled={creating}>
-                {creating ? 'جاري الحفظ...' : 'حفظ'}
-              </Button>
-            </Box>
+            {/* Actions */}
+            <Grid item xs={12}>
+              <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
+                <Button variant="outlined" onClick={() => navigate('/providers')} disabled={creating}>
+                  إلغاء
+                </Button>
+                <RBACGuard requiredPermissions={[PERMISSIONS.MANAGE_PROVIDERS]}>
+                  <Button type="submit" variant="contained" startIcon={<Save />} disabled={creating}>
+                    {creating ? 'جاري الحفظ...' : 'حفظ'}
+                  </Button>
+                </RBACGuard>
+              </Box>
+            </Grid>
           </Grid>
-        </Grid>
-      </Box>
-    </MainCard>
+        </Box>
+      </MainCard>
     </>
   );
 };

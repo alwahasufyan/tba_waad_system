@@ -31,6 +31,7 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
 import jakarta.persistence.UniqueConstraint;
+import jakarta.persistence.PrePersist;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -41,8 +42,7 @@ import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "members", uniqueConstraints = {
-    @UniqueConstraint(columnNames = "civilId", name = "uk_member_civil_id"),
-    @UniqueConstraint(columnNames = "cardNumber", name = "uk_member_card_number")
+        @UniqueConstraint(columnNames = "cardNumber", name = "uk_member_card_number")
 })
 @Data
 @Builder
@@ -65,7 +65,8 @@ public class Member {
     @JoinColumn(name = "insurance_org_id")
     private Organization insuranceOrganization;
 
-    // LEGACY: Old relationships (kept for backwards compatibility, will be removed in future)
+    // LEGACY: Old relationships (kept for backwards compatibility, will be removed
+    // in future)
     @Deprecated
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "employer_id", insertable = false, updatable = false)
@@ -97,17 +98,26 @@ public class Member {
     @Column(length = 200, name = "full_name_english")
     private String fullNameEnglish;
 
-    @NotBlank(message = "Civil ID (National ID) is required")
-    @Column(unique = true, nullable = false, length = 50, name = "civil_id")
+    // Phase 1 Enterprise Fix: Civil ID is Optional
+    @Column(length = 50, name = "civil_id")
     private String civilId;
 
-    @Column(unique = true, length = 50, name = "card_number")
+    // Phase 1 Enterprise Fix: Card Number is Mandatory & System Generated BARCODE
+    // Format: WAAD|MEMBER|{SEQUENCE}
+    @Column(nullable = false, unique = true, length = 50, name = "card_number")
     private String cardNumber;
+
+    @PrePersist
+    public void ensureCardNumber() {
+        if (this.cardNumber == null || this.cardNumber.isEmpty()) {
+            this.cardNumber = com.waad.tba.modules.member.util.CardNumberGenerator.generate();
+        }
+    }
 
     @NotNull(message = "Date of birth is required")
     @Column(nullable = false, name = "birth_date")
     private LocalDate birthDate;
-    
+
     @NotNull(message = "Gender is required")
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 10)
@@ -116,10 +126,10 @@ public class Member {
     @Enumerated(EnumType.STRING)
     @Column(length = 20, name = "marital_status")
     private MaritalStatus maritalStatus;
-    
+
     @Column(length = 20)
     private String phone;
-    
+
     @Email(message = "Invalid email format")
     @Column(length = 255)
     private String email;

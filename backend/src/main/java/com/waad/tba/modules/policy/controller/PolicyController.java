@@ -33,7 +33,7 @@ public class PolicyController {
         return ResponseEntity.ok(ApiResponse.success(policies));
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/{id:\\d+}")
     @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('VIEW_POLICIES')")
     public ResponseEntity<ApiResponse<PolicyDto>> getPolicyById(@PathVariable Long id) {
         PolicyDto policy = policyService.getPolicyById(id);
@@ -56,7 +56,8 @@ public class PolicyController {
 
     @GetMapping("/insurance/{insuranceCompanyId}")
     @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('VIEW_POLICIES')")
-    public ResponseEntity<ApiResponse<List<PolicyDto>>> getPoliciesByInsuranceCompany(@PathVariable Long insuranceCompanyId) {
+    public ResponseEntity<ApiResponse<List<PolicyDto>>> getPoliciesByInsuranceCompany(
+            @PathVariable Long insuranceCompanyId) {
         List<PolicyDto> policies = policyService.getPoliciesByInsuranceCompany(insuranceCompanyId);
         return ResponseEntity.ok(ApiResponse.success(policies));
     }
@@ -69,7 +70,7 @@ public class PolicyController {
                 .body(ApiResponse.success("Policy created successfully", created));
     }
 
-    @PutMapping("/{id}")
+    @PutMapping("/{id:\\d+}")
     @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('MANAGE_POLICIES')")
     public ResponseEntity<ApiResponse<PolicyDto>> updatePolicy(
             @PathVariable Long id,
@@ -78,7 +79,7 @@ public class PolicyController {
         return ResponseEntity.ok(ApiResponse.success("Policy updated successfully", updated));
     }
 
-    @PatchMapping("/{id}/status")
+    @PatchMapping("/{id:\\d+}/status")
     @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('MANAGE_POLICIES')")
     public ResponseEntity<ApiResponse<PolicyDto>> updatePolicyStatus(
             @PathVariable Long id,
@@ -87,7 +88,7 @@ public class PolicyController {
         return ResponseEntity.ok(ApiResponse.success("Policy status updated successfully", updated));
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/{id:\\d+}")
     @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('MANAGE_POLICIES')")
     public ResponseEntity<ApiResponse<Void>> deletePolicy(@PathVariable Long id) {
         policyService.deletePolicy(id);

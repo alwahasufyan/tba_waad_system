@@ -33,7 +33,15 @@ public class BenefitPackageController {
         return ResponseEntity.ok(ApiResponse.success(benefitPackages));
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/selector")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('VIEW_BENEFIT_PACKAGES')")
+    public ResponseEntity<ApiResponse<List<BenefitPackageDto>>> getSelectorOptions() {
+        // Phase 1: Selector returns all active packages
+        List<BenefitPackageDto> benefitPackages = benefitPackageService.getActiveBenefitPackages();
+        return ResponseEntity.ok(ApiResponse.success(benefitPackages));
+    }
+
+    @GetMapping("/{id:\\d+}")
     @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('VIEW_BENEFIT_PACKAGES')")
     public ResponseEntity<ApiResponse<BenefitPackageDto>> getBenefitPackageById(@PathVariable Long id) {
         BenefitPackageDto benefitPackage = benefitPackageService.getBenefitPackageById(id);
@@ -49,13 +57,14 @@ public class BenefitPackageController {
 
     @PostMapping
     @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('MANAGE_BENEFIT_PACKAGES')")
-    public ResponseEntity<ApiResponse<BenefitPackageDto>> createBenefitPackage(@Valid @RequestBody BenefitPackageDto dto) {
+    public ResponseEntity<ApiResponse<BenefitPackageDto>> createBenefitPackage(
+            @Valid @RequestBody BenefitPackageDto dto) {
         BenefitPackageDto created = benefitPackageService.createBenefitPackage(dto);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.success("Benefit package created successfully", created));
     }
 
-    @PutMapping("/{id}")
+    @PutMapping("/{id:\\d+}")
     @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('MANAGE_BENEFIT_PACKAGES')")
     public ResponseEntity<ApiResponse<BenefitPackageDto>> updateBenefitPackage(
             @PathVariable Long id,
@@ -64,7 +73,7 @@ public class BenefitPackageController {
         return ResponseEntity.ok(ApiResponse.success("Benefit package updated successfully", updated));
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/{id:\\d+}")
     @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('MANAGE_BENEFIT_PACKAGES')")
     public ResponseEntity<ApiResponse<Void>> deleteBenefitPackage(@PathVariable Long id) {
         benefitPackageService.deleteBenefitPackage(id);

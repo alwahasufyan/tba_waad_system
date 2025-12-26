@@ -35,11 +35,11 @@ public class CompanyController {
     @Operation(summary = "Create new company", description = "Create a new company (tenant) in the system")
     public ResponseEntity<ApiResponse<CompanyDto>> createCompany(
             @Valid @RequestBody CompanyDto companyDto) {
-        
+
         log.info("REST request to create company: {}", companyDto.getName());
-        
+
         CompanyDto createdCompany = companyService.createCompany(companyDto);
-        
+
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(ApiResponse.success("Company created successfully", createdCompany));
@@ -48,32 +48,32 @@ public class CompanyController {
     /**
      * Update an existing company
      */
-    @PutMapping("/{id}")
+    @PutMapping("/{id:\\d+}")
     @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('MANAGE_COMPANIES')")
     @Operation(summary = "Update company", description = "Update an existing company")
     public ResponseEntity<ApiResponse<CompanyDto>> updateCompany(
             @PathVariable Long id,
             @Valid @RequestBody CompanyDto companyDto) {
-        
+
         log.info("REST request to update company with ID: {}", id);
-        
+
         CompanyDto updatedCompany = companyService.updateCompany(id, companyDto);
-        
+
         return ResponseEntity.ok(ApiResponse.success("Company updated successfully", updatedCompany));
     }
 
     /**
      * Get company by ID
      */
-    @GetMapping("/{id}")
+    @GetMapping("/{id:\\d+}")
     @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('VIEW_COMPANIES')")
     @Operation(summary = "Get company by ID", description = "Retrieve a company by its ID")
     public ResponseEntity<ApiResponse<CompanyDto>> getCompany(@PathVariable Long id) {
-        
+
         log.info("REST request to get company with ID: {}", id);
-        
+
         CompanyDto company = companyService.getCompany(id);
-        
+
         return ResponseEntity.ok(ApiResponse.success("Company retrieved successfully", company));
     }
 
@@ -84,11 +84,11 @@ public class CompanyController {
     @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('VIEW_COMPANIES')")
     @Operation(summary = "Get company by code", description = "Retrieve a company by its code")
     public ResponseEntity<ApiResponse<CompanyDto>> getCompanyByCode(@PathVariable String code) {
-        
+
         log.info("REST request to get company with code: {}", code);
-        
+
         CompanyDto company = companyService.getCompanyByCode(code);
-        
+
         return ResponseEntity.ok(ApiResponse.success("Company retrieved successfully", company));
     }
 
@@ -99,56 +99,56 @@ public class CompanyController {
     @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('VIEW_COMPANIES')")
     @Operation(summary = "Get all companies", description = "Retrieve all companies in the system")
     public ResponseEntity<ApiResponse<List<CompanyDto>>> getAllCompanies() {
-        
+
         log.info("REST request to get all companies");
-        
+
         List<CompanyDto> companies = companyService.getAllCompanies();
-        
+
         return ResponseEntity.ok(ApiResponse.success("Companies retrieved successfully", companies));
     }
 
     /**
      * Activate a company
      */
-    @PatchMapping("/{id}/activate")
+    @PatchMapping("/{id:\\d+}/activate")
     @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('MANAGE_COMPANIES')")
     @Operation(summary = "Activate company", description = "Activate a deactivated company")
     public ResponseEntity<ApiResponse<CompanyDto>> activateCompany(@PathVariable Long id) {
-        
+
         log.info("REST request to activate company with ID: {}", id);
-        
+
         CompanyDto company = companyService.activateCompany(id);
-        
+
         return ResponseEntity.ok(ApiResponse.success("Company activated successfully", company));
     }
 
     /**
      * Deactivate a company
      */
-    @PatchMapping("/{id}/deactivate")
+    @PatchMapping("/{id:\\d+}/deactivate")
     @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('MANAGE_COMPANIES')")
     @Operation(summary = "Deactivate company", description = "Deactivate an active company")
     public ResponseEntity<ApiResponse<CompanyDto>> deactivateCompany(@PathVariable Long id) {
-        
+
         log.info("REST request to deactivate company with ID: {}", id);
-        
+
         CompanyDto company = companyService.deactivateCompany(id);
-        
+
         return ResponseEntity.ok(ApiResponse.success("Company deactivated successfully", company));
     }
 
     /**
      * Delete a company
      */
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/{id:\\d+}")
     @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('MANAGE_COMPANIES')")
     @Operation(summary = "Delete company", description = "Delete a company from the system")
     public ResponseEntity<ApiResponse<Void>> deleteCompany(@PathVariable Long id) {
-        
+
         log.info("REST request to delete company with ID: {}", id);
-        
+
         companyService.deleteCompany(id);
-        
+
         return ResponseEntity.ok(ApiResponse.success("Company deleted successfully", null));
     }
 }

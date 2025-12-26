@@ -48,7 +48,7 @@ public class ClaimController {
                 .body(ApiResponse.success("Claim created successfully", claim));
     }
 
-    @PutMapping("/{id}")
+    @PutMapping("/{id:\\d+}")
     @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('MANAGE_CLAIMS')")
     public ResponseEntity<ApiResponse<ClaimViewDto>> updateClaim(
             @PathVariable Long id,
@@ -57,7 +57,7 @@ public class ClaimController {
         return ResponseEntity.ok(ApiResponse.success("Claim updated successfully", claim));
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/{id:\\d+}")
     @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('VIEW_CLAIMS')")
     public ResponseEntity<ApiResponse<ClaimViewDto>> getClaim(@PathVariable Long id) {
         ClaimViewDto claim = claimService.getClaim(id);
@@ -74,18 +74,18 @@ public class ClaimController {
             @RequestParam(required = false) String search) {
         Page<ClaimViewDto> claimsPage = claimService.listClaims(
                 Math.max(0, page - 1), size, sortBy, sortDir, search);
-        
+
         PaginationResponse<ClaimViewDto> response = PaginationResponse.<ClaimViewDto>builder()
                 .items(claimsPage.getContent())
                 .total(claimsPage.getTotalElements())
                 .page(page)
                 .size(size)
                 .build();
-        
+
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/{id:\\d+}")
     @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('MANAGE_CLAIMS')")
     public ResponseEntity<ApiResponse<Void>> deleteClaim(@PathVariable Long id) {
         claimService.deleteClaim(id);
@@ -128,10 +128,9 @@ public class ClaimController {
      * Submit a draft claim for review.
      * Transitions: DRAFT → SUBMITTED
      */
-    @PostMapping("/{id}/submit")
+    @PostMapping("/{id:\\d+}/submit")
     @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('MANAGE_CLAIMS')")
-    @Operation(summary = "Submit claim for review", 
-               description = "Submit a draft claim for review. Validates required attachments.")
+    @Operation(summary = "Submit claim for review", description = "Submit a draft claim for review. Validates required attachments.")
     public ResponseEntity<ApiResponse<ClaimViewDto>> submitClaim(@PathVariable Long id) {
         ClaimViewDto claim = claimService.submitClaim(id);
         return ResponseEntity.ok(ApiResponse.success("تم تقديم المطالبة للمراجعة بنجاح", claim));
@@ -143,12 +142,12 @@ public class ClaimController {
      * 
      * Validates:
      * - Coverage limits (via CoverageValidationService)
-     * - Financial snapshot equation: RequestedAmount = PatientCoPay + NetProviderAmount
+     * - Financial snapshot equation: RequestedAmount = PatientCoPay +
+     * NetProviderAmount
      */
-    @PostMapping("/{id}/approve")
+    @PostMapping("/{id:\\d+}/approve")
     @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('APPROVE_CLAIMS')")
-    @Operation(summary = "Approve claim", 
-               description = "Approve a claim with automatic cost calculation. Validates coverage limits and calculates patient co-pay.")
+    @Operation(summary = "Approve claim", description = "Approve a claim with automatic cost calculation. Validates coverage limits and calculates patient co-pay.")
     public ResponseEntity<ApiResponse<ClaimViewDto>> approveClaim(
             @PathVariable Long id,
             @Valid @RequestBody ClaimApproveDto dto) {
@@ -160,10 +159,9 @@ public class ClaimController {
      * Reject a claim with mandatory reason.
      * Transitions: SUBMITTED/UNDER_REVIEW → REJECTED (terminal)
      */
-    @PostMapping("/{id}/reject")
+    @PostMapping("/{id:\\d+}/reject")
     @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('APPROVE_CLAIMS')")
-    @Operation(summary = "Reject claim", 
-               description = "Reject a claim. Rejection reason is mandatory.")
+    @Operation(summary = "Reject claim", description = "Reject a claim. Rejection reason is mandatory.")
     public ResponseEntity<ApiResponse<ClaimViewDto>> rejectClaim(
             @PathVariable Long id,
             @Valid @RequestBody ClaimRejectDto dto) {
@@ -175,10 +173,9 @@ public class ClaimController {
      * Settle a claim (mark ready for payment).
      * Transitions: APPROVED → SETTLED (terminal)
      */
-    @PostMapping("/{id}/settle")
+    @PostMapping("/{id:\\d+}/settle")
     @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('SETTLE_CLAIMS')")
-    @Operation(summary = "Settle claim", 
-               description = "Settle an approved claim. Requires payment reference number.")
+    @Operation(summary = "Settle claim", description = "Settle an approved claim. Requires payment reference number.")
     public ResponseEntity<ApiResponse<ClaimViewDto>> settleClaim(
             @PathVariable Long id,
             @Valid @RequestBody ClaimSettleDto dto) {
@@ -190,10 +187,9 @@ public class ClaimController {
      * Get cost breakdown for a claim (Financial Snapshot).
      * Shows: RequestedAmount | PatientCoPay | NetProviderAmount
      */
-    @GetMapping("/{id}/cost-breakdown")
+    @GetMapping("/{id:\\d+}/cost-breakdown")
     @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('VIEW_CLAIMS')")
-    @Operation(summary = "Get cost breakdown", 
-               description = "Get detailed cost breakdown including deductible, co-pay, and insurance amount.")
+    @Operation(summary = "Get cost breakdown", description = "Get detailed cost breakdown including deductible, co-pay, and insurance amount.")
     public ResponseEntity<ApiResponse<CostBreakdownDto>> getCostBreakdown(@PathVariable Long id) {
         CostBreakdownDto breakdown = claimService.getCostBreakdownDto(id);
         return ResponseEntity.ok(ApiResponse.success("تم استرجاع تفاصيل التكلفة", breakdown));
@@ -209,24 +205,23 @@ public class ClaimController {
      */
     @GetMapping("/inbox/pending")
     @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('VIEW_CLAIMS')")
-    @Operation(summary = "Claims pending review", 
-               description = "Get claims awaiting review (SUBMITTED or UNDER_REVIEW status)")
+    @Operation(summary = "Claims pending review", description = "Get claims awaiting review (SUBMITTED or UNDER_REVIEW status)")
     public ResponseEntity<ApiResponse<PaginationResponse<ClaimViewDto>>> getPendingClaims(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(defaultValue = "createdAt") String sortBy,
             @RequestParam(defaultValue = "asc") String sortDir) {
-        
+
         Page<ClaimViewDto> claimsPage = claimService.getPendingClaims(
                 Math.max(0, page - 1), size, sortBy, sortDir);
-        
+
         PaginationResponse<ClaimViewDto> response = PaginationResponse.<ClaimViewDto>builder()
                 .items(claimsPage.getContent())
                 .total(claimsPage.getTotalElements())
                 .page(page)
                 .size(size)
                 .build();
-        
+
         return ResponseEntity.ok(ApiResponse.success("المطالبات المعلقة", response));
     }
 
@@ -235,24 +230,23 @@ public class ClaimController {
      */
     @GetMapping("/inbox/approved")
     @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('VIEW_CLAIMS')")
-    @Operation(summary = "Claims ready for settlement", 
-               description = "Get approved claims awaiting settlement (APPROVED status)")
+    @Operation(summary = "Claims ready for settlement", description = "Get approved claims awaiting settlement (APPROVED status)")
     public ResponseEntity<ApiResponse<PaginationResponse<ClaimViewDto>>> getApprovedClaims(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(defaultValue = "reviewedAt") String sortBy,
             @RequestParam(defaultValue = "asc") String sortDir) {
-        
+
         Page<ClaimViewDto> claimsPage = claimService.getApprovedClaims(
                 Math.max(0, page - 1), size, sortBy, sortDir);
-        
+
         PaginationResponse<ClaimViewDto> response = PaginationResponse.<ClaimViewDto>builder()
                 .items(claimsPage.getContent())
                 .total(claimsPage.getTotalElements())
                 .page(page)
                 .size(size)
                 .build();
-        
+
         return ResponseEntity.ok(ApiResponse.success("المطالبات الموافق عليها", response));
     }
 }

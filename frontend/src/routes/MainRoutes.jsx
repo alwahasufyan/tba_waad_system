@@ -479,15 +479,8 @@ const MainRoutes = {
       ]
     },
 
-    // Benefit Packages Module
-    {
-      path: 'benefit-packages',
-      element: (
-        <RouteGuard allowedRoles={['ADMIN', 'INSURANCE_COMPANY', 'REVIEWER']}>
-          <BenefitPackagesList />
-        </RouteGuard>
-      )
-    },
+    // NOTE: Benefit Packages main routes are defined below (line ~674)
+    // This section intentionally left empty to avoid duplicate route
 
     // Insurance Companies Module - LOCKED (Single Tenant Mode)
     // All routes redirect to locked page explaining the fixed insurance company
@@ -671,9 +664,10 @@ const MainRoutes = {
       ]
     },
 
-    // Benefit Packages Module
+    // Benefit Packages Module - Wrapped with TableRefreshLayout
     {
       path: 'benefit-packages',
+      element: <TableRefreshLayout />,
       children: [
         {
           path: '',

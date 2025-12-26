@@ -38,6 +38,8 @@ import { createMember } from 'services/api/members.service';
 import axiosClient from 'utils/axios';
 import { openSnackbar } from 'api/snackbar';
 import { FIXED_INSURANCE_COMPANY, getFixedInsuranceCompanyId } from 'constants/insuranceCompany';
+import RBACGuard from 'components/tba/RBACGuard';
+import { PERMISSIONS } from 'constants/permissions.constants';
 
 /**
  * Member Create Page
@@ -253,7 +255,6 @@ const MemberCreate = () => {
 
     // Required fields
     if (!form.fullNameArabic) newErrors.fullNameArabic = 'Full name (Arabic) is required';
-    if (!form.civilId) newErrors.civilId = 'Civil ID is required';
     if (!form.birthDate) newErrors.birthDate = 'Birth date is required';
     if (!form.gender) newErrors.gender = 'Gender is required';
     if (!form.employerId) newErrors.employerId = 'Employer is required';
@@ -384,8 +385,7 @@ const MemberCreate = () => {
               <Grid item xs={12} md={6}>
                 <TextField
                   fullWidth
-                  required
-                  label="الرقم المدني"
+                  label="الرقم المدني (اختياري)"
                   value={form.civilId}
                   onChange={handleChange('civilId')}
                   error={!!errors.civilId}
@@ -394,15 +394,7 @@ const MemberCreate = () => {
                 />
               </Grid>
 
-              <Grid item xs={12} md={6}>
-                <TextField
-                  fullWidth
-                  label="رقم البطاقة"
-                  value={form.cardNumber}
-                  onChange={handleChange('cardNumber')}
-                  placeholder="MEM-123456"
-                />
-              </Grid>
+
 
               <Grid item xs={12} md={4}>
                 <DatePicker
@@ -872,9 +864,11 @@ const MemberCreate = () => {
               <Button variant="outlined" onClick={() => navigate('/members')} disabled={loading}>
                 إلغاء
               </Button>
-              <Button type="submit" variant="contained" startIcon={<SaveIcon />} disabled={loading}>
-                {loading ? 'جاري الحفظ...' : 'حفظ البيانات'}
-              </Button>
+              <RBACGuard requiredPermissions={[PERMISSIONS.MANAGE_MEMBERS]}>
+                <Button type="submit" variant="contained" startIcon={<SaveIcon />} disabled={loading}>
+                  {loading ? 'جاري الحفظ...' : 'حفظ البيانات'}
+                </Button>
+              </RBACGuard>
             </Stack>
           </MainCard>
         </Stack>

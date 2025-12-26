@@ -29,15 +29,15 @@ public class AuditLogController {
     @GetMapping
     @Operation(summary = "Get all audit logs")
     @ApiResponses({
-        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Success"),
-        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden")
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Success"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden")
     })
     public ApiResponse<Page<AuditLog>> getAllAuditLogs(Pageable pageable) {
         Page<AuditLog> logs = auditLogService.getAllAuditLogs(pageable);
         return ApiResponse.success("Audit logs retrieved", logs);
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/{id:\\d+}")
     @Operation(summary = "Get audit log by ID")
     public ApiResponse<AuditLog> getAuditLogById(@PathVariable Long id) {
         AuditLog log = auditLogService.getAuditLogById(id);

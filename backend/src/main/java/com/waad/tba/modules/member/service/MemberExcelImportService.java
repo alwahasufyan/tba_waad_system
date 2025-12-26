@@ -46,6 +46,9 @@ import com.waad.tba.modules.member.repository.MemberAttributeRepository;
 import com.waad.tba.modules.member.repository.MemberImportErrorRepository;
 import com.waad.tba.modules.member.repository.MemberImportLogRepository;
 import com.waad.tba.modules.member.repository.MemberRepository;
+import com.waad.tba.common.entity.Organization;
+import com.waad.tba.common.enums.OrganizationType;
+import com.waad.tba.common.repository.OrganizationRepository;
 import com.waad.tba.modules.policy.entity.Policy;
 import com.waad.tba.modules.policy.repository.PolicyRepository;
 import com.waad.tba.modules.rbac.entity.User;
@@ -59,22 +62,18 @@ import lombok.extern.slf4j.Slf4j;
  * 
  * Compatible with Odoo hr.employee.public exports.
  * 
- * UNIQUE IDENTIFIER: card_number (Member Insurance Number)
- * - Members are matched ONLY by card_number
- * - card_number is mandatory for import
- * - Rows without card_number are rejected
+ * UNIQUE IDENTIFIER: AUTO-GENERATED BARCODE (WAAD|MEMBER|...)
+ * - Members are ALWAYS CREATED NEW
+ * - card_number from Excel is IGNORED (Security/Identity Safety)
+ * - Matching by name/civil_id is DISABLED for Phase 1
  * 
  * Column Mappings (Odoo → TBA):
- * - card_number / member_no / insurance_no → cardNumber (MANDATORY, unique key)
  * - name / full_name → fullNameArabic (MANDATORY)
- * - full_name_english → fullNameEnglish (optional)
- * - company / employer → employer (lookup)
+ * - company / employer → employerOrganization (MANDATORY LOOKUP)
  * - policy → policy (lookup)
- * - national_id / civil_id → civilId (optional)
- * - job_title → attribute(job_title)
- * - department / department_id → attribute(department)
- * - work_location / work_location_id → attribute(work_location)
- * - Any other columns → attribute(column_name)
+ * - national_id / civil_id → civilId (optional, no uniqueness constraint)
+ * - barcode / badge_id → IGNORED
+ * - card_number → IGNORED
  */
 @Slf4j
 @Service
@@ -86,6 +85,7 @@ public class MemberExcelImportService {
     private final MemberImportLogRepository importLogRepository;
     private final MemberImportErrorRepository importErrorRepository;
     private final EmployerRepository employerRepository;
+    private final OrganizationRepository organizationRepository;
     private final PolicyRepository policyRepository;
     private final AuthorizationService authorizationService;
     private final ObjectMapper objectMapper;
@@ -96,155 +96,151 @@ public class MemberExcelImportService {
 
     /**
      * Mandatory columns (at least one variant required)
-     * card_number is the ONLY unique identifier for matching members
-     * 
-     * Enhanced with comprehensive Arabic column names from Odoo exports
      */
     private static final List<String[]> MANDATORY_COLUMNS = List.of(
-            // Card Number (UNIQUE KEY) - رقم البطاقة
-            new String[]{
-                "card_number", "cardnumber", "card number", "member_no", "member_number", 
-                "insurance_no", "insurance_number", "membership_no", "membership_number",
-                "رقم البطاقة", "رقم العضوية", "رقم التأمين", "رقم العضو", "رقم بطاقة التأمين",
-                "رقم الكرت", "رقم البوليصة الفردي"
+            // Full Name - الاسم الكامل (MANDATORY)
+            new String[] {
+                    "full_name", "name", "full_name_arabic", "fullname", "member_name",
+                    "الاسم الكامل", "الاسم", "اسم الموظف", "الاسم بالعربية", "اسم العضو",
+                    "الاسم الثلاثي", "الاسم الرباعي", "اسم المؤمن عليه"
             },
-            // Full Name - الاسم الكامل
-            new String[]{
-                "full_name", "name", "full_name_arabic", "fullname", "member_name",
-                "الاسم الكامل", "الاسم", "اسم الموظف", "الاسم بالعربية", "اسم العضو",
-                "الاسم الثلاثي", "الاسم الرباعي", "اسم المؤمن عليه"
-            },
-            // Employer - جهة العمل (Optional for lenient validation)
-            new String[]{
-                "employer", "company", "company_id", "company_name", "employer_name",
-                "work_company", "organization",
-                "جهة العمل", "الشركة", "اسم الشركة", "المؤسسة", "جهة الانتساب",
-                "صاحب العمل", "الجهة", "مكان العمل"
+            // Employer - جهة العمل (MANDATORY)
+            new String[] {
+                    "employer", "company", "company_id", "company_name", "employer_name",
+                    "work_company", "organization", "employer_code",
+                    "جهة العمل", "الشركة", "اسم الشركة", "المؤسسة", "جهة الانتساب",
+                    "صاحب العمل", "الجهة", "مكان العمل", "كود الجهة"
             },
             // Policy - الوثيقة (Optional)
-            new String[]{
-                "policy", "policy_number", "policy_id", "policy_no", "insurance_policy",
-                "رقم الوثيقة", "الوثيقة", "رقم البوليصة", "وثيقة التأمين", "رقم العقد"
-            }
-    );
+            new String[] {
+                    "policy", "policy_number", "policy_id", "policy_no", "insurance_policy",
+                    "رقم الوثيقة", "الوثيقة", "رقم البوليصة", "وثيقة التأمين", "رقم العقد"
+            });
 
     /**
      * Optional core field mappings with enhanced Arabic support
-     * NOTE: national_id/civil_id is OPTIONAL - card_number is the unique identifier
+     * NOTE: national_id/civil_id is OPTIONAL
+     * NOTE: card_number is IGNORED
      */
     private static final Map<String, String[]> OPTIONAL_FIELD_MAPPINGS = Map.ofEntries(
             // Civil ID - الرقم الوطني
-            Map.entry("civilId", new String[]{
-                "national_id", "identification_id", "civil_id", "civilid", "national_number",
-                "id_number", "identity_number",
-                "الرقم الوطني", "رقم الهوية", "الرقم المدني", "رقم البطاقة الشخصية",
-                "رقم الهوية الوطنية"
+            Map.entry("civilId", new String[] {
+                    "national_id", "identification_id", "civil_id", "civilid", "national_number",
+                    "id_number", "identity_number",
+                    "الرقم الوطني", "رقم الهوية", "الرقم المدني", "رقم البطاقة الشخصية",
+                    "رقم الهوية الوطنية"
+            }),
+            // Card Number / Barcode - IGNORED
+            Map.entry("cardNumber", new String[] {
+                    "card_number", "cardnumber", "card number", "member_no", "member_number",
+                    "insurance_no", "insurance_number", "membership_no", "membership_number",
+                    "barcode", "badge_id", "employee_id",
+                    "رقم البطاقة", "رقم العضوية", "رقم التأمين", "رقم العضو", "رقم بطاقة التأمين",
+                    "الباركود", "رقم الشارة"
             }),
             // Full Name English - الاسم بالإنجليزية
-            Map.entry("fullNameEnglish", new String[]{
-                "full_name_english", "name_english", "english_name", "name_en",
-                "الاسم بالإنجليزية", "الاسم الانجليزي"
+            Map.entry("fullNameEnglish", new String[] {
+                    "full_name_english", "name_english", "english_name", "name_en",
+                    "الاسم بالإنجليزية", "الاسم الانجليزي"
             }),
             // Birth Date - تاريخ الميلاد
-            Map.entry("birthDate", new String[]{
-                "birth_date", "birthday", "dob", "date_of_birth", "birthdate",
-                "تاريخ الميلاد", "تاريخ الولادة", "الميلاد"
+            Map.entry("birthDate", new String[] {
+                    "birth_date", "birthday", "dob", "date_of_birth", "birthdate",
+                    "تاريخ الميلاد", "تاريخ الولادة", "الميلاد"
             }),
             // Gender - الجنس
-            Map.entry("gender", new String[]{
-                "gender", "sex",
-                "الجنس", "النوع"
+            Map.entry("gender", new String[] {
+                    "gender", "sex",
+                    "الجنس", "النوع"
             }),
             // Phone - الهاتف
-            Map.entry("phone", new String[]{
-                "phone", "mobile", "mobile_phone", "work_phone", "phone_number",
-                "telephone", "tel", "cell", "cellphone",
-                "الهاتف", "الجوال", "رقم الهاتف", "رقم الجوال", "هاتف العمل",
-                "الموبايل", "رقم التواصل"
+            Map.entry("phone", new String[] {
+                    "phone", "mobile", "mobile_phone", "work_phone", "phone_number",
+                    "telephone", "tel", "cell", "cellphone",
+                    "الهاتف", "الجوال", "رقم الهاتف", "رقم الجوال", "هاتف العمل",
+                    "الموبايل", "رقم التواصل"
             }),
             // Email - البريد الإلكتروني
-            Map.entry("email", new String[]{
-                "email", "work_email", "email_address", "e_mail",
-                "البريد الإلكتروني", "الإيميل", "البريد"
+            Map.entry("email", new String[] {
+                    "email", "work_email", "email_address", "e_mail",
+                    "البريد الإلكتروني", "الإيميل", "البريد"
             }),
             // Nationality - الجنسية
-            Map.entry("nationality", new String[]{
-                "nationality", "country", "country_id",
-                "الجنسية", "البلد"
+            Map.entry("nationality", new String[] {
+                    "nationality", "country", "country_id",
+                    "الجنسية", "البلد"
             }),
             // Employee Number - رقم الموظف
-            Map.entry("employeeNumber", new String[]{
-                "employee_number", "employee_id", "badge_id", "barcode", "emp_no",
-                "employee_code", "staff_id",
-                "رقم الموظف", "الرقم الوظيفي", "رقم العمل", "كود الموظف"
+            Map.entry("employeeNumber", new String[] {
+                    "employee_number", "employee_id", "badge_id", "barcode", "emp_no",
+                    "employee_code", "staff_id",
+                    "رقم الموظف", "الرقم الوظيفي", "رقم العمل", "كود الموظف"
             }),
             // Address - العنوان
-            Map.entry("address", new String[]{
-                "address", "home_address", "street", "location",
-                "العنوان", "عنوان السكن", "الموقع"
+            Map.entry("address", new String[] {
+                    "address", "home_address", "street", "location",
+                    "العنوان", "عنوان السكن", "الموقع"
             }),
             // Marital Status - الحالة الاجتماعية
-            Map.entry("maritalStatus", new String[]{
-                "marital_status", "marital", "status_marital",
-                "الحالة الاجتماعية", "الحالة الزوجية"
-            })
-    );
+            Map.entry("maritalStatus", new String[] {
+                    "marital_status", "marital", "status_marital",
+                    "الحالة الاجتماعية", "الحالة الزوجية"
+            }));
 
     /**
      * Columns that go to attributes (Odoo fields) with enhanced Arabic support
      */
     private static final Map<String, String[]> ATTRIBUTE_MAPPINGS = Map.ofEntries(
             // Job Title - المسمى الوظيفي
-            Map.entry("job_title", new String[]{
-                "job_title", "job_id", "job", "position", "title", "job_position",
-                "الوظيفة", "المسمى الوظيفي", "المنصب", "الدرجة الوظيفية"
+            Map.entry("job_title", new String[] {
+                    "job_title", "job_id", "job", "position", "title", "job_position",
+                    "الوظيفة", "المسمى الوظيفي", "المنصب", "الدرجة الوظيفية"
             }),
             // Department - القسم
-            Map.entry("department", new String[]{
-                "department", "department_id", "dept", "division", "section",
-                "القسم", "الإدارة", "الوحدة", "الفرع"
+            Map.entry("department", new String[] {
+                    "department", "department_id", "dept", "division", "section",
+                    "القسم", "الإدارة", "الوحدة", "الفرع"
             }),
             // Work Location - موقع العمل
-            Map.entry("work_location", new String[]{
-                "work_location", "work_location_id", "location", "office", "branch",
-                "موقع العمل", "مكان العمل", "الفرع", "المكتب"
+            Map.entry("work_location", new String[] {
+                    "work_location", "work_location_id", "location", "office", "branch",
+                    "موقع العمل", "مكان العمل", "الفرع", "المكتب"
             }),
             // Grade - الدرجة
-            Map.entry("grade", new String[]{
-                "grade", "x_grade", "level", "rank", "class",
-                "الدرجة", "المستوى", "الرتبة", "الفئة"
+            Map.entry("grade", new String[] {
+                    "grade", "x_grade", "level", "rank", "class",
+                    "الدرجة", "المستوى", "الرتبة", "الفئة"
             }),
             // Manager - المدير
-            Map.entry("manager", new String[]{
-                "manager", "parent_id", "manager_name", "supervisor", "direct_manager",
-                "المدير", "المسؤول", "المدير المباشر"
+            Map.entry("manager", new String[] {
+                    "manager", "parent_id", "manager_name", "supervisor", "direct_manager",
+                    "المدير", "المسؤول", "المدير المباشر"
             }),
             // Cost Center - مركز التكلفة
-            Map.entry("cost_center", new String[]{
-                "cost_center", "x_cost_center", "cost_code",
-                "مركز التكلفة", "رمز التكلفة"
+            Map.entry("cost_center", new String[] {
+                    "cost_center", "x_cost_center", "cost_code",
+                    "مركز التكلفة", "رمز التكلفة"
             }),
             // Start Date - تاريخ البداية
-            Map.entry("start_date", new String[]{
-                "start_date", "join_date", "hire_date", "employment_date",
-                "تاريخ البداية", "تاريخ الالتحاق", "تاريخ التعيين"
+            Map.entry("start_date", new String[] {
+                    "start_date", "join_date", "hire_date", "employment_date",
+                    "تاريخ البداية", "تاريخ الالتحاق", "تاريخ التعيين"
             }),
             // End Date - تاريخ النهاية
-            Map.entry("end_date", new String[]{
-                "end_date", "termination_date", "leave_date",
-                "تاريخ النهاية", "تاريخ الانتهاء"
+            Map.entry("end_date", new String[] {
+                    "end_date", "termination_date", "leave_date",
+                    "تاريخ النهاية", "تاريخ الانتهاء"
             }),
             // Benefit Class - فئة المنافع
-            Map.entry("benefit_class", new String[]{
-                "benefit_class", "class", "coverage_class", "plan_class",
-                "فئة المنافع", "فئة التغطية", "الفئة"
+            Map.entry("benefit_class", new String[] {
+                    "benefit_class", "class", "coverage_class", "plan_class",
+                    "فئة المنافع", "فئة التغطية", "الفئة"
             }),
             // Notes - ملاحظات
-            Map.entry("notes", new String[]{
-                "notes", "remarks", "comment", "comments",
-                "ملاحظات", "تعليقات"
-            })
-    );
+            Map.entry("notes", new String[] {
+                    "notes", "remarks", "comment", "comments",
+                    "ملاحظات", "تعليقات"
+            }));
 
     // ═══════════════════════════════════════════════════════════════════════════
     // PREVIEW (Parse and Validate without committing)
@@ -274,10 +270,10 @@ public class MemberExcelImportService {
         int errorCount = 0;
 
         try (InputStream is = file.getInputStream();
-             Workbook workbook = new XSSFWorkbook(is)) {
+                Workbook workbook = new XSSFWorkbook(is)) {
 
             Sheet sheet = workbook.getSheetAt(0);
-            int totalRows = sheet.getLastRowNum();  // Excluding header
+            int totalRows = sheet.getLastRowNum(); // Excluding header
 
             // Parse header row
             Row headerRow = sheet.getRow(0);
@@ -291,7 +287,8 @@ public class MemberExcelImportService {
             for (int i = 0; i < headerRow.getLastCellNum(); i++) {
                 Cell cell = headerRow.getCell(i);
                 String colName = getCellStringValue(cell);
-                if (colName == null) colName = "";
+                if (colName == null)
+                    colName = "";
                 columnIndexToName.put(i, colName.trim().toLowerCase());
                 detectedColumns.add(colName.trim());
 
@@ -299,7 +296,8 @@ public class MemberExcelImportService {
                 mapColumnToField(colName.trim().toLowerCase(), i, fieldToColumnIndex, columnMappings);
             }
 
-            // Validate mandatory columns exist (only card_number and full_name are truly mandatory)
+            // Validate mandatory columns exist (only card_number and full_name are truly
+            // mandatory)
             validateMandatoryColumns(fieldToColumnIndex, validationErrors);
 
             // Parse data rows (limit preview to 50 rows)
@@ -308,37 +306,29 @@ public class MemberExcelImportService {
 
             for (int rowNum = 1; rowNum <= totalRows; rowNum++) {
                 Row row = sheet.getRow(rowNum);
-                if (row == null || isEmptyRow(row)) continue;
+                if (row == null || isEmptyRow(row))
+                    continue;
 
-                MemberImportRowDto rowDto = parseRow(row, rowNum, fieldToColumnIndex, 
+                MemberImportRowDto rowDto = parseRow(row, rowNum, fieldToColumnIndex,
                         columnIndexToName, validationErrors, seenCardNumbers);
 
                 // Determine row status based on validation results
                 boolean hasErrors = rowDto.getErrors() != null && !rowDto.getErrors().isEmpty();
                 boolean hasWarnings = rowDto.getWarnings() != null && !rowDto.getWarnings().isEmpty();
-                
+
                 if (hasErrors) {
                     // Critical errors - row will be skipped
                     rowDto.setStatus("ERROR");
                     errorCount++;
                 } else {
-                    // Check if update or new based on card_number (ONLY unique identifier)
-                    if (rowDto.getCardNumber() != null && !rowDto.getCardNumber().isBlank()) {
-                        boolean exists = memberRepository.existsByCardNumber(rowDto.getCardNumber());
-                        if (exists) {
-                            rowDto.setStatus(hasWarnings ? "WARNING" : "UPDATE");
-                            updateCount++;
-                        } else {
-                            rowDto.setStatus(hasWarnings ? "WARNING" : "NEW");
-                            newCount++;
-                        }
-                        if (hasWarnings) {
-                            warningCount++;
-                        }
-                    } else {
-                        // Should not reach here if validation works correctly
-                        rowDto.setStatus("ERROR");
-                        errorCount++;
+                    // Phase 1 Enterprise Fix: ALWAYS NEW
+                    // We treat every row as a new member insertion.
+                    // Identity is managed by auto-generated card numbers.
+                    rowDto.setStatus(hasWarnings ? "WARNING" : "NEW");
+                    newCount++;
+
+                    if (hasWarnings) {
+                        warningCount++;
                     }
                 }
 
@@ -351,7 +341,7 @@ public class MemberExcelImportService {
             if (totalRows > previewLimit) {
                 warnings.add(String.format("عرض أول %d صف من إجمالي %d صف", previewLimit, totalRows));
             }
-            
+
             // Summary info
             int importableCount = newCount + updateCount;
             if (warningCount > 0) {
@@ -373,7 +363,7 @@ public class MemberExcelImportService {
                     .columnMappings(columnMappings)
                     .previewRows(previewRows)
                     .validationErrors(validationErrors)
-                    .canProceed(importableCount > 0)  // Can proceed if any rows are valid
+                    .canProceed(importableCount > 0) // Can proceed if any rows are valid
                     .matchKeyUsed("CARD_NUMBER")
                     .warnings(warnings)
                     .build();
@@ -392,7 +382,7 @@ public class MemberExcelImportService {
         log.info("📥 Executing member import: batchId={}, file={}", batchId, file.getOriginalFilename());
 
         User currentUser = authorizationService.getCurrentUser();
-        
+
         // Create import log
         MemberImportLog importLog = MemberImportLog.builder()
                 .importBatchId(batchId)
@@ -413,7 +403,7 @@ public class MemberExcelImportService {
         int errorCount = 0;
 
         try (InputStream is = file.getInputStream();
-             Workbook workbook = new XSSFWorkbook(is)) {
+                Workbook workbook = new XSSFWorkbook(is)) {
 
             Sheet sheet = workbook.getSheetAt(0);
             int totalRows = sheet.getLastRowNum();
@@ -442,9 +432,9 @@ public class MemberExcelImportService {
                 totalProcessed++;
 
                 try {
-                    ImportRowResult result = processRow(row, rowNum, fieldToColumnIndex, 
+                    ImportRowResult result = processRow(row, rowNum, fieldToColumnIndex,
                             columnIndexToName, importLog);
-                    
+
                     if (result.isCreated()) {
                         createdCount++;
                         importLog.incrementCreated();
@@ -459,12 +449,12 @@ public class MemberExcelImportService {
                 } catch (Exception e) {
                     errorCount++;
                     importLog.incrementError();
-                    
+
                     String rowJson = rowToJson(row, columnIndexToName);
                     MemberImportError error = MemberImportError.systemError(
                             importLog, rowNum, e.getMessage(), rowJson);
                     importErrorRepository.save(error);
-                    
+
                     errors.add(ImportErrorDetailDto.builder()
                             .rowNumber(rowNum)
                             .errorType("SYSTEM")
@@ -481,8 +471,8 @@ public class MemberExcelImportService {
             importLog.markCompleted();
             importLogRepository.save(importLog);
 
-            double successRate = totalProcessed > 0 
-                    ? (double)(createdCount + updatedCount) / totalProcessed * 100 
+            double successRate = totalProcessed > 0
+                    ? (double) (createdCount + updatedCount) / totalProcessed * 100
                     : 0;
 
             String message = String.format(
@@ -518,14 +508,17 @@ public class MemberExcelImportService {
     // HELPER METHODS
     // ═══════════════════════════════════════════════════════════════════════════
 
-    private void mapColumnToField(String colName, int index, 
+    private void mapColumnToField(String colName, int index,
             Map<String, Integer> fieldToColumnIndex, Map<String, String> columnMappings) {
-        
-        // Mandatory columns - card_number is the UNIQUE identifier (index 0)
+
+        // Mandatory columns mapping based on new order:
+        // 0: Full Name
+        // 1: Employer
+        // 2: Policy
         for (int i = 0; i < MANDATORY_COLUMNS.size(); i++) {
             String[] variants = MANDATORY_COLUMNS.get(i);
-            String fieldName = i == 0 ? "cardNumber" : i == 1 ? "fullName" : i == 2 ? "employer" : "policy";
-            
+            String fieldName = i == 0 ? "fullName" : i == 1 ? "employer" : "policy";
+
             for (String variant : variants) {
                 if (colName.equalsIgnoreCase(variant) || colName.contains(variant)) {
                     fieldToColumnIndex.put(fieldName, index);
@@ -567,15 +560,8 @@ public class MemberExcelImportService {
 
     private void validateMandatoryColumns(Map<String, Integer> fieldToColumnIndex,
             List<ImportValidationErrorDto> errors) {
-        
-        // card_number is the ONLY unique identifier - MANDATORY
-        if (!fieldToColumnIndex.containsKey("cardNumber")) {
-            errors.add(ImportValidationErrorDto.builder()
-                    .rowNumber(0)
-                    .field("header")
-                    .message("Missing mandatory column: card_number / member_no / insurance_no (رقم البطاقة)")
-                    .build());
-        }
+
+        // Full Name and Employer are MANDATORY
         if (!fieldToColumnIndex.containsKey("fullName")) {
             errors.add(ImportValidationErrorDto.builder()
                     .rowNumber(0)
@@ -592,16 +578,16 @@ public class MemberExcelImportService {
         }
     }
 
-    private MemberImportRowDto parseRow(Row row, int rowNum, 
+    private MemberImportRowDto parseRow(Row row, int rowNum,
             Map<String, Integer> fieldToColumnIndex,
             Map<Integer, String> columnIndexToName,
             List<ImportValidationErrorDto> validationErrors,
             Set<String> seenCardNumbers) {
 
-        List<String> rowErrors = new ArrayList<>();    // Critical errors - block import
-        List<String> rowWarnings = new ArrayList<>();  // Warnings - allow import
+        List<String> rowErrors = new ArrayList<>(); // Critical errors - block import
+        List<String> rowWarnings = new ArrayList<>(); // Warnings - allow import
         Map<String, String> attributes = new HashMap<>();
-        String status = "NEW";  // Default status
+        String status = "NEW"; // Default status
         boolean hasError = false;
         boolean hasWarning = false;
 
@@ -614,30 +600,6 @@ public class MemberExcelImportService {
         // ═══════════════════════════════════════════════════════════════════════════
         // CRITICAL VALIDATIONS (ERROR) - These block import
         // ═══════════════════════════════════════════════════════════════════════════
-        
-        // card_number is MANDATORY - unique identifier
-        if (cardNumber == null || cardNumber.isBlank()) {
-            rowErrors.add("رقم البطاقة مطلوب (Card number is required)");
-            validationErrors.add(ImportValidationErrorDto.builder()
-                    .rowNumber(rowNum)
-                    .field("card_number")
-                    .message("رقم البطاقة مطلوب - Card number is required")
-                    .severity("ERROR")
-                    .build());
-            hasError = true;
-        } else if (seenCardNumbers.contains(cardNumber)) {
-            rowErrors.add("رقم بطاقة مكرر في الملف: " + cardNumber);
-            validationErrors.add(ImportValidationErrorDto.builder()
-                    .rowNumber(rowNum)
-                    .field("card_number")
-                    .value(cardNumber)
-                    .message("رقم بطاقة مكرر في الملف - Duplicate card number in file")
-                    .severity("ERROR")
-                    .build());
-            hasError = true;
-        } else if (cardNumber != null) {
-            seenCardNumbers.add(cardNumber);
-        }
 
         // full_name is MANDATORY
         if (fullName == null || fullName.isBlank()) {
@@ -654,24 +616,25 @@ public class MemberExcelImportService {
         // ═══════════════════════════════════════════════════════════════════════════
         // NON-CRITICAL VALIDATIONS (WARNING) - These allow import but flag issues
         // ═══════════════════════════════════════════════════════════════════════════
-        
-        // employer is OPTIONAL - row can be imported without it (WARNING)
+
+        // employer is MANDATORY (Enterprise Fix)
         if (employerName == null || employerName.isBlank()) {
-            rowWarnings.add("جهة العمل غير محددة - سيتم استخدام القيمة الافتراضية");
+            rowErrors.add("جهة العمل مطلوبة (Employer is required)");
             validationErrors.add(ImportValidationErrorDto.builder()
                     .rowNumber(rowNum)
                     .field("employer")
-                    .message("جهة العمل غير محددة - Employer not specified, will use default")
-                    .severity("WARNING")
+                    .message("جهة العمل مطلوبة - Employer is required")
+                    .severity("ERROR")
                     .build());
-            hasWarning = true;
+            hasError = true;
         } else {
             // Check if employer exists
             Optional<Employer> employerOpt = employerRepository.findByNameIgnoreCase(employerName);
             if (employerOpt.isEmpty()) {
                 List<Employer> matches = employerRepository.findByNameContainingIgnoreCase(employerName);
                 if (matches.isEmpty()) {
-                    rowWarnings.add("جهة العمل غير موجودة: " + employerName + " - سيتم إنشاء سجل جديد أو تعيين قيمة افتراضية");
+                    rowWarnings.add(
+                            "جهة العمل غير موجودة: " + employerName + " - يرجى التأكد من الاسم أو الكود");
                     validationErrors.add(ImportValidationErrorDto.builder()
                             .rowNumber(rowNum)
                             .field("employer")
@@ -681,6 +644,15 @@ public class MemberExcelImportService {
                             .build());
                     hasWarning = true;
                 }
+            }
+        }
+
+        // Card Number check (Info only, or duplicate check within file?)
+        if (cardNumber != null && !cardNumber.isBlank()) {
+            if (seenCardNumbers.contains(cardNumber)) {
+                rowWarnings.add("رقم بطاقة مكرر في الملف: " + cardNumber + " (سيتم تجاهله وإنشاء رقم جديد)");
+            } else {
+                seenCardNumbers.add(cardNumber);
             }
         }
 
@@ -714,7 +686,7 @@ public class MemberExcelImportService {
         if (hasError) {
             status = "ERROR";
         } else if (hasWarning) {
-            status = "WARNING";  // Has warnings but can be imported
+            status = "WARNING"; // Has warnings but can be imported
         }
         // Status will be updated to NEW or UPDATE after checking existence
 
@@ -750,7 +722,7 @@ public class MemberExcelImportService {
         String fullName = getFieldValue(row, fieldToColumnIndex, "fullName");
         String employerName = getFieldValue(row, fieldToColumnIndex, "employer");
         String policyNumber = getFieldValue(row, fieldToColumnIndex, "policy");
-        
+
         // Optional: civil_id is no longer the matching key
         String civilId = getFieldValue(row, fieldToColumnIndex, "civilId");
 
@@ -764,8 +736,11 @@ public class MemberExcelImportService {
             return ImportRowResult.skipped();
         }
 
-        // LENIENT: employer is optional - try to find it, use first available if not specified
+        // LENIENT: employer is optional - try to find it, use first available if not
+        // specified
         Employer employer = null;
+        Organization employerOrg = null;
+
         if (employerName != null && !employerName.isBlank()) {
             Optional<Employer> employerOpt = employerRepository.findByNameIgnoreCase(employerName);
             if (employerOpt.isEmpty()) {
@@ -775,23 +750,29 @@ public class MemberExcelImportService {
                     employer = matches.get(0);
                     log.debug("✅ Partial employer match for '{}' → '{}'", employerName, employer.getNameAr());
                 } else {
-                    log.warn("⚠️ Row {}: Employer not found '{}', will use default", rowNum, employerName);
+                    log.warn("⚠️ Row {}: Employer not found '{}'.", rowNum, employerName);
                 }
             } else {
                 employer = employerOpt.get();
             }
         }
-        
-        // If no employer found, try to get first available
-        if (employer == null) {
-            List<Employer> allEmployers = employerRepository.findAll();
-            if (!allEmployers.isEmpty()) {
-                employer = allEmployers.get(0);
-                log.debug("ℹ️ Row {}: Using default employer '{}'", rowNum, employer.getNameAr());
+
+        // Phase 1 Enterprise Fix: Organization is MANDATORY
+        if (employer != null) {
+            // Find corresponding Organization
+            Optional<Organization> orgOpt = organizationRepository.findByCodeAndType(
+                    employer.getCode(), OrganizationType.EMPLOYER);
+
+            if (orgOpt.isPresent()) {
+                employerOrg = orgOpt.get();
             } else {
-                log.warn("⚠️ Row {}: No employers in system, skipping row", rowNum);
-                return ImportRowResult.skipped();
+                log.error("❌ Row {}: Organization not found for Employer Code '{}'", rowNum, employer.getCode());
+                return ImportRowResult.skipped(); // Cannot create member without Organization
             }
+        } else {
+            // If employer lookup failed entirely
+            log.error("❌ Row {}: Employer '{}' not found in system.", rowNum, employerName);
+            return ImportRowResult.skipped();
         }
 
         // Find policy (optional - no skip if not found)
@@ -803,32 +784,25 @@ public class MemberExcelImportService {
             }
         }
 
-        // Check if member exists by card_number (ONLY unique identifier)
-        Optional<Member> existingOpt = memberRepository.findByCardNumber(cardNumber);
-        Member member;
-        boolean isNew = existingOpt.isEmpty();
+        // Phase 1 Enterprise Fix: ALWAYS CREATE NEW MEMBER
+        // Ignore card_number for matching. Auto-generate it.
+        // civil_id is optional.
 
-        if (isNew) {
-            member = Member.builder()
-                    .cardNumber(cardNumber)
-                    .civilId(civilId)  // Optional - store if provided
-                    .fullNameArabic(fullName)
-                    .employer(employer)
-                    .policy(policy)
-                    .status(MemberStatus.ACTIVE)
-                    .active(true)
-                    .build();
-        } else {
-            member = existingOpt.get();
-            member.setFullNameArabic(fullName);
-            member.setEmployer(employer);
-            if (civilId != null && !civilId.isBlank()) {
-                member.setCivilId(civilId);  // Update civil_id if provided
-            }
-            if (policy != null) {
-                member.setPolicy(policy);
-            }
-        }
+        Member member = Member.builder()
+                // .cardNumber(cardNumber) // Don't set card number, let system generate valid
+                // one
+                .civilId(civilId) // Optional
+                .fullNameArabic(fullName)
+                // .employer(employer) // Legacy: Set to null explicitly
+                .employerOrganization(employerOrg) // Mandatory New Field
+                .policy(policy)
+                .status(MemberStatus.ACTIVE)
+                .active(true)
+                .build();
+
+        member.setEmployer(null); // Explicitly nullify legacy field
+
+        boolean isNew = true; // Always new
 
         // Optional core fields
         String fullNameEnglish = getFieldValue(row, fieldToColumnIndex, "fullNameEnglish");
@@ -855,7 +829,7 @@ public class MemberExcelImportService {
         if (employeeNumber != null && !employeeNumber.isBlank()) {
             member.setEmployeeNumber(employeeNumber);
         }
-        
+
         // Address field
         String address = getFieldValue(row, fieldToColumnIndex, "address");
         if (address != null && !address.isBlank()) {
@@ -892,7 +866,7 @@ public class MemberExcelImportService {
             if (entry.getKey().startsWith("attr:")) {
                 String attrCode = entry.getKey().substring(5);
                 String attrValue = getCellStringValue(row.getCell(entry.getValue()));
-                
+
                 if (attrValue != null && !attrValue.isBlank()) {
                     saveOrUpdateAttribute(member, attrCode, attrValue, AttributeSource.IMPORT);
                 }
@@ -905,7 +879,7 @@ public class MemberExcelImportService {
     private void saveOrUpdateAttribute(Member member, String code, String value, AttributeSource source) {
         Optional<MemberAttribute> existing = attributeRepository
                 .findByMemberIdAndAttributeCode(member.getId(), code);
-        
+
         MemberAttribute attr;
         if (existing.isPresent()) {
             attr = existing.get();
@@ -924,13 +898,15 @@ public class MemberExcelImportService {
 
     private String getFieldValue(Row row, Map<String, Integer> fieldToColumnIndex, String field) {
         Integer colIndex = fieldToColumnIndex.get(field);
-        if (colIndex == null) return null;
+        if (colIndex == null)
+            return null;
         return getCellStringValue(row.getCell(colIndex));
     }
 
     private String getCellStringValue(Cell cell) {
-        if (cell == null) return null;
-        
+        if (cell == null)
+            return null;
+
         return switch (cell.getCellType()) {
             case STRING -> cell.getStringCellValue();
             case NUMERIC -> {
@@ -965,7 +941,8 @@ public class MemberExcelImportService {
     }
 
     private Gender parseGender(String value) {
-        if (value == null) return null;
+        if (value == null)
+            return null;
         String v = value.toLowerCase().trim();
         if (v.contains("male") || v.contains("ذكر") || v.equals("m")) {
             return Gender.MALE;
@@ -977,7 +954,8 @@ public class MemberExcelImportService {
     }
 
     private LocalDate parseDate(String value) {
-        if (value == null || value.isBlank()) return null;
+        if (value == null || value.isBlank())
+            return null;
         try {
             // Try ISO format
             return LocalDate.parse(value);
@@ -989,7 +967,8 @@ public class MemberExcelImportService {
                     int day = Integer.parseInt(parts[0]);
                     int month = Integer.parseInt(parts[1]);
                     int year = Integer.parseInt(parts[2]);
-                    if (year < 100) year += 2000;
+                    if (year < 100)
+                        year += 2000;
                     return LocalDate.of(year, month, day);
                 }
             } catch (Exception e2) {
@@ -1028,12 +1007,28 @@ public class MemberExcelImportService {
             this.skipped = skipped;
         }
 
-        static ImportRowResult created() { return new ImportRowResult(true, false, false); }
-        static ImportRowResult updated() { return new ImportRowResult(false, true, false); }
-        static ImportRowResult skipped() { return new ImportRowResult(false, false, true); }
+        static ImportRowResult created() {
+            return new ImportRowResult(true, false, false);
+        }
 
-        boolean isCreated() { return created; }
-        boolean isUpdated() { return updated; }
-        boolean isSkipped() { return skipped; }
+        static ImportRowResult updated() {
+            return new ImportRowResult(false, true, false);
+        }
+
+        static ImportRowResult skipped() {
+            return new ImportRowResult(false, false, true);
+        }
+
+        boolean isCreated() {
+            return created;
+        }
+
+        boolean isUpdated() {
+            return updated;
+        }
+
+        boolean isSkipped() {
+            return skipped;
+        }
     }
 }

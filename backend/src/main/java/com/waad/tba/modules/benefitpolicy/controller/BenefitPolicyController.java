@@ -27,21 +27,21 @@ import java.util.List;
  * REST Controller for Benefit Policy management.
  * 
  * Endpoints:
- * - GET    /api/benefit-policies                     - List all (paginated)
- * - GET    /api/benefit-policies/{id}                - Get by ID
- * - GET    /api/benefit-policies/code/{code}         - Get by policy code
- * - GET    /api/benefit-policies/employer/{id}       - List by employer
- * - GET    /api/benefit-policies/status/{status}     - List by status
- * - GET    /api/benefit-policies/effective           - Get effective for employer on date
- * - GET    /api/benefit-policies/selector            - Selector list for dropdowns
- * - GET    /api/benefit-policies/expiring            - Get policies expiring soon
- * - POST   /api/benefit-policies                     - Create new
- * - PUT    /api/benefit-policies/{id}                - Update
- * - POST   /api/benefit-policies/{id}/activate       - Activate policy
- * - POST   /api/benefit-policies/{id}/deactivate     - Deactivate policy
- * - POST   /api/benefit-policies/{id}/suspend        - Suspend policy
- * - POST   /api/benefit-policies/{id}/cancel         - Cancel policy
- * - DELETE /api/benefit-policies/{id}                - Soft delete
+ * - GET /api/benefit-policies - List all (paginated)
+ * - GET /api/benefit-policies/{id} - Get by ID
+ * - GET /api/benefit-policies/code/{code} - Get by policy code
+ * - GET /api/benefit-policies/employer/{id} - List by employer
+ * - GET /api/benefit-policies/status/{status} - List by status
+ * - GET /api/benefit-policies/effective - Get effective for employer on date
+ * - GET /api/benefit-policies/selector - Selector list for dropdowns
+ * - GET /api/benefit-policies/expiring - Get policies expiring soon
+ * - POST /api/benefit-policies - Create new
+ * - PUT /api/benefit-policies/{id} - Update
+ * - POST /api/benefit-policies/{id}/activate - Activate policy
+ * - POST /api/benefit-policies/{id}/deactivate - Deactivate policy
+ * - POST /api/benefit-policies/{id}/suspend - Suspend policy
+ * - POST /api/benefit-policies/{id}/cancel - Cancel policy
+ * - DELETE /api/benefit-policies/{id} - Soft delete
  */
 @Slf4j
 @RestController
@@ -64,21 +64,21 @@ public class BenefitPolicyController {
             @Parameter(description = "Page size") @RequestParam(defaultValue = "20") int size,
             @Parameter(description = "Sort field") @RequestParam(defaultValue = "createdAt") String sortBy,
             @Parameter(description = "Sort direction") @RequestParam(defaultValue = "DESC") String sortDir) {
-        
-        log.info("[BENEFIT-POLICIES] GET /api/benefit-policies - page={}, size={}, sortBy={}, sortDir={}", 
+
+        log.info("[BENEFIT-POLICIES] GET /api/benefit-policies - page={}, size={}, sortBy={}, sortDir={}",
                 page, size, sortBy, sortDir);
-        
+
         Sort sort = Sort.by(Sort.Direction.fromString(sortDir), sortBy);
         Pageable pageable = PageRequest.of(page, size, sort);
-        
+
         Page<BenefitPolicyResponseDto> result = benefitPolicyService.findAll(pageable);
-        log.info("[BENEFIT-POLICIES] Returning {} records (totalElements: {}, totalPages: {})", 
+        log.info("[BENEFIT-POLICIES] Returning {} records (totalElements: {}, totalPages: {})",
                 result.getContent().size(), result.getTotalElements(), result.getTotalPages());
-        
+
         return ResponseEntity.ok(ApiResponse.success("Benefit policies retrieved", result));
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/{id:\\d+}")
     @PreAuthorize("hasAnyAuthority('benefit_policies.view', 'SUPER_ADMIN')")
     @Operation(summary = "Get benefit policy by ID")
     public ResponseEntity<ApiResponse<BenefitPolicyResponseDto>> findById(@PathVariable Long id) {
@@ -110,7 +110,7 @@ public class BenefitPolicyController {
             @PathVariable Long employerOrgId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-        
+
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
         Page<BenefitPolicyResponseDto> result = benefitPolicyService.findByEmployer(employerOrgId, pageable);
         return ResponseEntity.ok(ApiResponse.success("Benefit policies for employer retrieved", result));
@@ -121,7 +121,7 @@ public class BenefitPolicyController {
     @Operation(summary = "List benefit policies by status")
     public ResponseEntity<ApiResponse<List<BenefitPolicyResponseDto>>> findByStatus(
             @PathVariable String status) {
-        
+
         BenefitPolicyStatus policyStatus;
         try {
             policyStatus = BenefitPolicyStatus.valueOf(status.toUpperCase());
@@ -129,7 +129,7 @@ public class BenefitPolicyController {
             return ResponseEntity.badRequest()
                     .body(ApiResponse.error("Invalid status: " + status));
         }
-        
+
         List<BenefitPolicyResponseDto> result = benefitPolicyService.findByStatus(policyStatus);
         return ResponseEntity.ok(ApiResponse.success("Benefit policies retrieved", result));
     }
@@ -139,13 +139,12 @@ public class BenefitPolicyController {
     @Operation(summary = "Get effective policy for employer on a date")
     public ResponseEntity<ApiResponse<BenefitPolicyResponseDto>> findEffective(
             @Parameter(description = "Employer organization ID") @RequestParam Long employerOrgId,
-            @Parameter(description = "Date to check (defaults to today)") 
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
-        
+            @Parameter(description = "Date to check (defaults to today)") @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+
         if (date == null) {
             date = LocalDate.now();
         }
-        
+
         BenefitPolicyResponseDto result = benefitPolicyService.findEffectiveForEmployer(employerOrgId, date);
         if (result == null) {
             return ResponseEntity.ok(ApiResponse.success("No effective policy found", null));
@@ -160,7 +159,7 @@ public class BenefitPolicyController {
             @RequestParam String q,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-        
+
         Pageable pageable = PageRequest.of(page, size);
         Page<BenefitPolicyResponseDto> result = benefitPolicyService.search(q, pageable);
         return ResponseEntity.ok(ApiResponse.success("Search results", result));
@@ -187,9 +186,8 @@ public class BenefitPolicyController {
     @PreAuthorize("hasAnyAuthority('benefit_policies.view', 'SUPER_ADMIN')")
     @Operation(summary = "Get policies expiring soon")
     public ResponseEntity<ApiResponse<List<BenefitPolicyResponseDto>>> getExpiringSoon(
-            @Parameter(description = "Number of days to check (default 30)") 
-            @RequestParam(defaultValue = "30") int days) {
-        
+            @Parameter(description = "Number of days to check (default 30)") @RequestParam(defaultValue = "30") int days) {
+
         List<BenefitPolicyResponseDto> result = benefitPolicyService.getPoliciesExpiringSoon(days);
         return ResponseEntity.ok(ApiResponse.success("Expiring policies retrieved", result));
     }
@@ -203,7 +201,7 @@ public class BenefitPolicyController {
     @Operation(summary = "Create a new benefit policy")
     public ResponseEntity<ApiResponse<BenefitPolicyResponseDto>> create(
             @Valid @RequestBody BenefitPolicyCreateDto dto) {
-        
+
         log.info("Creating benefit policy: {}", dto.getName());
         BenefitPolicyResponseDto result = benefitPolicyService.create(dto);
         return ResponseEntity.status(HttpStatus.CREATED)
@@ -214,13 +212,13 @@ public class BenefitPolicyController {
     // UPDATE ENDPOINT
     // ═══════════════════════════════════════════════════════════════════════════
 
-    @PutMapping("/{id}")
+    @PutMapping("/{id:\\d+}")
     @PreAuthorize("hasAnyAuthority('benefit_policies.update', 'SUPER_ADMIN')")
     @Operation(summary = "Update an existing benefit policy")
     public ResponseEntity<ApiResponse<BenefitPolicyResponseDto>> update(
             @PathVariable Long id,
             @Valid @RequestBody BenefitPolicyUpdateDto dto) {
-        
+
         log.info("Updating benefit policy: {}", id);
         BenefitPolicyResponseDto result = benefitPolicyService.update(id, dto);
         return ResponseEntity.ok(ApiResponse.success("Benefit policy updated successfully", result));
@@ -230,17 +228,16 @@ public class BenefitPolicyController {
     // STATUS ENDPOINTS
     // ═══════════════════════════════════════════════════════════════════════════
 
-    @PostMapping("/{id}/activate")
+    @PostMapping("/{id:\\d+}/activate")
     @PreAuthorize("hasAnyAuthority('benefit_policies.activate', 'SUPER_ADMIN')")
-    @Operation(summary = "Activate a benefit policy", 
-               description = "Only one active policy is allowed per employer per period")
+    @Operation(summary = "Activate a benefit policy", description = "Only one active policy is allowed per employer per period")
     public ResponseEntity<ApiResponse<BenefitPolicyResponseDto>> activate(@PathVariable Long id) {
         log.info("Activating benefit policy: {}", id);
         BenefitPolicyResponseDto result = benefitPolicyService.activate(id);
         return ResponseEntity.ok(ApiResponse.success("Benefit policy activated", result));
     }
 
-    @PostMapping("/{id}/deactivate")
+    @PostMapping("/{id:\\d+}/deactivate")
     @PreAuthorize("hasAnyAuthority('benefit_policies.deactivate', 'SUPER_ADMIN')")
     @Operation(summary = "Deactivate (expire) a benefit policy")
     public ResponseEntity<ApiResponse<BenefitPolicyResponseDto>> deactivate(@PathVariable Long id) {
@@ -249,7 +246,7 @@ public class BenefitPolicyController {
         return ResponseEntity.ok(ApiResponse.success("Benefit policy deactivated", result));
     }
 
-    @PostMapping("/{id}/suspend")
+    @PostMapping("/{id:\\d+}/suspend")
     @PreAuthorize("hasAnyAuthority('benefit_policies.suspend', 'SUPER_ADMIN')")
     @Operation(summary = "Suspend a benefit policy temporarily")
     public ResponseEntity<ApiResponse<BenefitPolicyResponseDto>> suspend(@PathVariable Long id) {
@@ -258,7 +255,7 @@ public class BenefitPolicyController {
         return ResponseEntity.ok(ApiResponse.success("Benefit policy suspended", result));
     }
 
-    @PostMapping("/{id}/cancel")
+    @PostMapping("/{id:\\d+}/cancel")
     @PreAuthorize("hasAnyAuthority('benefit_policies.cancel', 'SUPER_ADMIN')")
     @Operation(summary = "Cancel a benefit policy")
     public ResponseEntity<ApiResponse<BenefitPolicyResponseDto>> cancel(@PathVariable Long id) {
@@ -271,7 +268,7 @@ public class BenefitPolicyController {
     // DELETE ENDPOINT
     // ═══════════════════════════════════════════════════════════════════════════
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/{id:\\d+}")
     @PreAuthorize("hasAnyAuthority('benefit_policies.delete', 'SUPER_ADMIN')")
     @Operation(summary = "Soft delete a benefit policy")
     public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {

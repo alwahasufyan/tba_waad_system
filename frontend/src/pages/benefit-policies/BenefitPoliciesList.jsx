@@ -26,6 +26,7 @@ import RBACGuard from 'components/tba/RBACGuard';
 import DataTable from 'components/tba/DataTable';
 
 import { getBenefitPolicies } from 'services/api/benefit-policies.service';
+import { PERMISSIONS } from 'constants/permissions.constants';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // STATUS CONFIGURATION
@@ -167,7 +168,7 @@ const BenefitPoliciesList = () => {
               <ViewIcon fontSize="small" />
             </IconButton>
           </Tooltip>
-          <RBACGuard requiredPermissions={['benefit_policies.update']}>
+          <RBACGuard requiredPermissions={[PERMISSIONS.MANAGE_BENEFIT_POLICIES]}>
             <Tooltip title="تعديل">
               <IconButton
                 size="small"
@@ -198,7 +199,7 @@ const BenefitPoliciesList = () => {
   }, [navigate]);
 
   return (
-    <RBACGuard requiredPermissions={['benefit_policies.view']}>
+    <RBACGuard requiredPermissions={[PERMISSIONS.VIEW_BENEFIT_POLICIES, PERMISSIONS.MANAGE_BENEFIT_POLICIES]}>
       <ModernPageHeader
         title="وثائق المنافع"
         subtitle="إدارة وثائق المنافع التأمينية"
@@ -214,7 +215,7 @@ const BenefitPoliciesList = () => {
                 <RefreshIcon />
               </IconButton>
             </Tooltip>
-            <RBACGuard requiredPermissions={['benefit_policies.create']}>
+            <RBACGuard requiredPermissions={[PERMISSIONS.MANAGE_BENEFIT_POLICIES]}>
               <Button
                 variant="contained"
                 color="primary"
@@ -236,8 +237,8 @@ const BenefitPoliciesList = () => {
         </MainCard>
       ) : isError ? (
         <MainCard>
-          <Alert 
-            severity="error" 
+          <Alert
+            severity="error"
             sx={{ mb: 2 }}
             action={
               <Button color="inherit" size="small" onClick={() => refetch()}>
@@ -250,11 +251,11 @@ const BenefitPoliciesList = () => {
         </MainCard>
       ) : tableData.length === 0 ? (
         <MainCard>
-          <Box 
-            display="flex" 
-            flexDirection="column" 
-            justifyContent="center" 
-            alignItems="center" 
+          <Box
+            display="flex"
+            flexDirection="column"
+            justifyContent="center"
+            alignItems="center"
             minHeight={300}
             sx={{ py: 4 }}
           >

@@ -48,7 +48,7 @@ axiosServices.interceptors.request.use(
       config.url = config.url.replace(/^\/api\//, '/');
       console.warn('⚠️ Normalized URL: removed duplicate /api/ prefix');
     }
-    
+
     console.log(`🌐 API Request: ${config.method?.toUpperCase()} ${config.url}`);
 
     // AUDIT FIX (TASK B): JWT removed from web frontend
@@ -65,7 +65,7 @@ axiosServices.interceptors.request.use(
         .split('; ')
         .find(row => row.startsWith('XSRF-TOKEN='))
         ?.split('=')[1];
-      
+
       if (csrfToken) {
         config.headers['X-XSRF-TOKEN'] = decodeURIComponent(csrfToken);
         console.log('🛡️ CSRF token attached');
@@ -78,7 +78,7 @@ axiosServices.interceptors.request.use(
     // - If user has EMPLOYER role => locked to their employerId
     // - Else (TBA staff) => use selectedEmployerId from switcher
     const { employerId, roles, user } = useRBACStore.getState();
-    
+
     if (employerId) {
       config.headers['X-Employer-ID'] = employerId.toString();
       console.log('✅ X-Employer-ID header:', employerId);
@@ -107,25 +107,47 @@ axiosServices.interceptors.response.use(
     const status = error.response?.status;
     const url = error.config?.url;
     const method = error.config?.method?.toUpperCase();
-    
-    console.error(`❌ API Error: ${method} ${url} [${status}]`, error.response?.data);
+    const errorData = error.response?.data;
+
+    console.error(`❌ API Error: ${method} ${url} [${status}]`, errorData);
 
     // SIMPLIFIED: NO redirects in axios
     // Let router handle navigation
     // Just clear RBAC store on 401
     if (status === 401) {
       console.warn('🚫 401 Unauthorized - Session expired');
-      
+
       // Clear RBAC store only (no redirect)
       useRBACStore.getState().clear();
     }
 
+    // ==========================================
+    // ENHANCED 403 HANDLING  
+    // ==========================================
     if (status === 403) {
       console.error('🚫 403 Forbidden - Access denied');
+
+      // Extract user-friendly message from backend response
+      const backendMessage = errorData?.message || errorData?.error || 'Access denied';
+
+      // Dispatch custom event for UI components to handle
+      window.dispatchEvent(new CustomEvent('api:forbidden', {
+        detail: {
+          url,
+          method,
+          message: backendMessage,
+          resource: url?.split('/').filter(Boolean)[0] || 'resource'
+        }
+      }));
+
+      // Enhance error object with user-friendly message
+      error.userMessage = `ليس لديك صلاحية لتنفيذ هذا الإجراء. الرجاء التواصل مع المسؤول.`;
+      error.technicalMessage = backendMessage;
     }
 
     if (status === 500) {
       console.error('🔥 500 Server Error');
+      error.userMessage = 'حدث خطأ في الخادم. الرجاء المحاولة لاحقاً.';
     }
 
     return Promise.reject(error);

@@ -57,19 +57,19 @@ public class MedicalPackageController {
             @Parameter(description = "Search query") @RequestParam(required = false) String search,
             @Parameter(description = "Sort by field") @RequestParam(defaultValue = "createdAt") String sortBy,
             @Parameter(description = "Sort direction") @RequestParam(defaultValue = "desc") String sortDir) {
-        
+
         Sort sort = Sort.by(Sort.Direction.fromString(sortDir), sortBy);
         PageRequest pageRequest = PageRequest.of(Math.max(0, page - 1), size, sort);
-        
+
         Page<MedicalPackage> pageResult = service.findAllPaginated(pageRequest, search);
-        
+
         PaginationResponse<MedicalPackage> response = PaginationResponse.<MedicalPackage>builder()
                 .items(pageResult.getContent())
                 .total(pageResult.getTotalElements())
                 .page(page)
                 .size(size)
                 .build();
-        
+
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
@@ -77,18 +77,16 @@ public class MedicalPackageController {
      * GET /api/medical-packages/{id}
      * Get medical package by ID
      */
-    @GetMapping("/{id}")
+    @GetMapping("/{id:\\d+}")
     @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('MEDICAL_PACKAGE_READ')")
     public ResponseEntity<ApiResponse<MedicalPackage>> getById(@PathVariable Long id) {
         try {
             MedicalPackage medicalPackage = service.findById(id);
             return ResponseEntity.ok(
-                ApiResponse.success("Medical package retrieved successfully", medicalPackage)
-            );
+                    ApiResponse.success("Medical package retrieved successfully", medicalPackage));
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
-                ApiResponse.error("Medical package not found: " + e.getMessage())
-            );
+                    ApiResponse.error("Medical package not found: " + e.getMessage()));
         }
     }
 
@@ -102,12 +100,10 @@ public class MedicalPackageController {
         try {
             MedicalPackage medicalPackage = service.findByCode(code);
             return ResponseEntity.ok(
-                ApiResponse.success("Medical package retrieved successfully", medicalPackage)
-            );
+                    ApiResponse.success("Medical package retrieved successfully", medicalPackage));
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
-                ApiResponse.error("Medical package not found: " + e.getMessage())
-            );
+                    ApiResponse.error("Medical package not found: " + e.getMessage()));
         }
     }
 
@@ -121,12 +117,10 @@ public class MedicalPackageController {
         try {
             List<MedicalPackage> packages = service.findActive();
             return ResponseEntity.ok(
-                ApiResponse.success("Active medical packages retrieved successfully", packages)
-            );
+                    ApiResponse.success("Active medical packages retrieved successfully", packages));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
-                ApiResponse.error("Failed to retrieve active medical packages: " + e.getMessage())
-            );
+                    ApiResponse.error("Failed to retrieve active medical packages: " + e.getMessage()));
         }
     }
 
@@ -140,8 +134,7 @@ public class MedicalPackageController {
     public ResponseEntity<ApiResponse<MedicalPackage>> create(@Valid @RequestBody MedicalPackageDTO dto) {
         MedicalPackage created = service.create(dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(
-            ApiResponse.success("Medical package created successfully", created)
-        );
+                ApiResponse.success("Medical package created successfully", created));
     }
 
     /**
@@ -151,11 +144,11 @@ public class MedicalPackageController {
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('MEDICAL_PACKAGE_UPDATE')")
     @Operation(summary = "Update medical package")
-    public ResponseEntity<ApiResponse<MedicalPackage>> update(@PathVariable Long id, @Valid @RequestBody MedicalPackageDTO dto) {
+    public ResponseEntity<ApiResponse<MedicalPackage>> update(@PathVariable Long id,
+            @Valid @RequestBody MedicalPackageDTO dto) {
         MedicalPackage updated = service.update(id, dto);
         return ResponseEntity.ok(
-            ApiResponse.success("Medical package updated successfully", updated)
-        );
+                ApiResponse.success("Medical package updated successfully", updated));
     }
 
     /**
@@ -168,8 +161,7 @@ public class MedicalPackageController {
     public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {
         service.delete(id);
         return ResponseEntity.ok(
-            ApiResponse.success("Medical package deleted successfully", null)
-        );
+                ApiResponse.success("Medical package deleted successfully", null));
     }
 
     /**
@@ -182,8 +174,7 @@ public class MedicalPackageController {
     public ResponseEntity<ApiResponse<Long>> count() {
         Long count = service.count();
         return ResponseEntity.ok(
-            ApiResponse.success("Package count retrieved successfully", count)
-        );
+                ApiResponse.success("Package count retrieved successfully", count));
     }
 
     @GetMapping("/search")

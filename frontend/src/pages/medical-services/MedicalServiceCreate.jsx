@@ -50,6 +50,8 @@ import { useTableRefresh } from 'contexts/TableRefreshContext';
 // Hooks & Services
 import { createMedicalService } from 'services/api/medical-services.service';
 import { useAllMedicalCategories } from 'hooks/useMedicalCategories';
+import RBACGuard from 'components/tba/RBACGuard';
+import { PERMISSIONS } from 'constants/permissions.constants';
 
 // ============================================================================
 // CONSTANTS
@@ -448,9 +450,11 @@ const MedicalServiceCreate = () => {
             <Button variant="outlined" onClick={handleBack} disabled={submitting}>
               إلغاء
             </Button>
-            <Button type="submit" variant="contained" startIcon={<SaveIcon />} disabled={submitting}>
-              {submitting ? 'جاري الحفظ...' : 'حفظ الخدمة'}
-            </Button>
+            <RBACGuard requiredPermissions={[PERMISSIONS.MANAGE_MEDICAL_SERVICES]}>
+              <Button type="submit" variant="contained" startIcon={<SaveIcon />} disabled={submitting}>
+                {submitting ? 'جاري الحفظ...' : 'حفظ الخدمة'}
+              </Button>
+            </RBACGuard>
           </Box>
         </Box>
       </MainCard>

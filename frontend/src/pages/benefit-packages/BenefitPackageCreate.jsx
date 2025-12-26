@@ -22,6 +22,8 @@ import { Save as SaveIcon, Cancel as CancelIcon, CardGiftcard as CardGiftcardIco
 
 import MainCard from 'components/MainCard';
 import ModernPageHeader from 'components/tba/ModernPageHeader';
+import RBACGuard from 'components/tba/RBACGuard';
+import { PERMISSIONS } from 'constants/permissions.constants';
 import { createBenefitPackage } from 'services/api/benefit-packages.service';
 import { useAllMedicalPackages } from 'hooks/useMedicalPackages';
 
@@ -285,9 +287,11 @@ const BenefitPackageCreate = () => {
                 <Button variant="outlined" startIcon={<CancelIcon />} onClick={handleCancel} disabled={loading}>
                   إلغاء
                 </Button>
-                <Button type="submit" variant="contained" startIcon={<SaveIcon />} disabled={loading}>
-                  {loading ? 'جارٍ الحفظ...' : 'حفظ'}
-                </Button>
+                <RBACGuard requiredPermissions={[PERMISSIONS.MANAGE_BENEFIT_PACKAGES]}>
+                  <Button type="submit" variant="contained" startIcon={<SaveIcon />} disabled={loading}>
+                    {loading ? 'جارٍ الحفظ...' : 'حفظ'}
+                  </Button>
+                </RBACGuard>
               </Stack>
             </Grid>
           </Grid>

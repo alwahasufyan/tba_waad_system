@@ -474,10 +474,10 @@ const MemberImport = () => {
                 <TableRow
                   key={row.rowNumber || index}
                   sx={{
-                    bgcolor: row.status === 'ERROR' 
-                      ? 'error.lighter' 
-                      : row.status === 'WARNING' 
-                        ? 'warning.lighter' 
+                    bgcolor: row.status === 'ERROR'
+                      ? 'error.lighter'
+                      : row.status === 'WARNING'
+                        ? 'warning.lighter'
                         : 'inherit'
                   }}
                 >
@@ -605,22 +605,22 @@ const MemberImport = () => {
         <Box component="ul" sx={{ pl: 2 }}>
           <li>
             <Typography variant="body2">
-              <strong>national_id / identification_id / civil_id</strong> - رقم الهوية (إجباري)
-            </Typography>
-          </li>
-          <li>
-            <Typography variant="body2">
               <strong>name / full_name / full_name_arabic</strong> - الاسم الكامل (إجباري)
             </Typography>
           </li>
           <li>
             <Typography variant="body2">
-              <strong>employer / company</strong> - صاحب العمل (إجباري)
+              <strong>employer / company / employer_code</strong> - جهة العمل (إجباري - الاسم أو الكود)
             </Typography>
           </li>
           <li>
             <Typography variant="body2">
-              <strong>policy / policy_number</strong> - رقم البوليصة (إجباري)
+              <strong>national_id / civil_id</strong> - الرقم المدني (اختياري)
+            </Typography>
+          </li>
+          <li>
+            <Typography variant="body2">
+              <strong>policy / policy_number</strong> - رقم البوليصة (اختياري)
             </Typography>
           </li>
         </Box>
@@ -629,6 +629,11 @@ const MemberImport = () => {
           الأعمدة الاختيارية
         </Typography>
         <Box component="ul" sx={{ pl: 2 }}>
+          <li>
+            <Typography variant="body2">
+              <strong>card_number</strong> - رقم البطاقة (اختياري - سيتم تجاهله وإنشاء رقم جديد تلقائياً)
+            </Typography>
+          </li>
           <li>
             <Typography variant="body2">
               <strong>full_name_english</strong> - الاسم بالإنجليزية
@@ -705,6 +710,12 @@ const MemberImport = () => {
         {activeStep === 0 && (
           <Box>
             {renderFileUploadArea()}
+
+            <Alert severity="warning" sx={{ mt: 2 }}>
+              <AlertTitle>ملاحظة هامة للنظام المؤسسي</AlertTitle>
+              سيتم استيراد جميع الصفوف الصالحة <strong>كسجلات جديدة</strong>. يتم تجاهل مطابقة الأعضاء الحاليين. <br />
+              يجب تحديد <strong>جهة العمل (Organization)</strong> بشكل صحيح لكل صف.
+            </Alert>
 
             {/* Template Info Toggle */}
             <Stack direction="row" justifyContent="center" sx={{ mt: 2 }}>

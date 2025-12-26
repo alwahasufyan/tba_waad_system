@@ -34,6 +34,8 @@ import { useTableRefresh } from 'contexts/TableRefreshContext';
 
 // Services
 import { createMedicalCategory } from 'services/api/medical-categories.service';
+import RBACGuard from 'components/tba/RBACGuard';
+import { PERMISSIONS } from 'constants/permissions.constants';
 
 // ============================================================================
 // CONSTANTS
@@ -313,9 +315,11 @@ const MedicalCategoryCreate = () => {
                 <Button variant="outlined" onClick={handleBack} disabled={submitting}>
                   إلغاء
                 </Button>
-                <Button type="submit" variant="contained" startIcon={<SaveIcon />} disabled={submitting}>
-                  {submitting ? 'جاري الحفظ...' : 'حفظ التصنيف'}
-                </Button>
+                <RBACGuard requiredPermissions={[PERMISSIONS.MANAGE_MEDICAL_CATEGORIES]}>
+                  <Button type="submit" variant="contained" startIcon={<SaveIcon />} disabled={submitting}>
+                    {submitting ? 'جاري الحفظ...' : 'حفظ التصنيف'}
+                  </Button>
+                </RBACGuard>
               </Stack>
             </Grid>
           </Grid>

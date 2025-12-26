@@ -39,7 +39,7 @@ public class ProviderController {
                 .body(ApiResponse.success("Provider created successfully", provider));
     }
 
-    @PutMapping("/{id}")
+    @PutMapping("/{id:\\d+}")
     @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('MANAGE_PROVIDERS')")
     public ResponseEntity<ApiResponse<ProviderViewDto>> updateProvider(
             @PathVariable Long id,
@@ -48,7 +48,7 @@ public class ProviderController {
         return ResponseEntity.ok(ApiResponse.success("Provider updated successfully", provider));
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/{id:\\d+}")
     @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('VIEW_PROVIDERS')")
     public ResponseEntity<ApiResponse<ProviderViewDto>> getProvider(@PathVariable Long id) {
         ProviderViewDto provider = providerService.getProvider(id);
@@ -62,18 +62,18 @@ public class ProviderController {
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) String search) {
         Page<ProviderViewDto> providers = providerService.listProviders(Math.max(0, page - 1), size, search);
-        
+
         PaginationResponse<ProviderViewDto> response = PaginationResponse.<ProviderViewDto>builder()
                 .items(providers.getContent())
                 .total(providers.getTotalElements())
                 .page(page)
                 .size(size)
                 .build();
-        
+
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/{id:\\d+}")
     @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('MANAGE_PROVIDERS')")
     public ResponseEntity<ApiResponse<Void>> deleteProvider(@PathVariable Long id) {
         providerService.deleteProvider(id);

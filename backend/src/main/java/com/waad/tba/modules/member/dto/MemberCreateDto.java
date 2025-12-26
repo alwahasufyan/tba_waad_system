@@ -22,7 +22,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 @NoArgsConstructor
 @AllArgsConstructor
 public class MemberCreateDto {
-    
+
     // Personal Information
     @Schema(description = "Full name in Arabic", example = "أحمد محمد علي", required = true)
     @NotBlank(message = "Full name in Arabic is required")
@@ -31,8 +31,7 @@ public class MemberCreateDto {
     @Schema(description = "Full name in English", example = "Ahmed Mohammed Ali")
     private String fullNameEnglish;
 
-    @Schema(description = "Civil ID", example = "289123456789", required = true)
-    @NotBlank(message = "Civil ID is required")
+    @Schema(description = "Civil ID", example = "289123456789")
     private String civilId;
 
     @Schema(description = "Card number", example = "MEM-123456")

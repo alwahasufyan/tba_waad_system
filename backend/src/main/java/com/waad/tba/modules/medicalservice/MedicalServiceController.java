@@ -43,23 +43,23 @@ public class MedicalServiceController {
             @Parameter(description = "Search query") @RequestParam(required = false) String search,
             @Parameter(description = "Sort by field") @RequestParam(defaultValue = "createdAt") String sortBy,
             @Parameter(description = "Sort direction") @RequestParam(defaultValue = "desc") String sortDir) {
-        
+
         Sort sort = Sort.by(Sort.Direction.fromString(sortDir), sortBy);
         PageRequest pageRequest = PageRequest.of(Math.max(0, page - 1), size, sort);
-        
+
         Page<MedicalServiceViewDto> pageResult = service.findAllPaginated(pageRequest, search);
-        
+
         PaginationResponse<MedicalServiceViewDto> response = PaginationResponse.<MedicalServiceViewDto>builder()
                 .items(pageResult.getContent())
                 .total(pageResult.getTotalElements())
                 .page(page)
                 .size(size)
                 .build();
-        
+
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/{id:\\d+}")
     @PreAuthorize("hasRole('SUPER_ADMIN') or hasAnyAuthority('VIEW_MEDICAL_SERVICES', 'MANAGE_MEDICAL_SERVICES')")
     @Operation(summary = "Get medical service by ID")
     public ResponseEntity<ApiResponse<MedicalServiceViewDto>> getById(@PathVariable Long id) {
@@ -72,20 +72,21 @@ public class MedicalServiceController {
     @Operation(summary = "Create medical service")
     public ResponseEntity<ApiResponse<MedicalServiceViewDto>> create(@Valid @RequestBody MedicalServiceCreateDto dto) {
         MedicalServiceViewDto created = service.create(dto);
-        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success("Medical service created successfully", created));
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.success("Medical service created successfully", created));
     }
 
-    @PutMapping("/{id}")
+    @PutMapping("/{id:\\d+}")
     @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('MANAGE_MEDICAL_SERVICES')")
     @Operation(summary = "Update medical service")
     public ResponseEntity<ApiResponse<MedicalServiceViewDto>> update(
-            @PathVariable Long id, 
+            @PathVariable Long id,
             @Valid @RequestBody MedicalServiceUpdateDto dto) {
         MedicalServiceViewDto updated = service.update(id, dto);
         return ResponseEntity.ok(ApiResponse.success("Medical service updated successfully", updated));
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/{id:\\d+}")
     @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('MANAGE_MEDICAL_SERVICES')")
     @Operation(summary = "Delete medical service")
     public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {

@@ -45,43 +45,38 @@ public class PreApprovalController {
      * Check if pre-approval is required for a service
      */
     @PostMapping("/check")
-    @Operation(
-        summary = "Check if pre-approval is required", 
-        description = "Check if pre-approval is required for a specific service and member. Provider must have an active contract with the member's company."
-    )
+    @Operation(summary = "Check if pre-approval is required", description = "Check if pre-approval is required for a specific service and member. Provider must have an active contract with the member's company.")
     public ResponseEntity<ApiResponse<PreApprovalCheckResponseDto>> checkApprovalRequired(
             @Valid @RequestBody PreApprovalCheckRequestDto request) {
-        
-        log.info("Checking pre-approval requirement for member: {}, service: {}", 
-            request.getMemberId(), request.getServiceCode());
 
-        PreApprovalService.PreApprovalRequirement requirement = 
-            preApprovalService.checkIfApprovalRequired(
+        log.info("Checking pre-approval requirement for member: {}, service: {}",
+                request.getMemberId(), request.getServiceCode());
+
+        PreApprovalService.PreApprovalRequirement requirement = preApprovalService.checkIfApprovalRequired(
                 request.getMemberId(),
                 request.getServiceCode(),
                 request.getProviderId(),
-                request.getAmount()
-            );
+                request.getAmount());
 
         // Check if there's already a valid approval
         Optional<PreApproval> validApproval = preApprovalService.findValidApprovalForService(
-            request.getMemberId(), request.getServiceCode(), request.getAmount());
+                request.getMemberId(), request.getServiceCode(), request.getAmount());
 
         PreApprovalCheckResponseDto response = PreApprovalCheckResponseDto.builder()
-            .required(requirement.isRequired())
-            .reason(requirement.getReason())
-            .exceedLimit(requirement.isExceedLimit())
-            .exceedAmount(requirement.getExceedAmount())
-            .requiredLevel(requirement.getRequiredLevel())
-            .allowAutoApproval(requirement.isAllowAutoApproval())
-            .canAutoApprove(requirement.isCanAutoApprove())
-            .hasValidApproval(validApproval.isPresent())
-            .validApprovalNumber(validApproval.map(PreApproval::getApprovalNumber).orElse(null))
-            .approvedAmount(validApproval.map(PreApproval::getApprovedAmount).orElse(null))
-            .build();
+                .required(requirement.isRequired())
+                .reason(requirement.getReason())
+                .exceedLimit(requirement.isExceedLimit())
+                .exceedAmount(requirement.getExceedAmount())
+                .requiredLevel(requirement.getRequiredLevel())
+                .allowAutoApproval(requirement.isAllowAutoApproval())
+                .canAutoApprove(requirement.isCanAutoApprove())
+                .hasValidApproval(validApproval.isPresent())
+                .validApprovalNumber(validApproval.map(PreApproval::getApprovalNumber).orElse(null))
+                .approvedAmount(validApproval.map(PreApproval::getApprovedAmount).orElse(null))
+                .build();
 
         return ResponseEntity.ok(ApiResponse.success(
-            "Pre-approval requirement check completed", response));
+                "Pre-approval requirement check completed", response));
     }
 
     /**
@@ -89,16 +84,14 @@ public class PreApprovalController {
      */
     @PostMapping
     @PreAuthorize("hasRole('SUPER_ADMIN') or hasAnyAuthority('CREATE_PRE_APPROVAL', 'PROVIDER_STAFF', 'TPA_STAFF')")
-    @Operation(summary = "Create pre-approval request", 
-               description = "Create a new pre-approval request")
+    @Operation(summary = "Create pre-approval request", description = "Create a new pre-approval request")
     public ResponseEntity<ApiResponse<PreApprovalResponseDto>> createPreApproval(
             @Valid @RequestBody PreApprovalRequestDto request) {
-        
-        log.info("Creating pre-approval for member: {}, type: {}", 
-            request.getMemberId(), request.getType());
 
-        PreApprovalService.PreApprovalRequest serviceRequest = 
-            PreApprovalService.PreApprovalRequest.builder()
+        log.info("Creating pre-approval for member: {}, type: {}",
+                request.getMemberId(), request.getType());
+
+        PreApprovalService.PreApprovalRequest serviceRequest = PreApprovalService.PreApprovalRequest.builder()
                 .memberId(request.getMemberId())
                 .providerId(request.getProviderId())
                 .serviceCode(request.getServiceCode())
@@ -116,18 +109,18 @@ public class PreApprovalController {
         PreApprovalResponseDto response = mapToDto(preApproval);
 
         return ResponseEntity.ok(ApiResponse.success(
-            "Pre-approval created successfully", response));
+                "Pre-approval created successfully", response));
     }
 
     /**
      * Get pre-approval by ID
      */
-    @GetMapping("/{id}")
+    @GetMapping("/{id:\\d+}")
     @PreAuthorize("hasRole('SUPER_ADMIN') or hasAnyAuthority('VIEW_PRE_APPROVAL', 'PROVIDER_STAFF', 'TPA_STAFF')")
     @Operation(summary = "Get pre-approval by ID")
     public ResponseEntity<ApiResponse<PreApprovalResponseDto>> getPreApprovalById(
             @PathVariable Long id) {
-        
+
         // TODO: Implement proper service method
         return ResponseEntity.ok(ApiResponse.success("Pre-approval retrieved", null));
     }
@@ -140,7 +133,7 @@ public class PreApprovalController {
     @Operation(summary = "Get pre-approval by approval number")
     public ResponseEntity<ApiResponse<PreApprovalResponseDto>> getByApprovalNumber(
             @PathVariable String approvalNumber) {
-        
+
         // TODO: Implement proper service method
         return ResponseEntity.ok(ApiResponse.success("Pre-approval retrieved", null));
     }
@@ -153,7 +146,7 @@ public class PreApprovalController {
     @Operation(summary = "Get all pre-approvals for a member")
     public ResponseEntity<ApiResponse<List<PreApprovalResponseDto>>> getByMember(
             @PathVariable Long memberId) {
-        
+
         // TODO: Implement proper service method
         return ResponseEntity.ok(ApiResponse.success("Pre-approvals retrieved", null));
     }
@@ -166,63 +159,63 @@ public class PreApprovalController {
     @Operation(summary = "Get valid pre-approvals for a member")
     public ResponseEntity<ApiResponse<List<PreApprovalResponseDto>>> getValidApprovals(
             @PathVariable Long memberId) {
-        
+
         List<PreApproval> validApprovals = preApprovalService.getValidApprovalsForMember(memberId);
         List<PreApprovalResponseDto> response = validApprovals.stream()
-            .map(this::mapToDto)
-            .toList();
+                .map(this::mapToDto)
+                .toList();
 
         return ResponseEntity.ok(ApiResponse.success(
-            "Valid pre-approvals retrieved", response));
+                "Valid pre-approvals retrieved", response));
     }
 
     /**
      * Approve a pre-approval request
      */
-    @PostMapping("/{id}/approve")
+    @PostMapping("/{id:\\d+}/approve")
     @PreAuthorize("hasRole('SUPER_ADMIN') or hasAnyAuthority('APPROVE_PRE_APPROVAL', 'MEDICAL_REVIEWER', 'TPA_MANAGER')")
     @Operation(summary = "Approve pre-approval request")
     public ResponseEntity<ApiResponse<PreApprovalResponseDto>> approvePreApproval(
             @PathVariable Long id,
             @Valid @RequestBody PreApprovalApproveDto request,
             @Parameter(hidden = true) @RequestAttribute(required = false) Long currentUserId) {
-        
+
         log.info("Approving pre-approval: {}", id);
 
         // TODO: Get current user ID from security context
         Long reviewerId = currentUserId != null ? currentUserId : 1L;
 
         PreApproval preApproval = preApprovalService.approvePreApproval(
-            id, reviewerId, request.getApprovedAmount(), request.getNotes());
+                id, reviewerId, request.getApprovedAmount(), request.getNotes());
 
         PreApprovalResponseDto response = mapToDto(preApproval);
 
         return ResponseEntity.ok(ApiResponse.success(
-            "Pre-approval approved successfully", response));
+                "Pre-approval approved successfully", response));
     }
 
     /**
      * Reject a pre-approval request
      */
-    @PostMapping("/{id}/reject")
+    @PostMapping("/{id:\\d+}/reject")
     @PreAuthorize("hasRole('SUPER_ADMIN') or hasAnyAuthority('APPROVE_PRE_APPROVAL', 'MEDICAL_REVIEWER', 'TPA_MANAGER')")
     @Operation(summary = "Reject pre-approval request")
     public ResponseEntity<ApiResponse<PreApprovalResponseDto>> rejectPreApproval(
             @PathVariable Long id,
             @Valid @RequestBody PreApprovalRejectDto request,
             @Parameter(hidden = true) @RequestAttribute(required = false) Long currentUserId) {
-        
+
         log.info("Rejecting pre-approval: {}", id);
 
         Long reviewerId = currentUserId != null ? currentUserId : 1L;
 
         PreApproval preApproval = preApprovalService.rejectPreApproval(
-            id, reviewerId, request.getRejectionReason());
+                id, reviewerId, request.getRejectionReason());
 
         PreApprovalResponseDto response = mapToDto(preApproval);
 
         return ResponseEntity.ok(ApiResponse.success(
-            "Pre-approval rejected", response));
+                "Pre-approval rejected", response));
     }
 
     /**
@@ -233,7 +226,7 @@ public class PreApprovalController {
     @Operation(summary = "Get all pre-approvals with pagination")
     public ResponseEntity<ApiResponse<Page<PreApprovalResponseDto>>> getAllPreApprovals(
             Pageable pageable) {
-        
+
         // TODO: Implement proper service method
         return ResponseEntity.ok(ApiResponse.success("Pre-approvals retrieved", null));
     }
@@ -247,52 +240,52 @@ public class PreApprovalController {
     @Operation(summary = "Get pending pre-approvals for inbox")
     public ResponseEntity<ApiResponse<Page<PreApprovalResponseDto>>> getPendingForInbox(
             Pageable pageable) {
-        
+
         log.info("Fetching pending pre-approvals for inbox");
-        
+
         Page<PreApproval> pendingApprovals = preApprovalService.getPendingPreApprovals(pageable);
         Page<PreApprovalResponseDto> response = pendingApprovals.map(this::mapToDto);
-        
+
         return ResponseEntity.ok(ApiResponse.success("Pending pre-approvals retrieved", response));
     }
 
     // Helper method to map entity to DTO
     private PreApprovalResponseDto mapToDto(PreApproval entity) {
         return PreApprovalResponseDto.builder()
-            .id(entity.getId())
-            .approvalNumber(entity.getApprovalNumber())
-            .type(entity.getType())
-            .memberId(entity.getMember().getId())
-            .memberName(entity.getMember().getFullName())
-            .memberCardNumber(entity.getMember().getCardNumber())
-            .providerId(entity.getProviderId())
-            .providerName(entity.getProviderName())
-            .serviceCode(entity.getServiceCode())
-            .serviceDescription(entity.getServiceDescription())
-            .diagnosisCode(entity.getDiagnosisCode())
-            .diagnosisDescription(entity.getDiagnosisDescription())
-            .requestedAmount(entity.getRequestedAmount())
-            .approvedAmount(entity.getApprovedAmount())
-            .rejectedAmount(entity.getRejectedAmount())
-            .memberRemainingBalance(entity.getMemberRemainingBalance())
-            .exceedAmount(entity.getExceedAmount())
-            .status(entity.getStatus())
-            .requiredLevel(entity.getRequiredLevel())
-            .requestDate(entity.getRequestDate())
-            .expectedServiceDate(entity.getExpectedServiceDate())
-            .requestReason(entity.getRequestReason())
-            .medicalReviewNotes(entity.getMedicalReviewNotes())
-            .managerNotes(entity.getManagerNotes())
-            .validFrom(entity.getValidFrom())
-            .validUntil(entity.getValidUntil())
-            .expired(entity.getExpired())
-            .rejectionReason(entity.getRejectionReason())
-            .autoApproved(entity.getAutoApproved())
-            .autoApprovalRule(entity.getAutoApprovalRule())
-            .notes(entity.getNotes())
-            .active(entity.getActive())
-            .createdAt(entity.getCreatedAt())
-            .updatedAt(entity.getUpdatedAt())
-            .build();
+                .id(entity.getId())
+                .approvalNumber(entity.getApprovalNumber())
+                .type(entity.getType())
+                .memberId(entity.getMember().getId())
+                .memberName(entity.getMember().getFullName())
+                .memberCardNumber(entity.getMember().getCardNumber())
+                .providerId(entity.getProviderId())
+                .providerName(entity.getProviderName())
+                .serviceCode(entity.getServiceCode())
+                .serviceDescription(entity.getServiceDescription())
+                .diagnosisCode(entity.getDiagnosisCode())
+                .diagnosisDescription(entity.getDiagnosisDescription())
+                .requestedAmount(entity.getRequestedAmount())
+                .approvedAmount(entity.getApprovedAmount())
+                .rejectedAmount(entity.getRejectedAmount())
+                .memberRemainingBalance(entity.getMemberRemainingBalance())
+                .exceedAmount(entity.getExceedAmount())
+                .status(entity.getStatus())
+                .requiredLevel(entity.getRequiredLevel())
+                .requestDate(entity.getRequestDate())
+                .expectedServiceDate(entity.getExpectedServiceDate())
+                .requestReason(entity.getRequestReason())
+                .medicalReviewNotes(entity.getMedicalReviewNotes())
+                .managerNotes(entity.getManagerNotes())
+                .validFrom(entity.getValidFrom())
+                .validUntil(entity.getValidUntil())
+                .expired(entity.getExpired())
+                .rejectionReason(entity.getRejectionReason())
+                .autoApproved(entity.getAutoApproved())
+                .autoApprovalRule(entity.getAutoApprovalRule())
+                .notes(entity.getNotes())
+                .active(entity.getActive())
+                .createdAt(entity.getCreatedAt())
+                .updatedAt(entity.getUpdatedAt())
+                .build();
     }
 }

@@ -26,44 +26,49 @@ public class PreAuthorizationController {
         return ResponseEntity.ok(ApiResponse.success(preAuths));
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/{id:\\d+}")
     public ResponseEntity<ApiResponse<PreAuthorizationDto>> getPreAuthorizationById(@PathVariable Long id) {
         PreAuthorizationDto preAuth = preAuthService.getPreAuthorizationById(id);
         return ResponseEntity.ok(ApiResponse.success(preAuth));
     }
 
     @GetMapping("/number/{preAuthNumber}")
-    public ResponseEntity<ApiResponse<PreAuthorizationDto>> getPreAuthorizationByNumber(@PathVariable String preAuthNumber) {
+    public ResponseEntity<ApiResponse<PreAuthorizationDto>> getPreAuthorizationByNumber(
+            @PathVariable String preAuthNumber) {
         PreAuthorizationDto preAuth = preAuthService.getPreAuthorizationByNumber(preAuthNumber);
         return ResponseEntity.ok(ApiResponse.success(preAuth));
     }
 
     @GetMapping("/member/{memberId}")
-    public ResponseEntity<ApiResponse<List<PreAuthorizationDto>>> getPreAuthorizationsByMember(@PathVariable Long memberId) {
+    public ResponseEntity<ApiResponse<List<PreAuthorizationDto>>> getPreAuthorizationsByMember(
+            @PathVariable Long memberId) {
         List<PreAuthorizationDto> preAuths = preAuthService.getPreAuthorizationsByMember(memberId);
         return ResponseEntity.ok(ApiResponse.success(preAuths));
     }
 
     @GetMapping("/provider/{providerId}")
-    public ResponseEntity<ApiResponse<List<PreAuthorizationDto>>> getPreAuthorizationsByProvider(@PathVariable Long providerId) {
+    public ResponseEntity<ApiResponse<List<PreAuthorizationDto>>> getPreAuthorizationsByProvider(
+            @PathVariable Long providerId) {
         List<PreAuthorizationDto> preAuths = preAuthService.getPreAuthorizationsByProvider(providerId);
         return ResponseEntity.ok(ApiResponse.success(preAuths));
     }
 
     @GetMapping("/status/{status}")
-    public ResponseEntity<ApiResponse<List<PreAuthorizationDto>>> getPreAuthorizationsByStatus(@PathVariable String status) {
+    public ResponseEntity<ApiResponse<List<PreAuthorizationDto>>> getPreAuthorizationsByStatus(
+            @PathVariable String status) {
         List<PreAuthorizationDto> preAuths = preAuthService.getPreAuthorizationsByStatus(status);
         return ResponseEntity.ok(ApiResponse.success(preAuths));
     }
 
     @PostMapping
-    public ResponseEntity<ApiResponse<PreAuthorizationDto>> createPreAuthorization(@Valid @RequestBody PreAuthorizationDto dto) {
+    public ResponseEntity<ApiResponse<PreAuthorizationDto>> createPreAuthorization(
+            @Valid @RequestBody PreAuthorizationDto dto) {
         PreAuthorizationDto created = preAuthService.createPreAuthorization(dto);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.success("Pre-authorization created successfully", created));
     }
 
-    @PutMapping("/{id}")
+    @PutMapping("/{id:\\d+}")
     public ResponseEntity<ApiResponse<PreAuthorizationDto>> updatePreAuthorization(
             @PathVariable Long id,
             @Valid @RequestBody PreAuthorizationDto dto) {
@@ -71,7 +76,7 @@ public class PreAuthorizationController {
         return ResponseEntity.ok(ApiResponse.success("Pre-authorization updated successfully", updated));
     }
 
-    @PostMapping("/{id}/approve")
+    @PostMapping("/{id:\\d+}/approve")
     public ResponseEntity<ApiResponse<PreAuthorizationDto>> approvePreAuthorization(
             @PathVariable Long id,
             @Valid @RequestBody ApprovePreAuthDto dto,
@@ -80,7 +85,7 @@ public class PreAuthorizationController {
         return ResponseEntity.ok(ApiResponse.success("Pre-authorization approved successfully", approved));
     }
 
-    @PostMapping("/{id}/reject")
+    @PostMapping("/{id:\\d+}/reject")
     public ResponseEntity<ApiResponse<PreAuthorizationDto>> rejectPreAuthorization(
             @PathVariable Long id,
             @Valid @RequestBody RejectPreAuthDto dto,
@@ -89,7 +94,7 @@ public class PreAuthorizationController {
         return ResponseEntity.ok(ApiResponse.success("Pre-authorization rejected successfully", rejected));
     }
 
-    @PostMapping("/{id}/under-review")
+    @PostMapping("/{id:\\d+}/under-review")
     public ResponseEntity<ApiResponse<PreAuthorizationDto>> markUnderReview(
             @PathVariable Long id,
             @RequestParam Long reviewerId) {
@@ -97,7 +102,7 @@ public class PreAuthorizationController {
         return ResponseEntity.ok(ApiResponse.success("Pre-authorization marked as under review", updated));
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/{id:\\d+}")
     public ResponseEntity<ApiResponse<Void>> deletePreAuthorization(@PathVariable Long id) {
         preAuthService.deletePreAuthorization(id);
         return ResponseEntity.ok(ApiResponse.success("Pre-authorization deleted successfully", null));

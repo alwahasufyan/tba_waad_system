@@ -19,6 +19,8 @@ import { useSnackbar } from 'notistack';
 
 import MainCard from 'components/MainCard';
 import ModernPageHeader from 'components/tba/ModernPageHeader';
+import RBACGuard from 'components/tba/RBACGuard';
+import { PERMISSIONS } from 'constants/permissions.constants';
 import { createEmployer } from 'services/api/employers.service';
 
 // Static Arabic labels
@@ -171,9 +173,11 @@ const EmployerCreate = () => {
             <Button variant="outlined" onClick={() => navigate('/employers')} disabled={saving}>
               {LABELS.cancel}
             </Button>
-            <Button type="submit" variant="contained" startIcon={<SaveIcon />} disabled={saving}>
-              {saving ? LABELS.saving : LABELS.save}
-            </Button>
+            <RBACGuard requiredPermissions={[PERMISSIONS.MANAGE_EMPLOYERS]}>
+              <Button type="submit" variant="contained" startIcon={<SaveIcon />} disabled={saving}>
+                {saving ? LABELS.saving : LABELS.save}
+              </Button>
+            </RBACGuard>
           </Stack>
         </Box>
       </MainCard>

@@ -66,19 +66,19 @@ public class MedicalCategoryController {
             @Parameter(description = "Search query") @RequestParam(required = false) String search,
             @Parameter(description = "Sort by field") @RequestParam(defaultValue = "createdAt") String sortBy,
             @Parameter(description = "Sort direction") @RequestParam(defaultValue = "desc") String sortDir) {
-        
+
         Sort sort = Sort.by(Sort.Direction.fromString(sortDir), sortBy);
         PageRequest pageRequest = PageRequest.of(Math.max(0, page - 1), size, sort);
-        
+
         Page<MedicalCategoryViewDto> pageResult = service.findAllPaginated(pageRequest, search);
-        
+
         PaginationResponse<MedicalCategoryViewDto> response = PaginationResponse.<MedicalCategoryViewDto>builder()
                 .items(pageResult.getContent())
                 .total(pageResult.getTotalElements())
                 .page(page)
                 .size(size)
                 .build();
-        
+
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
@@ -86,7 +86,7 @@ public class MedicalCategoryController {
      * Get medical category by ID
      * GET /api/medical-categories/{id}
      */
-    @GetMapping("/{id}")
+    @GetMapping("/{id:\\d+}")
     @PreAuthorize("hasRole('SUPER_ADMIN') or hasAnyAuthority('VIEW_MEDICAL_CATEGORIES', 'MANAGE_MEDICAL_CATEGORIES')")
     @Operation(summary = "Get medical category by ID")
     public ResponseEntity<ApiResponse<MedicalCategoryViewDto>> getCategoryById(@PathVariable Long id) {
@@ -113,7 +113,8 @@ public class MedicalCategoryController {
     @PostMapping
     @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('MANAGE_MEDICAL_CATEGORIES')")
     @Operation(summary = "Create medical category")
-    public ResponseEntity<ApiResponse<MedicalCategoryViewDto>> createCategory(@Valid @RequestBody MedicalCategoryCreateDto dto) {
+    public ResponseEntity<ApiResponse<MedicalCategoryViewDto>> createCategory(
+            @Valid @RequestBody MedicalCategoryCreateDto dto) {
         MedicalCategoryViewDto created = service.create(dto);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.success("Medical category created successfully", created));
@@ -123,7 +124,7 @@ public class MedicalCategoryController {
      * Update medical category
      * PUT /api/medical-categories/{id}
      */
-    @PutMapping("/{id}")
+    @PutMapping("/{id:\\d+}")
     @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('MANAGE_MEDICAL_CATEGORIES')")
     @Operation(summary = "Update medical category")
     public ResponseEntity<ApiResponse<MedicalCategoryViewDto>> updateCategory(
@@ -137,7 +138,7 @@ public class MedicalCategoryController {
      * Delete medical category
      * DELETE /api/medical-categories/{id}
      */
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/{id:\\d+}")
     @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('MANAGE_MEDICAL_CATEGORIES')")
     @Operation(summary = "Delete medical category")
     public ResponseEntity<ApiResponse<Void>> deleteCategory(@PathVariable Long id) {

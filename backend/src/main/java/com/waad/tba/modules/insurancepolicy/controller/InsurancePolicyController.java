@@ -55,23 +55,21 @@ public class InsurancePolicyController {
                 .body(ApiResponse.success("Insurance policy created successfully", created));
     }
 
-    @PutMapping("/{id}")
+    @PutMapping("/{id:\\d+}")
     @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('MANAGE_POLICIES')")
     @Operation(summary = "Update insurance policy", description = "Updates an existing insurance policy template.")
     public ResponseEntity<ApiResponse<InsurancePolicyViewDto>> updatePolicy(
-            @Parameter(name = "id", description = "Policy ID", required = true)
-            @PathVariable Long id,
+            @Parameter(name = "id", description = "Policy ID", required = true) @PathVariable Long id,
             @Valid @RequestBody InsurancePolicyUpdateDto dto) {
         InsurancePolicyViewDto updated = insurancePolicyService.updatePolicy(id, dto);
         return ResponseEntity.ok(ApiResponse.success("Insurance policy updated successfully", updated));
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/{id:\\d+}")
     @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('VIEW_POLICIES')")
     @Operation(summary = "Get insurance policy by ID", description = "Returns an insurance policy by ID.")
     public ResponseEntity<ApiResponse<InsurancePolicyViewDto>> getPolicy(
-            @Parameter(name = "id", description = "Policy ID", required = true)
-            @PathVariable Long id) {
+            @Parameter(name = "id", description = "Policy ID", required = true) @PathVariable Long id) {
         InsurancePolicyViewDto policy = insurancePolicyService.getPolicy(id);
         return ResponseEntity.ok(ApiResponse.success("Insurance policy retrieved successfully", policy));
     }
@@ -80,38 +78,32 @@ public class InsurancePolicyController {
     @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('VIEW_POLICIES')")
     @Operation(summary = "List insurance policies", description = "Returns a paginated list of insurance policies with optional search.")
     public ResponseEntity<ApiResponse<PaginationResponse<InsurancePolicyViewDto>>> listPolicies(
-            @Parameter(name = "page", description = "Page number (1-based)")
-            @RequestParam(defaultValue = "1") int page,
-            @Parameter(name = "size", description = "Page size")
-            @RequestParam(defaultValue = "10") int size,
-            @Parameter(name = "search", description = "Search keyword")
-            @RequestParam(required = false) String search,
-            @Parameter(name = "sortBy", description = "Sort by field")
-            @RequestParam(defaultValue = "createdAt") String sortBy,
-            @Parameter(name = "sortDir", description = "Sort direction")
-            @RequestParam(defaultValue = "desc") String sortDir) {
-        
+            @Parameter(name = "page", description = "Page number (1-based)") @RequestParam(defaultValue = "1") int page,
+            @Parameter(name = "size", description = "Page size") @RequestParam(defaultValue = "10") int size,
+            @Parameter(name = "search", description = "Search keyword") @RequestParam(required = false) String search,
+            @Parameter(name = "sortBy", description = "Sort by field") @RequestParam(defaultValue = "createdAt") String sortBy,
+            @Parameter(name = "sortDir", description = "Sort direction") @RequestParam(defaultValue = "desc") String sortDir) {
+
         Pageable pageable = PageRequest.of(Math.max(0, page - 1), size,
                 Sort.by(Sort.Direction.fromString(sortDir), sortBy));
-        
+
         Page<InsurancePolicyViewDto> pageResult = insurancePolicyService.listPolicies(pageable, search);
-        
+
         PaginationResponse<InsurancePolicyViewDto> response = PaginationResponse.<InsurancePolicyViewDto>builder()
                 .items(pageResult.getContent())
                 .total(pageResult.getTotalElements())
                 .page(page)
                 .size(size)
                 .build();
-        
+
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/{id:\\d+}")
     @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('MANAGE_POLICIES')")
     @Operation(summary = "Delete insurance policy", description = "Soft deletes an insurance policy by ID.")
     public ResponseEntity<ApiResponse<Void>> deletePolicy(
-            @Parameter(name = "id", description = "Policy ID", required = true)
-            @PathVariable Long id) {
+            @Parameter(name = "id", description = "Policy ID", required = true) @PathVariable Long id) {
         insurancePolicyService.deletePolicy(id);
         return ResponseEntity.ok(ApiResponse.success("Insurance policy deleted successfully", null));
     }
@@ -130,8 +122,7 @@ public class InsurancePolicyController {
     @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('MANAGE_POLICIES')")
     @Operation(summary = "Add benefit package to policy", description = "Creates a new benefit package for a policy.")
     public ResponseEntity<ApiResponse<PolicyBenefitPackageViewDto>> createBenefitPackage(
-            @Parameter(name = "policyId", description = "Policy ID", required = true)
-            @PathVariable Long policyId,
+            @Parameter(name = "policyId", description = "Policy ID", required = true) @PathVariable Long policyId,
             @Valid @RequestBody PolicyBenefitPackageCreateDto dto) {
         PolicyBenefitPackageViewDto created = benefitPackageService.createBenefitPackage(policyId, dto);
         return ResponseEntity.status(HttpStatus.CREATED)
@@ -142,8 +133,7 @@ public class InsurancePolicyController {
     @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('VIEW_POLICIES')")
     @Operation(summary = "List benefit packages for policy", description = "Returns all benefit packages for a policy.")
     public ResponseEntity<ApiResponse<List<PolicyBenefitPackageViewDto>>> listBenefitPackages(
-            @Parameter(name = "policyId", description = "Policy ID", required = true)
-            @PathVariable Long policyId) {
+            @Parameter(name = "policyId", description = "Policy ID", required = true) @PathVariable Long policyId) {
         List<PolicyBenefitPackageViewDto> packages = benefitPackageService.listBenefitPackagesByPolicy(policyId);
         return ResponseEntity.ok(ApiResponse.success("Benefit packages retrieved successfully", packages));
     }
@@ -152,8 +142,7 @@ public class InsurancePolicyController {
     @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('MANAGE_POLICIES')")
     @Operation(summary = "Update benefit package", description = "Updates an existing benefit package.")
     public ResponseEntity<ApiResponse<PolicyBenefitPackageViewDto>> updateBenefitPackage(
-            @Parameter(name = "id", description = "Benefit package ID", required = true)
-            @PathVariable Long id,
+            @Parameter(name = "id", description = "Benefit package ID", required = true) @PathVariable Long id,
             @Valid @RequestBody PolicyBenefitPackageUpdateDto dto) {
         PolicyBenefitPackageViewDto updated = benefitPackageService.updateBenefitPackage(id, dto);
         return ResponseEntity.ok(ApiResponse.success("Benefit package updated successfully", updated));
@@ -163,8 +152,7 @@ public class InsurancePolicyController {
     @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('MANAGE_POLICIES')")
     @Operation(summary = "Delete benefit package", description = "Soft deletes a benefit package by ID.")
     public ResponseEntity<ApiResponse<Void>> deleteBenefitPackage(
-            @Parameter(name = "id", description = "Benefit package ID", required = true)
-            @PathVariable Long id) {
+            @Parameter(name = "id", description = "Benefit package ID", required = true) @PathVariable Long id) {
         benefitPackageService.deleteBenefitPackage(id);
         return ResponseEntity.ok(ApiResponse.success("Benefit package deleted successfully", null));
     }
