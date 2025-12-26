@@ -1,5 +1,6 @@
 package com.waad.tba.modules.eligibility.rules;
 
+import com.waad.tba.modules.benefitpolicy.entity.BenefitPolicy;
 import com.waad.tba.modules.eligibility.domain.EligibilityContext;
 import com.waad.tba.modules.eligibility.domain.EligibilityReason;
 import com.waad.tba.modules.eligibility.domain.EligibilityRule;
@@ -17,7 +18,8 @@ import java.time.LocalDate;
  * Phase E1 - Eligibility Engine
  * 
  * Validates that the member has satisfied the waiting period.
- * Uses the policy's generalWaitingPeriodDays configuration.
+ * Uses BenefitPolicy.defaultWaitingPeriodDays (canonical) or
+ * falls back to Policy.generalWaitingPeriodDays (legacy).
  * 
  * This is a hard rule - failure stops evaluation.
  * 
@@ -52,11 +54,8 @@ public class WaitingPeriodRule implements EligibilityRule {
 
     @Override
     public boolean isApplicable(EligibilityContext context) {
-        // Only applicable if policy has a waiting period configured
-        if (!context.hasPolicy()) return false;
-        
-        Policy policy = context.getPolicy();
-        Integer waitingPeriod = policy.getGeneralWaitingPeriodDays();
+        // Check if any policy has a waiting period configured
+        Integer waitingPeriod = context.getEffectiveWaitingPeriodDays();
         
         // Skip if no waiting period or waiting period is 0
         return waitingPeriod != null && waitingPeriod > 0;
@@ -65,11 +64,10 @@ public class WaitingPeriodRule implements EligibilityRule {
     @Override
     public RuleResult evaluate(EligibilityContext context) {
         Member member = context.getMember();
-        Policy policy = context.getPolicy();
         LocalDate serviceDate = context.getServiceDate();
 
-        // Get waiting period from policy
-        Integer waitingPeriodDays = policy.getGeneralWaitingPeriodDays();
+        // Get waiting period from BenefitPolicy (canonical) or Policy (legacy)
+        Integer waitingPeriodDays = context.getEffectiveWaitingPeriodDays();
         if (waitingPeriodDays == null || waitingPeriodDays <= 0) {
             return RuleResult.pass("No waiting period configured");
         }

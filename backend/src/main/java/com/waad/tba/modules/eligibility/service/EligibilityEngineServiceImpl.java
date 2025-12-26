@@ -1,5 +1,6 @@
 package com.waad.tba.modules.eligibility.service;
 
+import com.waad.tba.modules.benefitpolicy.entity.BenefitPolicy;
 import com.waad.tba.modules.eligibility.domain.*;
 import com.waad.tba.modules.eligibility.dto.EligibilityCheckRequest;
 import com.waad.tba.modules.eligibility.entity.EligibilityCheck;
@@ -137,7 +138,7 @@ public class EligibilityEngineServiceImpl implements EligibilityEngineService {
             member = memberRepository.findById(request.getMemberId()).orElse(null);
         }
 
-        // Resolve policy (from request or from member)
+        // Resolve policy (from request or from member) - LEGACY
         Policy policy = null;
         Long policyId = request.getPolicyId();
         
@@ -147,6 +148,14 @@ public class EligibilityEngineServiceImpl implements EligibilityEngineService {
             // Auto-resolve from member
             policy = member.getPolicy();
             policyId = policy.getId();
+        }
+        
+        // Resolve BenefitPolicy from member (CANONICAL)
+        BenefitPolicy benefitPolicy = null;
+        Long benefitPolicyId = null;
+        if (member != null && member.getBenefitPolicy() != null) {
+            benefitPolicy = member.getBenefitPolicy();
+            benefitPolicyId = benefitPolicy.getId();
         }
 
         // Resolve provider (optional)
@@ -171,11 +180,13 @@ public class EligibilityEngineServiceImpl implements EligibilityEngineService {
                 .requestId(requestId)
                 .memberId(request.getMemberId())
                 .policyId(policyId)
+                .benefitPolicyId(benefitPolicyId)
                 .providerId(request.getProviderId())
                 .serviceDate(request.getServiceDate())
                 .serviceCode(request.getServiceCode())
                 .member(member)
                 .policy(policy)
+                .benefitPolicy(benefitPolicy)
                 .provider(provider)
                 .employerOrganization(member != null ? member.getEmployerOrganization() : null)
                 .checkedByUserId(userId)

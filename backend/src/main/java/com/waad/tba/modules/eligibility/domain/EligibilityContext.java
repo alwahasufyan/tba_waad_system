@@ -1,5 +1,6 @@
 package com.waad.tba.modules.eligibility.domain;
 
+import com.waad.tba.modules.benefitpolicy.entity.BenefitPolicy;
 import com.waad.tba.modules.member.entity.Member;
 import com.waad.tba.modules.policy.entity.Policy;
 import com.waad.tba.modules.provider.entity.Provider;
@@ -46,6 +47,11 @@ public class EligibilityContext {
      * Policy ID (may be auto-resolved from member)
      */
     private final Long policyId;
+    
+    /**
+     * BenefitPolicy ID (may be auto-resolved from member)
+     */
+    private final Long benefitPolicyId;
 
     /**
      * Provider ID (optional)
@@ -72,9 +78,14 @@ public class EligibilityContext {
     private final Member member;
 
     /**
-     * Resolved policy entity
+     * Resolved policy entity (legacy - kept for backward compatibility)
      */
     private final Policy policy;
+    
+    /**
+     * Resolved BenefitPolicy entity (canonical source)
+     */
+    private final BenefitPolicy benefitPolicy;
 
     /**
      * Resolved provider entity (optional)
@@ -142,10 +153,24 @@ public class EligibilityContext {
     }
 
     /**
-     * Check if policy was resolved
+     * Check if policy was resolved (legacy)
      */
     public boolean hasPolicy() {
         return policy != null;
+    }
+    
+    /**
+     * Check if BenefitPolicy was resolved (canonical)
+     */
+    public boolean hasBenefitPolicy() {
+        return benefitPolicy != null;
+    }
+    
+    /**
+     * Check if any policy (legacy or BenefitPolicy) was resolved
+     */
+    public boolean hasAnyPolicy() {
+        return policy != null || benefitPolicy != null;
     }
 
     /**
@@ -163,7 +188,7 @@ public class EligibilityContext {
     }
 
     /**
-     * Get policy status safely
+     * Get policy status safely (legacy)
      */
     public Policy.PolicyStatus getPolicyStatus() {
         return policy != null ? policy.getStatus() : null;
@@ -203,6 +228,12 @@ public class EligibilityContext {
      * Check if the service date falls within policy coverage period
      */
     public boolean serviceDateInCoveragePeriod() {
+        // First check BenefitPolicy (canonical)
+        if (benefitPolicy != null && serviceDate != null) {
+            return benefitPolicy.isEffectiveOn(serviceDate);
+        }
+        
+        // Fallback to legacy Policy
         if (policy == null || serviceDate == null) return false;
         
         LocalDate start = policy.getStartDate();
@@ -211,6 +242,36 @@ public class EligibilityContext {
         if (start == null || end == null) return false;
         
         return !serviceDate.isBefore(start) && !serviceDate.isAfter(end);
+    }
+    
+    /**
+     * Check if service date is in BenefitPolicy coverage period
+     */
+    public boolean serviceDateInBenefitPolicyCoveragePeriod() {
+        if (benefitPolicy == null || serviceDate == null) return false;
+        return benefitPolicy.isEffectiveOn(serviceDate);
+    }
+    
+    /**
+     * Get the effective waiting period days.
+     * Uses BenefitPolicy.defaultWaitingPeriodDays if available,
+     * otherwise falls back to legacy Policy.generalWaitingPeriodDays.
+     */
+    public Integer getEffectiveWaitingPeriodDays() {
+        if (benefitPolicy != null && benefitPolicy.getDefaultWaitingPeriodDays() != null) {
+            return benefitPolicy.getDefaultWaitingPeriodDays();
+        }
+        if (policy != null) {
+            return policy.getGeneralWaitingPeriodDays();
+        }
+        return 0;
+    }
+    
+    /**
+     * Get BenefitPolicy status safely
+     */
+    public BenefitPolicy.BenefitPolicyStatus getBenefitPolicyStatus() {
+        return benefitPolicy != null ? benefitPolicy.getStatus() : null;
     }
 
     /**

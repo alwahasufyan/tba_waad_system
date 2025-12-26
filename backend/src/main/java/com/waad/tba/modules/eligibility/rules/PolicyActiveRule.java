@@ -1,5 +1,6 @@
 package com.waad.tba.modules.eligibility.rules;
 
+import com.waad.tba.modules.benefitpolicy.entity.BenefitPolicy;
 import com.waad.tba.modules.eligibility.domain.EligibilityContext;
 import com.waad.tba.modules.eligibility.domain.EligibilityReason;
 import com.waad.tba.modules.eligibility.domain.EligibilityRule;
@@ -14,6 +15,7 @@ import org.springframework.stereotype.Component;
  * Phase E1 - Eligibility Engine
  * 
  * Validates that the policy has an ACTIVE status.
+ * Checks BenefitPolicy first (canonical), then falls back to Policy (legacy).
  * This is a hard rule - failure stops evaluation.
  * 
  * Priority: 40
@@ -47,14 +49,76 @@ public class PolicyActiveRule implements EligibilityRule {
 
     @Override
     public boolean isApplicable(EligibilityContext context) {
-        return context.hasPolicy();
+        return context.hasAnyPolicy();
     }
 
     @Override
     public RuleResult evaluate(EligibilityContext context) {
-        Policy policy = context.getPolicy();
-        Policy.PolicyStatus status = policy.getStatus();
-
+        // Check BenefitPolicy first (canonical)
+        if (context.hasBenefitPolicy()) {
+            return evaluateBenefitPolicy(context.getBenefitPolicy());
+        }
+        
+        // Fallback to legacy Policy
+        if (context.hasPolicy()) {
+            return evaluateLegacyPolicy(context.getPolicy());
+        }
+        
+        return RuleResult.fail(
+            EligibilityReason.POLICY_NOT_FOUND,
+            "No policy to evaluate"
+        );
+    }
+    
+    private RuleResult evaluateBenefitPolicy(BenefitPolicy benefitPolicy) {
+        // Check the active flag
+        if (!benefitPolicy.isActive()) {
+            return RuleResult.fail(
+                EligibilityReason.POLICY_INACTIVE,
+                "BenefitPolicy: " + benefitPolicy.getName() + " (inactive)"
+            );
+        }
+        
+        BenefitPolicy.BenefitPolicyStatus status = benefitPolicy.getStatus();
+        if (status == null) {
+            return RuleResult.fail(
+                EligibilityReason.POLICY_INACTIVE,
+                "BenefitPolicy status is null"
+            );
+        }
+        
+        switch (status) {
+            case ACTIVE:
+                return RuleResult.pass("BenefitPolicy ACTIVE: " + benefitPolicy.getName());
+            
+            case SUSPENDED:
+                return RuleResult.fail(
+                    EligibilityReason.POLICY_SUSPENDED,
+                    "BenefitPolicy: " + benefitPolicy.getName()
+                );
+            
+            case EXPIRED:
+                return RuleResult.fail(
+                    EligibilityReason.POLICY_EXPIRED,
+                    "BenefitPolicy: " + benefitPolicy.getName()
+                );
+            
+            case CANCELLED:
+                return RuleResult.fail(
+                    EligibilityReason.POLICY_CANCELLED,
+                    "BenefitPolicy: " + benefitPolicy.getName()
+                );
+            
+            case DRAFT:
+            default:
+                return RuleResult.fail(
+                    EligibilityReason.POLICY_INACTIVE,
+                    "BenefitPolicy status: " + status
+                );
+        }
+    }
+    
+    private RuleResult evaluateLegacyPolicy(Policy policy) {
         // Also check the active flag
         if (!Boolean.TRUE.equals(policy.getActive())) {
             return RuleResult.fail(
@@ -63,6 +127,7 @@ public class PolicyActiveRule implements EligibilityRule {
             );
         }
 
+        Policy.PolicyStatus status = policy.getStatus();
         if (status == null) {
             return RuleResult.fail(
                 EligibilityReason.POLICY_INACTIVE,

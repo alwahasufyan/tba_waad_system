@@ -1,5 +1,6 @@
 package com.waad.tba.modules.eligibility.rules;
 
+import com.waad.tba.modules.benefitpolicy.entity.BenefitPolicy;
 import com.waad.tba.modules.eligibility.domain.EligibilityContext;
 import com.waad.tba.modules.eligibility.domain.EligibilityReason;
 import com.waad.tba.modules.eligibility.domain.EligibilityRule;
@@ -17,6 +18,7 @@ import java.time.format.DateTimeFormatter;
  * Phase E1 - Eligibility Engine
  * 
  * Validates that the service date falls within the policy coverage period.
+ * Checks BenefitPolicy first (canonical), then falls back to Policy (legacy).
  * This is a hard rule - failure stops evaluation.
  * 
  * Priority: 50
@@ -52,13 +54,79 @@ public class PolicyCoveragePeriodRule implements EligibilityRule {
 
     @Override
     public boolean isApplicable(EligibilityContext context) {
-        return context.hasPolicy() && context.getServiceDate() != null;
+        return context.hasAnyPolicy() && context.getServiceDate() != null;
     }
 
     @Override
     public RuleResult evaluate(EligibilityContext context) {
-        Policy policy = context.getPolicy();
         LocalDate serviceDate = context.getServiceDate();
+        
+        // Check BenefitPolicy first (canonical)
+        if (context.hasBenefitPolicy()) {
+            return evaluateBenefitPolicy(context.getBenefitPolicy(), serviceDate);
+        }
+        
+        // Fallback to legacy Policy
+        if (context.hasPolicy()) {
+            return evaluateLegacyPolicy(context.getPolicy(), serviceDate);
+        }
+        
+        return RuleResult.fail(
+            EligibilityReason.POLICY_NOT_FOUND,
+            "No policy to evaluate coverage period"
+        );
+    }
+    
+    private RuleResult evaluateBenefitPolicy(BenefitPolicy benefitPolicy, LocalDate serviceDate) {
+        LocalDate startDate = benefitPolicy.getStartDate();
+        LocalDate endDate = benefitPolicy.getEndDate();
+        
+        // Check start date
+        if (startDate == null) {
+            return RuleResult.fail(
+                EligibilityReason.POLICY_INACTIVE,
+                "BenefitPolicy has no start date defined"
+            );
+        }
+        
+        // Check end date
+        if (endDate == null) {
+            return RuleResult.fail(
+                EligibilityReason.POLICY_INACTIVE,
+                "BenefitPolicy has no end date defined"
+            );
+        }
+        
+        // Service date before coverage start
+        if (serviceDate.isBefore(startDate)) {
+            return RuleResult.fail(
+                EligibilityReason.SERVICE_DATE_BEFORE_COVERAGE,
+                String.format(
+                    "Service date: %s, BenefitPolicy coverage starts: %s",
+                    serviceDate.format(DATE_FORMAT),
+                    startDate.format(DATE_FORMAT)
+                )
+            );
+        }
+        
+        // Service date after coverage end
+        if (serviceDate.isAfter(endDate)) {
+            return RuleResult.fail(
+                EligibilityReason.SERVICE_DATE_AFTER_COVERAGE,
+                String.format(
+                    "Service date: %s, BenefitPolicy coverage ends: %s",
+                    serviceDate.format(DATE_FORMAT),
+                    endDate.format(DATE_FORMAT)
+                )
+            );
+        }
+        
+        return RuleResult.pass(
+            String.format("BenefitPolicy coverage: %s to %s", startDate.format(DATE_FORMAT), endDate.format(DATE_FORMAT))
+        );
+    }
+    
+    private RuleResult evaluateLegacyPolicy(Policy policy, LocalDate serviceDate) {
         LocalDate startDate = policy.getStartDate();
         LocalDate endDate = policy.getEndDate();
 

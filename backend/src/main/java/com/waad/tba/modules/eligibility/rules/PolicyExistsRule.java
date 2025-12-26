@@ -4,7 +4,6 @@ import com.waad.tba.modules.eligibility.domain.EligibilityContext;
 import com.waad.tba.modules.eligibility.domain.EligibilityReason;
 import com.waad.tba.modules.eligibility.domain.EligibilityRule;
 import com.waad.tba.modules.eligibility.domain.RuleResult;
-import com.waad.tba.modules.policy.entity.Policy;
 
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
@@ -13,7 +12,8 @@ import org.springframework.stereotype.Component;
  * Rule: Policy Exists
  * Phase E1 - Eligibility Engine
  * 
- * Validates that the policy exists in the system.
+ * Validates that the member has a policy (BenefitPolicy or legacy Policy).
+ * Checks BenefitPolicy first (canonical), then falls back to Policy (legacy).
  * This is a hard rule - failure stops evaluation.
  * 
  * Priority: 30
@@ -47,14 +47,21 @@ public class PolicyExistsRule implements EligibilityRule {
 
     @Override
     public RuleResult evaluate(EligibilityContext context) {
-        if (!context.hasPolicy()) {
+        // Check for BenefitPolicy first (canonical), then legacy Policy
+        if (!context.hasAnyPolicy()) {
             return RuleResult.fail(
                 EligibilityReason.POLICY_NOT_FOUND,
-                context.getPolicyId() != null ? 
-                    "Policy ID: " + context.getPolicyId() : 
-                    "No policy found for member"
+                context.getMemberId() != null ? 
+                    "No policy found for member ID: " + context.getMemberId() : 
+                    "No policy found"
             );
         }
-        return RuleResult.pass();
+        
+        // Indicate which policy type was found
+        if (context.hasBenefitPolicy()) {
+            return RuleResult.pass("BenefitPolicy found: " + context.getBenefitPolicy().getName());
+        } else {
+            return RuleResult.pass("Legacy Policy found: " + context.getPolicy().getPolicyNumber());
+        }
     }
 }
