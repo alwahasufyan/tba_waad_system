@@ -33,9 +33,6 @@ import com.waad.tba.modules.claim.mapper.ClaimMapper;
 import com.waad.tba.modules.claim.repository.ClaimRepository;
 import com.waad.tba.modules.member.entity.Member;
 import com.waad.tba.modules.member.repository.MemberRepository;
-import com.waad.tba.modules.policy.entity.Policy;
-import com.waad.tba.modules.policy.service.CoverageValidationService;
-import com.waad.tba.modules.policy.service.PolicyValidationService;
 import com.waad.tba.modules.provider.service.ProviderNetworkService;
 import com.waad.tba.modules.rbac.entity.User;
 import com.waad.tba.security.AuthorizationService;
@@ -91,13 +88,9 @@ public class ClaimService {
     private final AuthorizationService authorizationService;
     private final MemberRepository memberRepository;
     
-    // Phase 6: Business flow validation services
-    private final PolicyValidationService policyValidationService;
-    private final CoverageValidationService coverageValidationService;
-    private final ClaimStateMachine claimStateMachine;
-    
-    // Phase 8: BenefitPolicy-based coverage validation (NEW - Single Source of Truth)
+    // Phase 8: BenefitPolicy-based coverage validation (Single Source of Truth)
     private final BenefitPolicyCoverageService benefitPolicyCoverageService;
+    private final ClaimStateMachine claimStateMachine;
     
     // Phase 7: Operational completeness services
     private final ProviderNetworkService providerNetworkService;
@@ -180,38 +173,13 @@ public class ClaimService {
         // PHASE 8: BenefitPolicy Validation (Single Source of Truth)
         // ═══════════════════════════════════════════════════════════════════════════
         // Validate member has active BenefitPolicy for service date
-        // PRIMARY: Use BenefitPolicy validation (canonical source)
-        // FALLBACK: Legacy Policy validation (temporary until policy module removed)
+        benefitPolicyCoverageService.validateCanCreateClaim(member, serviceDate);
+        log.info("✅ Member {} has valid BenefitPolicy for date {}", member.getCivilId(), serviceDate);
         
-        if (member.getBenefitPolicy() != null) {
-            // Use canonical BenefitPolicy validation
-            benefitPolicyCoverageService.validateCanCreateClaim(member, serviceDate);
-            log.info("✅ Member {} has valid BenefitPolicy for date {}", member.getCivilId(), serviceDate);
-            
-            // Validate amount limits using BenefitPolicy
-            if (dto.getRequestedAmount() != null) {
-                benefitPolicyCoverageService.validateAmountLimits(
-                    member, member.getBenefitPolicy(), dto.getRequestedAmount(), serviceDate);
-            }
-        } else {
-            // Fallback to legacy Policy validation
-            try {
-                policyValidationService.validateMemberPolicy(member, serviceDate);
-                log.debug("✅ Legacy Policy validation passed (fallback)");
-            } catch (Exception e) {
-                log.warn("⚠️ Legacy policy validation warning: {}", e.getMessage());
-            }
-            
-            // Validate coverage using legacy Policy
-            Policy policy = member.getPolicy();
-            if (policy != null && dto.getRequestedAmount() != null) {
-                try {
-                    coverageValidationService.validateAmountLimits(
-                        member, policy, dto.getRequestedAmount(), serviceDate);
-                } catch (Exception e) {
-                    log.warn("⚠️ Legacy coverage validation warning: {}", e.getMessage());
-                }
-            }
+        // Validate amount limits using BenefitPolicy
+        if (dto.getRequestedAmount() != null && member.getBenefitPolicy() != null) {
+            benefitPolicyCoverageService.validateAmountLimits(
+                member, member.getBenefitPolicy(), dto.getRequestedAmount(), serviceDate);
         }
         
         // Phase 7: Provider network validation (non-blocking, just warning)
@@ -569,14 +537,11 @@ public class ClaimService {
             netProviderAmount = claim.getRequestedAmount().subtract(patientCoPay);
         }
         
-        // Step 5: Validate coverage limits (Middleware Gate)
-        // PRIMARY: Use BenefitPolicy validation (canonical source)
-        // FALLBACK: Legacy Policy validation (temporary until policy module removed)
+        // Step 5: Validate coverage limits using BenefitPolicy (Single Source of Truth)
         Member member = claim.getMember();
         LocalDate serviceDate = claim.getVisitDate() != null ? claim.getVisitDate() : LocalDate.now();
         
         if (member.getBenefitPolicy() != null) {
-            // Use canonical BenefitPolicy validation
             try {
                 benefitPolicyCoverageService.validateAmountLimits(
                     member, member.getBenefitPolicy(), approvedAmount, serviceDate);
@@ -586,18 +551,7 @@ public class ClaimService {
                 throw new BusinessRuleException("فشل التحقق من التغطية: " + e.getMessage());
             }
         } else {
-            // Fallback to legacy Policy validation
-            Policy policy = member.getPolicy();
-            if (policy != null) {
-                try {
-                    coverageValidationService.validateAmountLimits(
-                        member, policy, approvedAmount, serviceDate);
-                    log.debug("✅ Legacy Policy amount validation passed (fallback)");
-                } catch (Exception e) {
-                    log.error("❌ Legacy coverage validation failed: {}", e.getMessage());
-                    throw new BusinessRuleException("فشل التحقق من التغطية: " + e.getMessage());
-                }
-            }
+            log.warn("⚠️ Member {} has no BenefitPolicy, skipping amount limit validation", member.getCivilId());
         }
         
         // Step 6: Update claim with financial snapshot

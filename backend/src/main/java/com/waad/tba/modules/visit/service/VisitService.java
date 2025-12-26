@@ -15,7 +15,6 @@ import com.waad.tba.common.exception.ResourceNotFoundException;
 import com.waad.tba.modules.benefitpolicy.service.BenefitPolicyCoverageService;
 import com.waad.tba.modules.member.entity.Member;
 import com.waad.tba.modules.member.repository.MemberRepository;
-import com.waad.tba.modules.policy.service.PolicyValidationService;
 import com.waad.tba.modules.rbac.entity.User;
 import com.waad.tba.modules.systemadmin.service.AuditLogService;
 import com.waad.tba.modules.visit.dto.VisitCreateDto;
@@ -70,10 +69,7 @@ public class VisitService {
     private final AuthorizationService authorizationService;
     private final AuditLogService auditLogService;
     
-    // Phase 6: Policy validation service (legacy - kept for fallback)
-    private final PolicyValidationService policyValidationService;
-    
-    // Phase 8: BenefitPolicy validation (canonical source)
+    // BenefitPolicy validation (canonical source for all coverage decisions)
     private final BenefitPolicyCoverageService benefitPolicyCoverageService;
 
     @Transactional(readOnly = true)
@@ -180,19 +176,14 @@ public class VisitService {
         Member member = memberRepository.findById(dto.getMemberId())
                 .orElseThrow(() -> new ResourceNotFoundException("Member", "id", dto.getMemberId()));
 
-        // Validate member has active policy for visit date
-        // PRIMARY: Use BenefitPolicy validation (canonical source)
-        // FALLBACK: Legacy Policy validation (temporary)
+        // Validate member has active BenefitPolicy for visit date (Single Source of Truth)
         LocalDate visitDate = dto.getVisitDate() != null ? dto.getVisitDate() : LocalDate.now();
         
         if (member.getBenefitPolicy() != null) {
-            // Use canonical BenefitPolicy validation
             benefitPolicyCoverageService.validateCanCreateClaim(member, visitDate);
             log.debug("✅ BenefitPolicy validation passed for visit");
         } else {
-            // Fallback to legacy Policy validation
-            policyValidationService.validateMemberPolicy(member, visitDate);
-            log.debug("✅ Legacy Policy validation passed (fallback)");
+            log.warn("⚠️ Member {} has no BenefitPolicy, skipping policy validation for visit", member.getCivilId());
         }
 
         Visit entity = mapper.toEntity(dto, member);
