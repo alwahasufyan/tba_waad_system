@@ -9,6 +9,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -21,8 +22,10 @@ public class PreAuthorizationController {
     private final PreAuthorizationService preAuthService;
 
     @GetMapping
-    public ResponseEntity<ApiResponse<List<PreAuthorizationDto>>> getAllPreAuthorizations() {
-        List<PreAuthorizationDto> preAuths = preAuthService.getAllPreAuthorizations();
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('VIEW_PREAUTH')")
+    public ResponseEntity<ApiResponse<List<PreAuthorizationDto>>> getAllPreAuthorizations(
+            @RequestParam(required = false) Long employerId) {
+        List<PreAuthorizationDto> preAuths = preAuthService.getAllPreAuthorizations(employerId);
         return ResponseEntity.ok(ApiResponse.success(preAuths));
     }
 

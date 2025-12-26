@@ -106,10 +106,12 @@ public class ClaimService {
     private final ClaimAuditService claimAuditService;
 
     /**
-     * Search claims with data-level filtering.
+     * Search claims with explicit employer filtering.
+     * @param employerId Optional employer ID for filtering (null = show all for admin)
+     * @param query Search query string
      */
-    public List<ClaimViewDto> search(String query) {
-        log.debug("🔍 Searching claims with query: {}", query);
+    public List<ClaimViewDto> search(Long employerId, String query) {
+        log.debug("🔍 Searching claims with query: {}, employerId: {}", query, employerId);
         
         User currentUser = authorizationService.getCurrentUser();
         if (currentUser == null) {
@@ -123,17 +125,21 @@ public class ClaimService {
                 log.warn("❌ EMPLOYER_ADMIN feature VIEW_CLAIMS disabled");
                 return Collections.emptyList();
             }
+            // EMPLOYER role is locked to their own employer
+            employerId = currentUser.getEmployerId();
         }
         
-        Long employerFilter = authorizationService.getEmployerFilterForUser(currentUser);
         List<Claim> claims;
         
-        if (employerFilter != null) {
-            log.debug("🔒 Filtering claims by employerId={}", employerFilter);
-            claims = claimRepository.searchByEmployerId(query, employerFilter);
-        } else {
-            log.debug("🔓 No filter - searching all claims");
+        if (employerId != null) {
+            log.debug("🔒 Filtering claims by employerId={}", employerId);
+            claims = claimRepository.searchByEmployerId(query, employerId);
+        } else if (authorizationService.isSuperAdmin(currentUser)) {
+            log.debug("🔓 Admin - searching all claims");
             claims = claimRepository.search(query);
+        } else {
+            log.warn("❌ No employer scope and not admin");
+            return Collections.emptyList();
         }
         
         return claims.stream()
@@ -395,9 +401,9 @@ public class ClaimService {
     }
 
     @Transactional(readOnly = true)
-    public Page<ClaimViewDto> listClaims(int page, int size, String sortBy, String sortDir, String search) {
-        log.debug("📋 Listing claims with pagination. page={}, size={}, sortBy={}, sortDir={}, search={}", 
-                page, size, sortBy, sortDir, search);
+    public Page<ClaimViewDto> listClaims(Long employerId, int page, int size, String sortBy, String sortDir, String search) {
+        log.debug("📋 Listing claims with pagination. employerId={}, page={}, size={}, sortBy={}, sortDir={}, search={}", 
+                employerId, page, size, sortBy, sortDir, search);
         
         User currentUser = authorizationService.getCurrentUser();
         if (currentUser == null) {
@@ -410,6 +416,8 @@ public class ClaimService {
                 log.warn("❌ EMPLOYER_ADMIN feature VIEW_CLAIMS disabled");
                 return Page.empty();
             }
+            // EMPLOYER role is locked to their own employer
+            employerId = currentUser.getEmployerId();
         }
         
         // Build sort direction from string parameter
@@ -417,15 +425,17 @@ public class ClaimService {
         Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
         String keyword = (search != null && !search.trim().isEmpty()) ? search.trim() : "";
         
-        Long employerFilter = authorizationService.getEmployerFilterForUser(currentUser);
         Page<Claim> claimsPage;
         
-        if (employerFilter != null) {
-            log.debug("🔒 Filtering claims by employerId={}", employerFilter);
-            claimsPage = claimRepository.searchPagedByEmployerId(keyword, employerFilter, pageable);
-        } else {
-            log.debug("🔓 No filter - listing all claims");
+        if (employerId != null) {
+            log.debug("🔒 Filtering claims by employerId={}", employerId);
+            claimsPage = claimRepository.searchPagedByEmployerId(keyword, employerId, pageable);
+        } else if (authorizationService.isSuperAdmin(currentUser)) {
+            log.debug("🔓 Admin - listing all claims");
             claimsPage = claimRepository.searchPaged(keyword, pageable);
+        } else {
+            log.warn("❌ No employer scope and not admin");
+            return Page.empty();
         }
         
         return claimsPage.map(claimMapper::toViewDto);
@@ -830,18 +840,26 @@ public class ClaimService {
     }
 
     @Transactional(readOnly = true)
-    public long countClaims() {
+    public long countClaims(Long employerId) {
         User currentUser = authorizationService.getCurrentUser();
         if (currentUser == null) {
             return 0;
         }
         
-        Long employerFilter = authorizationService.getEmployerFilterForUser(currentUser);
-        if (employerFilter != null) {
-            return claimRepository.countByMemberEmployerId(employerFilter);
+        // EMPLOYER role is locked to their own employer
+        if (authorizationService.isEmployerAdmin(currentUser)) {
+            employerId = currentUser.getEmployerId();
         }
         
-        return claimRepository.countActive();
+        if (employerId != null) {
+            return claimRepository.countByMemberEmployerId(employerId);
+        }
+        
+        if (authorizationService.isSuperAdmin(currentUser)) {
+            return claimRepository.countActive();
+        }
+        
+        return 0;
     }
 
     private void validateCreateDto(ClaimCreateDto dto) {

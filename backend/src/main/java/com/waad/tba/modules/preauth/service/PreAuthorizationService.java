@@ -30,8 +30,17 @@ public class PreAuthorizationService {
     private final UserRepository userRepository;
 
     @Transactional(readOnly = true)
-    public List<PreAuthorizationDto> getAllPreAuthorizations() {
-        log.info("Fetching all pre-authorizations");
+    public List<PreAuthorizationDto> getAllPreAuthorizations(Long employerId) {
+        log.info("Fetching pre-authorizations with employerId filter: {}", employerId);
+        
+        if (employerId != null) {
+            // Filter by employer via member relationship
+            return preAuthRepository.findByMemberEmployerId(employerId).stream()
+                    .map(this::toDto)
+                    .collect(Collectors.toList());
+        }
+        
+        // No filter - return all (admin only)
         return preAuthRepository.findAll().stream()
                 .map(this::toDto)
                 .collect(Collectors.toList());

@@ -226,17 +226,31 @@ public class VisitService {
     }
 
     @Transactional(readOnly = true)
-    public Page<VisitResponseDto> findAllPaginated(Pageable pageable, String search) {
-        log.debug("Finding visits with pagination. search={}", search);
-        if (search == null || search.isBlank()) {
-            return repository.findAll(pageable).map(mapper::toResponseDto);
+    public Page<VisitResponseDto> findAllPaginated(Long employerId, Pageable pageable, String search) {
+        log.debug("Finding visits with pagination. employerId={}, search={}", employerId, search);
+        
+        if (employerId != null) {
+            // Filter by employer
+            if (search == null || search.isBlank()) {
+                return repository.findByMemberEmployerId(employerId, pageable).map(mapper::toResponseDto);
+            } else {
+                return repository.searchPagedByEmployerId(search, employerId, pageable).map(mapper::toResponseDto);
+            }
         } else {
-            return repository.searchPaged(search, pageable).map(mapper::toResponseDto);
+            // No employer filter - return all (admin only should reach here)
+            if (search == null || search.isBlank()) {
+                return repository.findAll(pageable).map(mapper::toResponseDto);
+            } else {
+                return repository.searchPaged(search, pageable).map(mapper::toResponseDto);
+            }
         }
     }
 
     @Transactional(readOnly = true)
-    public long count() {
+    public long count(Long employerId) {
+        if (employerId != null) {
+            return repository.countByMemberEmployerId(employerId);
+        }
         return repository.count();
     }
 }

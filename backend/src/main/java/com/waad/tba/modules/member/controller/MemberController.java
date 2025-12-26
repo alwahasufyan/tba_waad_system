@@ -34,10 +34,10 @@ public class MemberController {
 
     @GetMapping("/selector")
     @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('VIEW_MEMBERS') or hasAuthority('MANAGE_MEMBERS')")
-    @Operation(summary = "Get member selector options", description = "Returns active members for dropdown/selector (filtered by organization context)")
+    @Operation(summary = "Get member selector options", description = "Returns active members for dropdown/selector (filtered by employer if provided)")
     public ResponseEntity<ApiResponse<List<MemberSelectorDto>>> getSelectorOptions(
-            @Parameter(description = "Employer ID for organization context (null = TPA/show all)") @RequestHeader(value = "X-Employer-ID", required = false) Long employerIdHeader) {
-        List<MemberSelectorDto> options = memberService.getSelectorOptions(employerIdHeader);
+            @Parameter(description = "Employer ID for filtering (null = show all for admin)") @RequestParam(required = false) Long employerId) {
+        List<MemberSelectorDto> options = memberService.getSelectorOptions(employerId);
         return ResponseEntity.ok(ApiResponse.success(options));
     }
 
@@ -71,9 +71,9 @@ public class MemberController {
 
     @GetMapping
     @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('VIEW_MEMBERS') or hasAuthority('MANAGE_MEMBERS')")
-    @Operation(summary = "List members with pagination", description = "Returns paginated list of members (filtered by organization context)")
+    @Operation(summary = "List members with pagination", description = "Returns paginated list of members (filtered by employer if provided)")
     public ResponseEntity<ApiResponse<PaginationResponse<MemberViewDto>>> list(
-            @Parameter(description = "Employer ID for organization context (null = TPA/show all)") @RequestHeader(value = "X-Employer-ID", required = false) Long employerIdHeader,
+            @Parameter(description = "Employer ID for filtering (null = show all for admin)") @RequestParam(required = false) Long employerId,
             @Parameter(description = "Page number (1-based)") @RequestParam(defaultValue = "1") int page,
             @Parameter(description = "Page size") @RequestParam(defaultValue = "20") int size,
             @Parameter(description = "Sort by field") @RequestParam(defaultValue = "createdAt") String sortBy,
@@ -83,7 +83,7 @@ public class MemberController {
         Sort sort = Sort.by(Sort.Direction.fromString(sortDir), sortBy);
         PageRequest pageRequest = PageRequest.of(Math.max(0, page - 1), size, sort);
 
-        Page<MemberViewDto> pageResult = memberService.listMembers(employerIdHeader, pageRequest, search);
+        Page<MemberViewDto> pageResult = memberService.listMembers(employerId, pageRequest, search);
 
         PaginationResponse<MemberViewDto> response = PaginationResponse.<MemberViewDto>builder()
                 .items(pageResult.getContent())
@@ -106,20 +106,20 @@ public class MemberController {
 
     @GetMapping("/count")
     @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('VIEW_MEMBERS') or hasAuthority('MANAGE_MEMBERS')")
-    @Operation(summary = "Count members", description = "Returns total count of active members (filtered by organization context)")
+    @Operation(summary = "Count members", description = "Returns total count of active members (filtered by employer if provided)")
     public ResponseEntity<ApiResponse<Long>> count(
-            @Parameter(description = "Employer ID for organization context (null = TPA/show all)") @RequestHeader(value = "X-Employer-ID", required = false) Long employerIdHeader) {
-        long total = memberService.count(employerIdHeader);
+            @Parameter(description = "Employer ID for filtering (null = count all for admin)") @RequestParam(required = false) Long employerId) {
+        long total = memberService.count(employerId);
         return ResponseEntity.ok(ApiResponse.success(total));
     }
 
     @GetMapping("/search")
     @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('VIEW_MEMBERS') or hasAuthority('MANAGE_MEMBERS')")
-    @Operation(summary = "Search members", description = "Searches members by name, ID, phone, etc. (filtered by organization context)")
+    @Operation(summary = "Search members", description = "Searches members by name, ID, phone, etc. (filtered by employer if provided)")
     public ResponseEntity<ApiResponse<List<MemberViewDto>>> search(
-            @Parameter(description = "Employer ID for organization context (null = TPA/show all)") @RequestHeader(value = "X-Employer-ID", required = false) Long employerIdHeader,
+            @Parameter(description = "Employer ID for filtering (null = search all for admin)") @RequestParam(required = false) Long employerId,
             @RequestParam String query) {
-        List<MemberViewDto> results = memberService.search(employerIdHeader, query);
+        List<MemberViewDto> results = memberService.search(employerId, query);
         return ResponseEntity.ok(ApiResponse.success(results));
     }
 

@@ -58,20 +58,27 @@ public class BenefitPolicyController {
 
     @GetMapping
     @PreAuthorize("hasAnyAuthority('benefit_policies.view', 'SUPER_ADMIN')")
-    @Operation(summary = "List all benefit policies", description = "Get paginated list of all benefit policies")
+    @Operation(summary = "List all benefit policies", description = "Get paginated list of all benefit policies (filtered by employer if provided)")
     public ResponseEntity<ApiResponse<Page<BenefitPolicyResponseDto>>> findAll(
+            @Parameter(description = "Employer ID for filtering (null = show all for admin)") @RequestParam(required = false) Long employerId,
             @Parameter(description = "Page number (0-based)") @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "Page size") @RequestParam(defaultValue = "20") int size,
             @Parameter(description = "Sort field") @RequestParam(defaultValue = "createdAt") String sortBy,
             @Parameter(description = "Sort direction") @RequestParam(defaultValue = "DESC") String sortDir) {
 
-        log.info("[BENEFIT-POLICIES] GET /api/benefit-policies - page={}, size={}, sortBy={}, sortDir={}",
-                page, size, sortBy, sortDir);
+        log.info("[BENEFIT-POLICIES] GET /api/benefit-policies - employerId={}, page={}, size={}, sortBy={}, sortDir={}",
+                employerId, page, size, sortBy, sortDir);
 
         Sort sort = Sort.by(Sort.Direction.fromString(sortDir), sortBy);
         Pageable pageable = PageRequest.of(page, size, sort);
 
-        Page<BenefitPolicyResponseDto> result = benefitPolicyService.findAll(pageable);
+        Page<BenefitPolicyResponseDto> result;
+        if (employerId != null) {
+            result = benefitPolicyService.findByEmployer(employerId, pageable);
+        } else {
+            result = benefitPolicyService.findAll(pageable);
+        }
+        
         log.info("[BENEFIT-POLICIES] Returning {} records (totalElements: {}, totalPages: {})",
                 result.getContent().size(), result.getTotalElements(), result.getTotalPages());
 

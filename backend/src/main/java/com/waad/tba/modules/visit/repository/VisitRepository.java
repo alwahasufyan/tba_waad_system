@@ -16,13 +16,26 @@ public interface VisitRepository extends JpaRepository<Visit, Long> {
     
     List<Visit> findByMemberId(Long memberId);
     
-    // Data-level filtering method for Phase 8.1
+    // Data-level filtering method for explicit employer filtering
     @Query("SELECT v FROM Visit v WHERE v.member.employer.id = :employerId")
     List<Visit> findByMemberEmployerId(@Param("employerId") Long employerId);
     
-    // Insurance Company filtering (for INSURANCE_ADMIN) - Phase 8.2
-    @Query("SELECT v FROM Visit v WHERE v.member.insuranceCompany.id = :companyId")
-    List<Visit> findByMemberInsuranceCompanyId(@Param("companyId") Long companyId);
+    // Paginated employer filtering
+    @Query("SELECT v FROM Visit v WHERE v.member.employer.id = :employerId")
+    Page<Visit> findByMemberEmployerId(@Param("employerId") Long employerId, Pageable pageable);
+    
+    // Search with employer filtering
+    @Query("SELECT v FROM Visit v LEFT JOIN v.member m WHERE v.member.employer.id = :employerId AND (" +
+           "LOWER(v.doctorName) LIKE LOWER(CONCAT('%', :q, '%')) OR " +
+           "LOWER(v.specialty) LIKE LOWER(CONCAT('%', :q, '%')) OR " +
+           "LOWER(v.diagnosis) LIKE LOWER(CONCAT('%', :q, '%')) OR " +
+           "LOWER(m.fullNameEnglish) LIKE LOWER(CONCAT('%', :q, '%')) OR " +
+           "LOWER(m.fullNameArabic) LIKE LOWER(CONCAT('%', :q, '%')))")
+    Page<Visit> searchPagedByEmployerId(@Param("q") String q, @Param("employerId") Long employerId, Pageable pageable);
+    
+    // Count by employer
+    @Query("SELECT COUNT(v) FROM Visit v WHERE v.member.employer.id = :employerId")
+    long countByMemberEmployerId(@Param("employerId") Long employerId);
     
     @Query("SELECT v FROM Visit v LEFT JOIN v.member m WHERE " +
            "LOWER(v.doctorName) LIKE LOWER(CONCAT('%', :query, '%')) OR " +

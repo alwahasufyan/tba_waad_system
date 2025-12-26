@@ -24,6 +24,10 @@ public interface PreAuthorizationRepository extends JpaRepository<PreAuthorizati
     
     List<PreAuthorization> findByReviewerId(Long reviewerId);
     
+    // Employer filtering via member relationship
+    @Query("SELECT p FROM PreAuthorization p WHERE p.member.employer.id = :employerId")
+    List<PreAuthorization> findByMemberEmployerId(@Param("employerId") Long employerId);
+    
     @Query("SELECT p FROM PreAuthorization p WHERE p.member.id = :memberId AND p.status = :status")
     List<PreAuthorization> findByMemberIdAndStatus(@Param("memberId") Long memberId, 
                                                     @Param("status") PreAuthStatus status);

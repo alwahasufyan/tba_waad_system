@@ -140,6 +140,7 @@ public class VisitController {
                         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Internal server error")
         })
         public ResponseEntity<ApiResponse<PaginationResponse<VisitResponseDto>>> paginate(
+                        @Parameter(name = "employerId", description = "Employer ID for filtering (null = show all for admin)") @RequestParam(required = false) Long employerId,
                         @Parameter(name = "page", description = "Page number (1-based)") @RequestParam(defaultValue = "1") int page,
                         @Parameter(name = "size", description = "Page size") @RequestParam(defaultValue = "10") int size,
                         @Parameter(name = "search", description = "Search query") @RequestParam(required = false) String search,
@@ -149,7 +150,7 @@ public class VisitController {
                                 org.springframework.data.domain.Sort.by(
                                                 org.springframework.data.domain.Sort.Direction.fromString(sortDir),
                                                 sortBy));
-                Page<VisitResponseDto> pageResult = service.findAllPaginated(pageable, search);
+                Page<VisitResponseDto> pageResult = service.findAllPaginated(employerId, pageable, search);
                 PaginationResponse<VisitResponseDto> response = PaginationResponse.<VisitResponseDto>builder()
                                 .items(pageResult.getContent())
                                 .total(pageResult.getTotalElements())
@@ -161,9 +162,10 @@ public class VisitController {
 
         @GetMapping("/count")
         @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('VIEW_VISITS')")
-        @Operation(summary = "Count visits", description = "Returns total number of visits")
-        public ResponseEntity<ApiResponse<Long>> count() {
-                long total = service.count();
+        @Operation(summary = "Count visits", description = "Returns total number of visits (filtered by employer if provided)")
+        public ResponseEntity<ApiResponse<Long>> count(
+                        @Parameter(name = "employerId", description = "Employer ID for filtering") @RequestParam(required = false) Long employerId) {
+                long total = service.count(employerId);
                 return ResponseEntity.ok(ApiResponse.success(total));
         }
 }

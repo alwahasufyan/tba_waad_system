@@ -13,30 +13,31 @@ import java.util.Optional;
 
 /**
  * ================================================================================================
- * Organization Context Service - Odoo-Like Multi-Company Context
+ * Organization Context Service - Explicit Employer Filtering
  * ================================================================================================
  * 
- * This service determines the current organization context for data filtering.
- * It implements the SAME logic as Odoo's company selector:
+ * ARCHITECTURE (Updated):
+ * - NO global employer context
+ * - NO X-Employer-ID headers
+ * - Employer filtering is EXPLICIT via query parameters
  * 
- * 1. TPA Organization (WAAD) selected → Show ALL data (no filtering)
- * 2. Specific Employer selected → Show ONLY that employer's data
- * 
- * USAGE:
- * - Controllers extract X-Employer-ID header and pass to service layer
- * - Services call getOrganizationContext() to get current context
- * - Repositories apply filtering based on organizationType:
- *     - TPA: No filtering (return all records)
- *     - EMPLOYER: Filter by employerOrganization.id
+ * USAGE PATTERN:
+ * - Controllers accept optional `employerId` query parameter
+ * - Services receive employerId explicitly and apply filtering
+ * - If employerId is null and user is admin → return all data
+ * - If employerId is null and user is EMPLOYER role → use user.employerId
+ * - If employerId is provided → filter by that employer
  * 
  * SECURITY:
- * - SUPER_ADMIN/TBA_ADMIN can switch between TPA and any employer
- * - EMPLOYER role is LOCKED to their own employerId (cannot switch)
- * - Organization context header is validated against user permissions
+ * - SUPER_ADMIN can see all data or filter by any employer
+ * - EMPLOYER role is LOCKED to their own employerId (override any parameter)
+ * 
+ * This service is still available for legacy compatibility but the preferred
+ * pattern is explicit employerId parameter passing in controllers/services.
  * 
  * ================================================================================================
  * @author TBA WAAD System
- * @version 1.0 - Odoo-Like Organization Context
+ * @version 2.0 - Explicit Employer Filtering (No Global Context)
  * ================================================================================================
  */
 @Service

@@ -67,13 +67,14 @@ public class ClaimController {
     @GetMapping
     @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('VIEW_CLAIMS')")
     public ResponseEntity<ApiResponse<PaginationResponse<ClaimViewDto>>> listClaims(
+            @RequestParam(required = false) Long employerId,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(defaultValue = "createdAt") String sortBy,
             @RequestParam(defaultValue = "desc") String sortDir,
             @RequestParam(required = false) String search) {
         Page<ClaimViewDto> claimsPage = claimService.listClaims(
-                Math.max(0, page - 1), size, sortBy, sortDir, search);
+                employerId, Math.max(0, page - 1), size, sortBy, sortDir, search);
 
         PaginationResponse<ClaimViewDto> response = PaginationResponse.<ClaimViewDto>builder()
                 .items(claimsPage.getContent())
@@ -94,15 +95,18 @@ public class ClaimController {
 
     @GetMapping("/count")
     @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('VIEW_CLAIMS')")
-    public ResponseEntity<ApiResponse<Long>> countClaims() {
-        long count = claimService.countClaims();
+    public ResponseEntity<ApiResponse<Long>> countClaims(
+            @RequestParam(required = false) Long employerId) {
+        long count = claimService.countClaims(employerId);
         return ResponseEntity.ok(ApiResponse.success("Claims counted successfully", count));
     }
 
     @GetMapping("/search")
     @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('VIEW_CLAIMS')")
-    public ResponseEntity<ApiResponse<List<ClaimViewDto>>> search(@RequestParam String query) {
-        List<ClaimViewDto> results = claimService.search(query);
+    public ResponseEntity<ApiResponse<List<ClaimViewDto>>> search(
+            @RequestParam(required = false) Long employerId,
+            @RequestParam String query) {
+        List<ClaimViewDto> results = claimService.search(employerId, query);
         return ResponseEntity.ok(ApiResponse.success(results));
     }
 
