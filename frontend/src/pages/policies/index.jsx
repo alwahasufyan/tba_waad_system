@@ -35,7 +35,6 @@ import MainCard from 'components/MainCard';
 import RBACGuard from 'components/tba/RBACGuard';
 import TableSkeleton from 'components/tba/LoadingSkeleton';
 import ErrorFallback, { EmptyState } from 'components/tba/ErrorFallback';
-import { FIXED_INSURANCE_COMPANY } from 'constants/insuranceCompany';
 // TODO: Create policies.service.js in services/api folder
 const policiesService = {
   getAll: async () => [],

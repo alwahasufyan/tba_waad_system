@@ -1,9 +1,9 @@
 package com.waad.tba.modules.policy.service;
 
+import com.waad.tba.common.entity.Organization;
+import com.waad.tba.common.repository.OrganizationRepository;
 import com.waad.tba.modules.employer.entity.Employer;
 import com.waad.tba.modules.employer.repository.EmployerRepository;
-import com.waad.tba.modules.insurance.entity.InsuranceCompany;
-import com.waad.tba.modules.insurance.repository.InsuranceCompanyRepository;
 import com.waad.tba.modules.policy.dto.PolicyDto;
 import com.waad.tba.modules.policy.entity.BenefitPackage;
 import com.waad.tba.modules.policy.entity.Policy;
@@ -25,7 +25,7 @@ public class PolicyService {
 
     private final PolicyRepository policyRepository;
     private final EmployerRepository employerRepository;
-    private final InsuranceCompanyRepository insuranceCompanyRepository;
+    private final OrganizationRepository organizationRepository;
     private final BenefitPackageRepository benefitPackageRepository;
 
     @Transactional(readOnly = true)
@@ -84,16 +84,14 @@ public class PolicyService {
             throw new RuntimeException("Policy with number " + dto.getPolicyNumber() + " already exists");
         }
 
-        Employer employer = employerRepository.findById(dto.getEmployerId())
-                .orElseThrow(() -> new RuntimeException("Employer not found with ID: " + dto.getEmployerId()));
-
-        InsuranceCompany insuranceCompany = insuranceCompanyRepository.findById(dto.getInsuranceCompanyId())
-                .orElseThrow(() -> new RuntimeException("Insurance company not found with ID: " + dto.getInsuranceCompanyId()));
+        // Use Organization for employer (new canonical approach)
+        Organization employerOrg = organizationRepository.findById(dto.getEmployerId())
+                .orElseThrow(() -> new RuntimeException("Employer organization not found with ID: " + dto.getEmployerId()));
 
         BenefitPackage benefitPackage = benefitPackageRepository.findById(dto.getBenefitPackageId())
                 .orElseThrow(() -> new RuntimeException("Benefit package not found with ID: " + dto.getBenefitPackageId()));
 
-        Policy policy = toEntity(dto, employer, insuranceCompany, benefitPackage);
+        Policy policy = toEntity(dto, employerOrg, benefitPackage);
         Policy saved = policyRepository.save(policy);
         log.info("Policy created successfully with ID: {}", saved.getId());
         return toDto(saved);
@@ -111,16 +109,14 @@ public class PolicyService {
             throw new RuntimeException("Policy with number " + dto.getPolicyNumber() + " already exists");
         }
 
-        Employer employer = employerRepository.findById(dto.getEmployerId())
-                .orElseThrow(() -> new RuntimeException("Employer not found with ID: " + dto.getEmployerId()));
-
-        InsuranceCompany insuranceCompany = insuranceCompanyRepository.findById(dto.getInsuranceCompanyId())
-                .orElseThrow(() -> new RuntimeException("Insurance company not found with ID: " + dto.getInsuranceCompanyId()));
+        // Use Organization for employer (new canonical approach)
+        Organization employerOrg = organizationRepository.findById(dto.getEmployerId())
+                .orElseThrow(() -> new RuntimeException("Employer organization not found with ID: " + dto.getEmployerId()));
 
         BenefitPackage benefitPackage = benefitPackageRepository.findById(dto.getBenefitPackageId())
                 .orElseThrow(() -> new RuntimeException("Benefit package not found with ID: " + dto.getBenefitPackageId()));
 
-        updateEntityFromDto(existing, dto, employer, insuranceCompany, benefitPackage);
+        updateEntityFromDto(existing, dto, employerOrg, benefitPackage);
         Policy updated = policyRepository.save(existing);
         log.info("Policy updated successfully with ID: {}", updated.getId());
         return toDto(updated);
@@ -152,16 +148,12 @@ public class PolicyService {
     }
 
     private PolicyDto toDto(Policy entity) {
-        return PolicyDto.builder()
+        PolicyDto.PolicyDtoBuilder builder = PolicyDto.builder()
                 .id(entity.getId())
                 .policyNumber(entity.getPolicyNumber())
                 .productName(entity.getProductName())
                 .startDate(entity.getStartDate())
                 .endDate(entity.getEndDate())
-                .employerId(entity.getEmployer().getId())
-                .employerName(entity.getEmployer().getNameAr())
-                .insuranceCompanyId(entity.getInsuranceCompany().getId())
-                .insuranceCompanyName(entity.getInsuranceCompany().getName())
                 .benefitPackageId(entity.getBenefitPackage().getId())
                 .benefitPackageName(entity.getBenefitPackage().getNameEn())
                 .status(entity.getStatus().name())
@@ -178,18 +170,28 @@ public class PolicyService {
                 .exclusions(entity.getExclusions())
                 .specialConditions(entity.getSpecialConditions())
                 .notes(entity.getNotes())
-                .active(entity.getActive())
-                .build();
+                .active(entity.getActive());
+        
+        // Use employerOrganization (new canonical)
+        if (entity.getEmployerOrganization() != null) {
+            builder.employerId(entity.getEmployerOrganization().getId())
+                   .employerName(entity.getEmployerOrganization().getName());
+        } else if (entity.getEmployer() != null) {
+            // Legacy fallback
+            builder.employerId(entity.getEmployer().getId())
+                   .employerName(entity.getEmployer().getNameAr());
+        }
+        
+        return builder.build();
     }
 
-    private Policy toEntity(PolicyDto dto, Employer employer, InsuranceCompany insuranceCompany, BenefitPackage benefitPackage) {
+    private Policy toEntity(PolicyDto dto, Organization employerOrg, BenefitPackage benefitPackage) {
         return Policy.builder()
                 .policyNumber(dto.getPolicyNumber())
                 .productName(dto.getProductName())
                 .startDate(dto.getStartDate())
                 .endDate(dto.getEndDate())
-                .employer(employer)
-                .insuranceCompany(insuranceCompany)
+                .employerOrganization(employerOrg)
                 .benefitPackage(benefitPackage)
                 .status(Policy.PolicyStatus.valueOf(dto.getStatus()))
                 .generalWaitingPeriodDays(dto.getGeneralWaitingPeriodDays())
@@ -209,14 +211,12 @@ public class PolicyService {
                 .build();
     }
 
-    private void updateEntityFromDto(Policy entity, PolicyDto dto, Employer employer, 
-                                     InsuranceCompany insuranceCompany, BenefitPackage benefitPackage) {
+    private void updateEntityFromDto(Policy entity, PolicyDto dto, Organization employerOrg, BenefitPackage benefitPackage) {
         entity.setPolicyNumber(dto.getPolicyNumber());
         entity.setProductName(dto.getProductName());
         entity.setStartDate(dto.getStartDate());
         entity.setEndDate(dto.getEndDate());
-        entity.setEmployer(employer);
-        entity.setInsuranceCompany(insuranceCompany);
+        entity.setEmployerOrganization(employerOrg);
         entity.setBenefitPackage(benefitPackage);
         entity.setStatus(Policy.PolicyStatus.valueOf(dto.getStatus()));
         entity.setGeneralWaitingPeriodDays(dto.getGeneralWaitingPeriodDays());

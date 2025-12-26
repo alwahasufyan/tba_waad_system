@@ -6,7 +6,6 @@
 export { default as claimsService } from './claims.service';
 export { default as employersService } from './employers.service';
 export { default as membersService } from './members.service';
-export { default as insurancePoliciesService } from './insurance-policies.service';
 export { default as reviewersService } from './reviewers.service';
 export { default as visitsService } from './visits.service';
 export { default as preApprovalsService } from './pre-approvals.service';

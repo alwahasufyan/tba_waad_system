@@ -19,7 +19,6 @@ import MainCard from 'components/MainCard';
 import { ModernPageHeader } from 'components/tba';
 import { usePreApprovalDetails, useUpdatePreApproval } from 'hooks/usePreApprovals';
 import { membersService } from 'services/api';
-import { FIXED_INSURANCE_COMPANY, getFixedInsuranceCompanyId } from 'constants/insuranceCompany';
 
 const PreApprovalEdit = () => {
   const { id } = useParams();
@@ -28,18 +27,15 @@ const PreApprovalEdit = () => {
   const { update, updating, error: updateError } = useUpdatePreApproval();
 
   const [members, setMembers] = useState([]);
-  // Insurance company is fixed in single-tenant mode - no dropdown needed
   const [policies, setPolicies] = useState([]);
   const [packages, setPackages] = useState([]);
 
   const [loadingMembers, setLoadingMembers] = useState(false);
-  // No loading state for companies - fixed in single-tenant mode
   const [loadingPolicies, setLoadingPolicies] = useState(false);
   const [loadingPackages, setLoadingPackages] = useState(false);
 
   const [formData, setFormData] = useState({
     memberId: null,
-    insuranceCompanyId: getFixedInsuranceCompanyId(), // Fixed single-tenant insurance company
     insurancePolicyId: '',
     benefitPackageId: '',
     providerName: '',
@@ -56,15 +52,13 @@ const PreApprovalEdit = () => {
 
   useEffect(() => {
     fetchMembers();
-    // Fetch policies for fixed insurance company on mount
-    fetchPolicies(getFixedInsuranceCompanyId());
+    fetchPolicies();
   }, []);
 
   useEffect(() => {
     if (preApproval) {
       setFormData({
         memberId: preApproval.member?.id || null,
-        insuranceCompanyId: getFixedInsuranceCompanyId(), // Always use fixed insurance company
         insurancePolicyId: preApproval.insurancePolicy?.id || '',
         benefitPackageId: preApproval.benefitPackage?.id || '',
         providerName: preApproval.providerName || '',
@@ -78,15 +72,12 @@ const PreApprovalEdit = () => {
         attachmentsCount: preApproval.attachmentsCount || 0
       });
 
-      // Always use fixed insurance company for policies
-      fetchPolicies(getFixedInsuranceCompanyId());
+      fetchPolicies();
       if (preApproval.insurancePolicy?.id) {
         fetchPackages(preApproval.insurancePolicy.id);
       }
     }
   }, [preApproval]);
-
-  // Insurance company is fixed - no need to watch for changes
 
   useEffect(() => {
     if (formData.insurancePolicyId) {
@@ -108,12 +99,10 @@ const PreApprovalEdit = () => {
     }
   };
 
-  // Insurance company is fixed in single-tenant mode - no need to fetch companies
-
-  const fetchPolicies = async (companyId) => {
+  const fetchPolicies = async () => {
     try {
       setLoadingPolicies(true);
-      const result = await getInsurancePolicies({ page: 1, size: 1000, insuranceCompanyId: companyId });
+      const result = await getInsurancePolicies({ page: 1, size: 1000 });
       setPolicies(result.items || []);
     } catch (err) {
       console.error('Error fetching policies:', err);

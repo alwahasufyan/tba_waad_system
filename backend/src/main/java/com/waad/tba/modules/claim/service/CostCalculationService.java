@@ -8,9 +8,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.waad.tba.common.enums.NetworkType;
+import com.waad.tba.modules.benefitpolicy.entity.BenefitPolicy;
 import com.waad.tba.modules.claim.entity.Claim;
 import com.waad.tba.modules.claim.repository.ClaimRepository;
-import com.waad.tba.modules.insurancepolicy.entity.PolicyBenefitPackage;
 import com.waad.tba.modules.member.entity.Member;
 import com.waad.tba.modules.provider.service.ProviderNetworkService;
 
@@ -61,23 +61,23 @@ public class CostCalculationService {
             return CostBreakdown.zero();
         }
         
-        // Get member and policy info
+        // Get member and benefit policy info
         Member member = claim.getMember();
-        PolicyBenefitPackage benefitPackage = claim.getBenefitPackage();
+        BenefitPolicy benefitPolicy = member != null ? member.getBenefitPolicy() : null;
         
         // Determine network type based on provider
         NetworkType networkType = providerNetworkService.determineNetworkTypeByName(claim.getProviderName());
         
         // Get deductible info
-        BigDecimal annualDeductible = getAnnualDeductible(benefitPackage);
+        BigDecimal annualDeductible = getAnnualDeductible(benefitPolicy);
         BigDecimal deductibleMet = getDeductibleMetThisPeriod(member, claim);
         BigDecimal remainingDeductible = annualDeductible.subtract(deductibleMet).max(BigDecimal.ZERO);
         
         // Get co-pay percentage based on network
-        BigDecimal coPayPercent = getCoPayPercent(benefitPackage, networkType);
+        BigDecimal coPayPercent = getCoPayPercent(benefitPolicy, networkType);
         
         // Get out-of-pocket maximum
-        BigDecimal outOfPocketMax = getOutOfPocketMax(benefitPackage);
+        BigDecimal outOfPocketMax = getOutOfPocketMax(benefitPolicy);
         BigDecimal outOfPocketSpent = getOutOfPocketSpentThisPeriod(member, claim);
         BigDecimal remainingOutOfPocket = outOfPocketMax.subtract(outOfPocketSpent).max(BigDecimal.ZERO);
         
@@ -246,22 +246,24 @@ public class CostCalculationService {
     }
     
     /**
-     * Get annual deductible from benefit package or use default.
+     * Get annual deductible from benefit policy or use default.
+     * BenefitPolicy doesn't have a dedicated deductible field - return default.
+     * In production, this could be derived from perMemberLimit or added as a new field.
      */
-    private BigDecimal getAnnualDeductible(PolicyBenefitPackage benefitPackage) {
-        // PolicyBenefitPackage doesn't have deductible field currently
-        // Return default - in production, this would come from the package
+    private BigDecimal getAnnualDeductible(BenefitPolicy benefitPolicy) {
+        // Return default - in production, this would come from the policy
         return DEFAULT_ANNUAL_DEDUCTIBLE;
     }
     
     /**
-     * Get co-pay percentage based on benefit package and network type.
+     * Get co-pay percentage based on benefit policy and network type.
+     * Co-pay = 100 - coverage percent. Higher coverage = lower co-pay.
      */
-    private BigDecimal getCoPayPercent(PolicyBenefitPackage benefitPackage, NetworkType networkType) {
-        // Check benefit package first
-        if (benefitPackage != null && benefitPackage.getCopayPercentage() != null) {
-            // Adjust for network type
-            BigDecimal baseCopay = benefitPackage.getCopayPercentage();
+    private BigDecimal getCoPayPercent(BenefitPolicy benefitPolicy, NetworkType networkType) {
+        // Check benefit policy first - co-pay is inverse of coverage
+        if (benefitPolicy != null && benefitPolicy.getDefaultCoveragePercent() != null) {
+            // Co-pay = 100 - coverage percent
+            BigDecimal baseCopay = new BigDecimal(100 - benefitPolicy.getDefaultCoveragePercent());
             if (networkType == NetworkType.OUT_OF_NETWORK) {
                 // Out-of-network typically has higher co-pay (e.g., +20%)
                 return baseCopay.add(new BigDecimal("20.00")).min(new BigDecimal("100.00"));
@@ -276,14 +278,23 @@ public class CostCalculationService {
     }
     
     /**
-     * Get out-of-pocket maximum from benefit package or use default.
+     * Get out-of-pocket maximum from benefit policy or use default.
+     * Uses perMemberLimit or a fraction of annualLimit as the basis.
      */
-    private BigDecimal getOutOfPocketMax(PolicyBenefitPackage benefitPackage) {
-        // PolicyBenefitPackage uses maxLimit which is similar concept
-        if (benefitPackage != null && benefitPackage.getMaxLimit() != null) {
-            // Use 10% of max limit as out-of-pocket max (simplified)
-            return benefitPackage.getMaxLimit().multiply(new BigDecimal("0.1"))
-                .setScale(2, RoundingMode.HALF_UP);
+    private BigDecimal getOutOfPocketMax(BenefitPolicy benefitPolicy) {
+        if (benefitPolicy != null) {
+            // Use per-member limit if available
+            if (benefitPolicy.getPerMemberLimit() != null) {
+                // Use 10% of per-member limit as out-of-pocket max
+                return benefitPolicy.getPerMemberLimit().multiply(new BigDecimal("0.1"))
+                    .setScale(2, RoundingMode.HALF_UP);
+            }
+            // Fall back to annual limit
+            if (benefitPolicy.getAnnualLimit() != null) {
+                // Use 10% of annual limit as out-of-pocket max
+                return benefitPolicy.getAnnualLimit().multiply(new BigDecimal("0.1"))
+                    .setScale(2, RoundingMode.HALF_UP);
+            }
         }
         return DEFAULT_OUT_OF_POCKET_MAX;
     }

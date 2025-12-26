@@ -2,8 +2,6 @@ package com.waad.tba.modules.claim.entity;
 
 import com.waad.tba.common.entity.Organization;
 import com.waad.tba.modules.member.entity.Member;
-import com.waad.tba.modules.insurancepolicy.entity.InsurancePolicy;
-import com.waad.tba.modules.insurancepolicy.entity.PolicyBenefitPackage;
 import com.waad.tba.modules.preauth.entity.PreApproval;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -33,19 +31,15 @@ public class Claim {
     @JoinColumn(name = "member_id", nullable = false)
     private Member member;
 
-    // NEW: Organization-based relationship (canonical)
+    // Organization-based relationship (TPA/WAAD organization)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "insurance_org_id", nullable = false)
     private Organization insuranceOrganization;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "insurance_policy_id")
-    private InsurancePolicy insurancePolicy;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "benefit_package_id")
-    private PolicyBenefitPackage benefitPackage;
-
+    // REMOVED: InsurancePolicy and PolicyBenefitPackage
+    // Coverage is now determined via Member.benefitPolicy (BenefitPolicy module)
+    // Legacy columns kept in DB for data migration but not mapped
+    
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "pre_approval_id")
     private PreApproval preApproval;

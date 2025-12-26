@@ -559,17 +559,33 @@ public class ClaimService {
         }
         
         // Step 5: Validate coverage limits (Middleware Gate)
+        // PRIMARY: Use BenefitPolicy validation (canonical source)
+        // FALLBACK: Legacy Policy validation (temporary until policy module removed)
         Member member = claim.getMember();
-        Policy policy = member.getPolicy();
-        if (policy != null) {
+        LocalDate serviceDate = claim.getVisitDate() != null ? claim.getVisitDate() : LocalDate.now();
+        
+        if (member.getBenefitPolicy() != null) {
+            // Use canonical BenefitPolicy validation
             try {
-                coverageValidationService.validateAmountLimits(
-                    member, policy, approvedAmount, 
-                    claim.getVisitDate() != null ? claim.getVisitDate() : LocalDate.now()
-                );
+                benefitPolicyCoverageService.validateAmountLimits(
+                    member, member.getBenefitPolicy(), approvedAmount, serviceDate);
+                log.debug("✅ BenefitPolicy amount validation passed");
             } catch (Exception e) {
-                log.error("❌ Coverage validation failed: {}", e.getMessage());
+                log.error("❌ BenefitPolicy coverage validation failed: {}", e.getMessage());
                 throw new BusinessRuleException("فشل التحقق من التغطية: " + e.getMessage());
+            }
+        } else {
+            // Fallback to legacy Policy validation
+            Policy policy = member.getPolicy();
+            if (policy != null) {
+                try {
+                    coverageValidationService.validateAmountLimits(
+                        member, policy, approvedAmount, serviceDate);
+                    log.debug("✅ Legacy Policy amount validation passed (fallback)");
+                } catch (Exception e) {
+                    log.error("❌ Legacy coverage validation failed: {}", e.getMessage());
+                    throw new BusinessRuleException("فشل التحقق من التغطية: " + e.getMessage());
+                }
             }
         }
         

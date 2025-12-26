@@ -7,7 +7,6 @@ import org.springframework.stereotype.Component;
 
 import com.waad.tba.modules.benefitpolicy.entity.BenefitPolicy;
 import com.waad.tba.modules.employer.entity.Employer;
-import com.waad.tba.modules.insurance.entity.InsuranceCompany;
 import com.waad.tba.modules.member.dto.FamilyMemberDto;
 import com.waad.tba.modules.member.dto.MemberAttributeDto;
 import com.waad.tba.modules.member.dto.MemberCreateDto;
@@ -64,12 +63,7 @@ public class MemberMapperV2 {
             entity.setEmployer(employer);
         }
 
-        // ربط شركة التأمين إذا وجدت
-        if (dto.getInsuranceCompanyId() != null) {
-            InsuranceCompany ic = new InsuranceCompany();
-            ic.setId(dto.getInsuranceCompanyId());
-            entity.setInsuranceCompany(ic);
-        }
+        // InsuranceCompany removed - coverage now via BenefitPolicy
 
         return entity;
     }
@@ -145,9 +139,10 @@ public class MemberMapperV2 {
             dto.setEmployerName(entity.getEmployer().getNameAr());
         }
 
-        if (entity.getInsuranceCompany() != null) {
-            dto.setInsuranceCompanyId(entity.getInsuranceCompany().getId());
-            dto.setInsuranceCompanyName(entity.getInsuranceCompany().getName());
+        // InsuranceCompany removed - organization info now via employerOrganization
+        if (entity.getEmployerOrganization() != null) {
+            dto.setEmployerId(entity.getEmployerOrganization().getId());
+            dto.setEmployerName(entity.getEmployerOrganization().getName());
         }
 
         // Benefit Policy mapping

@@ -21,24 +21,19 @@ import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import dayjs from 'dayjs';
 import MainCard from 'components/MainCard';
 import { useCreatePolicy } from 'hooks/usePolicies';
-import { FIXED_INSURANCE_COMPANY, getFixedInsuranceCompanyId } from 'constants/insuranceCompany';
 
 const PolicyCreate = () => {
   const navigate = useNavigate();
   const { create, creating, error } = useCreatePolicy();
-  // Insurance company is fixed in single-tenant mode - no dropdown needed
   const [formData, setFormData] = useState({
     name: '',
     code: '',
     description: '',
     startDate: null,
     endDate: null,
-    insuranceCompanyId: getFixedInsuranceCompanyId(), // Fixed single-tenant insurance company
     active: true
   });
   const [formErrors, setFormErrors] = useState({});
-
-  // No need to fetch companies - insurance company is fixed in single-tenant mode
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -74,10 +69,6 @@ const PolicyCreate = () => {
       errors.startDate = 'تاريخ البدء مطلوب';
     }
 
-    if (!formData.insuranceCompanyId) {
-      errors.insuranceCompanyId = 'شركة التأمين مطلوبة';
-    }
-
     if (formData.startDate && formData.endDate && dayjs(formData.endDate).isBefore(dayjs(formData.startDate))) {
       errors.endDate = 'تاريخ الانتهاء يجب أن يكون بعد تاريخ البدء';
     }
@@ -100,7 +91,6 @@ const PolicyCreate = () => {
         description: formData.description?.trim() || null,
         startDate: formData.startDate ? dayjs(formData.startDate).format('YYYY-MM-DD') : null,
         endDate: formData.endDate ? dayjs(formData.endDate).format('YYYY-MM-DD') : null,
-        insuranceCompanyId: formData.insuranceCompanyId,
         active: formData.active
       };
 

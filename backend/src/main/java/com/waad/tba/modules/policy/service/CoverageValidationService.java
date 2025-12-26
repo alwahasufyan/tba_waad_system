@@ -342,14 +342,17 @@ public class CoverageValidationService {
     }
 
     /**
-     * Calculate total used for a member under a specific policy.
+     * Calculate total used for a member under their benefit policy.
+     * Since Claim no longer has insurancePolicy reference, we calculate
+     * total used from all claims for the member (benefit policy is per-member).
      */
     private BigDecimal calculateTotalUsedForPolicy(Long memberId, Long policyId) {
         List<Claim> claims = claimRepository.findByMemberId(memberId);
         
+        // Calculate total approved amounts from all claims for this member
+        // The policyId parameter is kept for API compatibility but not used
+        // since coverage is now determined by Member.benefitPolicy
         return claims.stream()
-            .filter(c -> c.getInsurancePolicy() != null && 
-                        c.getInsurancePolicy().getId().equals(policyId))
             .filter(c -> c.getApprovedAmount() != null)
             .map(Claim::getApprovedAmount)
             .reduce(BigDecimal.ZERO, BigDecimal::add);

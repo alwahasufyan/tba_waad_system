@@ -6,7 +6,7 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.waad.tba.common.entity.OrganizationType;
+import com.waad.tba.common.enums.OrganizationType;
 import com.waad.tba.common.repository.OrganizationRepository;
 import com.waad.tba.modules.claim.repository.ClaimRepository;
 import com.waad.tba.modules.dashboard.dto.ClaimsPerDayDto;

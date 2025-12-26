@@ -129,6 +129,16 @@ public class BenefitPolicy {
     private BigDecimal perFamilyLimit;
 
     /**
+     * Default waiting period in days (policy-level default).
+     * Individual BenefitPolicyRule can override this per service/category.
+     * If null or 0, no waiting period applies.
+     */
+    @Min(value = 0, message = "Default waiting period must be >= 0")
+    @Column(name = "default_waiting_period_days")
+    @Builder.Default
+    private Integer defaultWaitingPeriodDays = 0;
+
+    /**
      * Policy status
      */
     @NotNull

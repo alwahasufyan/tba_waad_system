@@ -82,13 +82,6 @@ const BenefitPackageView = Loadable(lazy(() => import('pages/benefit-packages/Be
 const BenefitPoliciesList = Loadable(lazy(() => import('pages/benefit-policies/BenefitPoliciesList')));
 const BenefitPolicyView = Loadable(lazy(() => import('pages/benefit-policies/BenefitPolicyView')));
 
-// ==============================|| LAZY LOADING - INSURANCE POLICIES ||============================== //
-
-const InsurancePoliciesList = Loadable(lazy(() => import('pages/insurance-policies/InsurancePoliciesList')));
-const InsurancePolicyCreate = Loadable(lazy(() => import('pages/insurance-policies/InsurancePolicyCreate')));
-const InsurancePolicyEdit = Loadable(lazy(() => import('pages/insurance-policies/InsurancePolicyEdit')));
-const InsurancePolicyView = Loadable(lazy(() => import('pages/insurance-policies/InsurancePolicyView')));
-
 // ==============================|| LAZY LOADING - MEDICAL SERVICES ||============================== //
 
 const MedicalServicesList = Loadable(lazy(() => import('pages/medical-services/MedicalServicesList')));
@@ -476,45 +469,6 @@ const MainRoutes = {
 
     // NOTE: Benefit Packages main routes are defined below (line ~674)
     // This section intentionally left empty to avoid duplicate route
-
-    // Insurance Policies Module
-    {
-      path: 'insurance-policies',
-      children: [
-        {
-          path: '',
-          element: (
-            <RouteGuard allowedRoles={['ADMIN', 'INSURANCE_COMPANY', 'REVIEWER']}>
-              <InsurancePoliciesList />
-            </RouteGuard>
-          )
-        },
-        {
-          path: 'add',
-          element: (
-            <RouteGuard allowedRoles={['ADMIN', 'INSURANCE_COMPANY', 'REVIEWER']}>
-              <InsurancePolicyCreate />
-            </RouteGuard>
-          )
-        },
-        {
-          path: 'edit/:id',
-          element: (
-            <RouteGuard allowedRoles={['ADMIN', 'INSURANCE_COMPANY', 'REVIEWER']}>
-              <InsurancePolicyEdit />
-            </RouteGuard>
-          )
-        },
-        {
-          path: ':id',
-          element: (
-            <RouteGuard allowedRoles={['ADMIN', 'INSURANCE_COMPANY', 'REVIEWER']}>
-              <InsurancePolicyView />
-            </RouteGuard>
-          )
-        }
-      ]
-    },
 
     // Medical Services Module - Wrapped with TableRefreshLayout (Phase D2.3)
     {

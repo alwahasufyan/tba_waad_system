@@ -22,21 +22,18 @@ import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import dayjs from 'dayjs';
 import MainCard from 'components/MainCard';
 import { usePolicyDetails, useUpdatePolicy } from 'hooks/usePolicies';
-import { FIXED_INSURANCE_COMPANY, getFixedInsuranceCompanyId } from 'constants/insuranceCompany';
 
 const PolicyEdit = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { policy, loading: loadingPolicy } = usePolicyDetails(id);
   const { update, updating, error } = useUpdatePolicy();
-  // Insurance company is fixed in single-tenant mode - no dropdown needed
   const [formData, setFormData] = useState({
     name: '',
     code: '',
     description: '',
     startDate: null,
     endDate: null,
-    insuranceCompanyId: getFixedInsuranceCompanyId(), // Fixed single-tenant insurance company
     active: true
   });
   const [formErrors, setFormErrors] = useState({});
@@ -49,13 +46,10 @@ const PolicyEdit = () => {
         description: policy.description || '',
         startDate: policy.startDate ? dayjs(policy.startDate) : null,
         endDate: policy.endDate ? dayjs(policy.endDate) : null,
-        insuranceCompanyId: getFixedInsuranceCompanyId(), // Always use fixed insurance company
         active: policy.active ?? true
       });
     }
   }, [policy]);
-
-  // No need to fetch companies - insurance company is fixed in single-tenant mode
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -91,10 +85,6 @@ const PolicyEdit = () => {
       errors.startDate = 'تاريخ البدء مطلوب';
     }
 
-    if (!formData.insuranceCompanyId) {
-      errors.insuranceCompanyId = 'شركة التأمين مطلوبة';
-    }
-
     if (formData.startDate && formData.endDate && dayjs(formData.endDate).isBefore(dayjs(formData.startDate))) {
       errors.endDate = 'تاريخ الانتهاء يجب أن يكون بعد تاريخ البدء';
     }
@@ -117,7 +107,6 @@ const PolicyEdit = () => {
         description: formData.description?.trim() || null,
         startDate: formData.startDate ? dayjs(formData.startDate).format('YYYY-MM-DD') : null,
         endDate: formData.endDate ? dayjs(formData.endDate).format('YYYY-MM-DD') : null,
-        insuranceCompanyId: formData.insuranceCompanyId,
         active: formData.active
       };
 

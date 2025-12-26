@@ -7,8 +7,14 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface MedicalServiceRepository extends JpaRepository<MedicalService, Long> {
+    
+    /**
+     * Find a medical service by its code.
+     */
+    Optional<MedicalService> findByCode(String code);
     
     @Query("SELECT ms FROM MedicalService ms WHERE " +
            "(:search IS NULL OR :search = '' OR " +

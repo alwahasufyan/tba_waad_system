@@ -6,25 +6,21 @@ import MainCard from 'components/MainCard';
 import { ModernPageHeader } from 'components/tba';
 import { useCreatePreApproval } from 'hooks/usePreApprovals';
 import { membersService } from 'services/api';
-import { FIXED_INSURANCE_COMPANY, getFixedInsuranceCompanyId } from 'constants/insuranceCompany';
 
 const PreApprovalCreate = () => {
   const navigate = useNavigate();
   const { create, creating, error } = useCreatePreApproval();
 
   const [members, setMembers] = useState([]);
-  // Insurance company is fixed in single-tenant mode - no dropdown needed
   const [policies, setPolicies] = useState([]);
   const [packages, setPackages] = useState([]);
 
   const [loadingMembers, setLoadingMembers] = useState(false);
-  // No loading state for companies - fixed in single-tenant mode
   const [loadingPolicies, setLoadingPolicies] = useState(false);
   const [loadingPackages, setLoadingPackages] = useState(false);
 
   const [formData, setFormData] = useState({
     memberId: null,
-    insuranceCompanyId: getFixedInsuranceCompanyId(), // Fixed single-tenant insurance company
     insurancePolicyId: '',
     benefitPackageId: '',
     providerName: '',
@@ -38,12 +34,8 @@ const PreApprovalCreate = () => {
 
   useEffect(() => {
     fetchMembers();
-    // Fetch policies for fixed insurance company on mount
-    fetchPolicies(getFixedInsuranceCompanyId());
+    fetchPolicies();
   }, []);
-
-  // Insurance company is fixed - no need to watch for changes
-  // Policies are fetched once on mount
 
   useEffect(() => {
     if (formData.insurancePolicyId) {
@@ -65,12 +57,10 @@ const PreApprovalCreate = () => {
     }
   };
 
-  // Insurance company is fixed in single-tenant mode - no need to fetch companies
-
-  const fetchPolicies = async (companyId) => {
+  const fetchPolicies = async () => {
     try {
       setLoadingPolicies(true);
-      const result = await getInsurancePolicies({ page: 1, size: 1000, insuranceCompanyId: companyId });
+      const result = await getInsurancePolicies({ page: 1, size: 1000 });
       setPolicies(result.items || []);
     } catch (err) {
       console.error('Error fetching policies:', err);
@@ -113,10 +103,6 @@ const PreApprovalCreate = () => {
       errors.memberId = 'المؤمَّن عليه مطلوب';
     }
 
-    if (!formData.insuranceCompanyId) {
-      errors.insuranceCompanyId = 'شركة التأمين مطلوبة';
-    }
-
     if (!formData.providerName?.trim()) {
       errors.providerName = 'اسم مقدم الخدمة مطلوب';
     }
@@ -143,7 +129,6 @@ const PreApprovalCreate = () => {
     try {
       const payload = {
         memberId: formData.memberId,
-        insuranceCompanyId: formData.insuranceCompanyId,
         insurancePolicyId: formData.insurancePolicyId || null,
         benefitPackageId: formData.benefitPackageId || null,
         providerName: formData.providerName.trim(),

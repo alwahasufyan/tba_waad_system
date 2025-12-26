@@ -39,7 +39,6 @@ import ModernPageHeader from 'components/tba/ModernPageHeader';
 import { getMemberById, updateMember } from 'services/api/members.service';
 import axiosClient from 'utils/axios';
 import { openSnackbar } from 'api/snackbar';
-import { FIXED_INSURANCE_COMPANY, getFixedInsuranceCompanyId } from 'constants/insuranceCompany';
 
 /**
  * Member Edit Page
@@ -64,7 +63,6 @@ const MemberEdit = () => {
     policyNumber: '',
     benefitPackageId: '',
     benefitPolicyId: '',
-    insuranceCompanyId: '',
     employeeNumber: '',
     joinDate: null,
     occupation: '',
@@ -136,7 +134,6 @@ const MemberEdit = () => {
         policyNumber: member.policyNumber || '',
         benefitPackageId: member.benefitPackageId || '',
         benefitPolicyId: member.benefitPolicyId || '',
-        insuranceCompanyId: getFixedInsuranceCompanyId(), // Fixed single-tenant insurance company
         employeeNumber: member.employeeNumber || '',
         joinDate: member.joinDate || null,
         occupation: member.occupation || '',
@@ -324,7 +321,6 @@ const MemberEdit = () => {
         policyNumber: form.policyNumber || null,
         benefitPackageId: form.benefitPackageId || null,
         benefitPolicyId: form.benefitPolicyId || null,
-        insuranceCompanyId: form.insuranceCompanyId || null,
         employeeNumber: form.employeeNumber || null,
         joinDate: form.joinDate || null,
         occupation: form.occupation || null,

@@ -37,7 +37,6 @@ import ModernPageHeader from 'components/tba/ModernPageHeader';
 import { createMember } from 'services/api/members.service';
 import axiosClient from 'utils/axios';
 import { openSnackbar } from 'api/snackbar';
-import { FIXED_INSURANCE_COMPANY, getFixedInsuranceCompanyId } from 'constants/insuranceCompany';
 import RBACGuard from 'components/tba/RBACGuard';
 import { PERMISSIONS } from 'constants/permissions.constants';
 
@@ -71,10 +70,9 @@ const MemberCreate = () => {
     joinDate: null,
     occupation: '',
 
-    // Insurance
+    // Insurance/Coverage - now via BenefitPolicy
     policyNumber: '',
     benefitPackageId: '',
-    insuranceCompanyId: getFixedInsuranceCompanyId(), // Fixed single-tenant insurance company
 
     // Membership Period
     status: 'ACTIVE',
@@ -295,7 +293,6 @@ const MemberCreate = () => {
         nationality: form.nationality || null,
         policyNumber: form.policyNumber || null,
         benefitPackageId: form.benefitPackageId || null,
-        insuranceCompanyId: getFixedInsuranceCompanyId(), // Fixed single-tenant insurance company
         employerId: parseInt(form.employerId),
         employeeNumber: form.employeeNumber || null,
         joinDate: form.joinDate || null,

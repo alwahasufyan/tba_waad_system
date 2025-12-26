@@ -6,8 +6,6 @@ import com.waad.tba.modules.claim.entity.ClaimAttachment;
 import com.waad.tba.modules.claim.entity.ClaimLine;
 import com.waad.tba.common.repository.OrganizationRepository;
 import com.waad.tba.modules.member.repository.MemberRepository;
-import com.waad.tba.modules.insurancepolicy.repository.InsurancePolicyRepository;
-import com.waad.tba.modules.insurancepolicy.repository.PolicyBenefitPackageRepository;
 import com.waad.tba.modules.preauth.repository.PreApprovalRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -22,8 +20,6 @@ public class ClaimMapper {
 
     private final MemberRepository memberRepository;
     private final OrganizationRepository organizationRepository;
-    private final InsurancePolicyRepository insurancePolicyRepository;
-    private final PolicyBenefitPackageRepository policyBenefitPackageRepository;
     private final PreApprovalRepository preApprovalRepository;
 
     public Claim toEntity(ClaimCreateDto dto) {
@@ -41,12 +37,9 @@ public class ClaimMapper {
                 .requestedAmount(dto.getRequestedAmount())
                 .build();
 
-        if (dto.getInsurancePolicyId() != null) {
-            claim.setInsurancePolicy(insurancePolicyRepository.findById(dto.getInsurancePolicyId()).orElse(null));
-        }
-        if (dto.getBenefitPackageId() != null) {
-            claim.setBenefitPackage(policyBenefitPackageRepository.findById(dto.getBenefitPackageId()).orElse(null));
-        }
+        // REMOVED: InsurancePolicy and PolicyBenefitPackage mapping
+        // Coverage is determined via Member.benefitPolicy
+        
         if (dto.getPreApprovalId() != null) {
             claim.setPreApproval(preApprovalRepository.findById(dto.getPreApprovalId()).orElse(null));
         }
@@ -90,12 +83,8 @@ public class ClaimMapper {
         if (dto.getReviewerComment() != null) claim.setReviewerComment(dto.getReviewerComment());
         if (dto.getActive() != null) claim.setActive(dto.getActive());
 
-        if (dto.getInsurancePolicyId() != null) {
-            claim.setInsurancePolicy(insurancePolicyRepository.findById(dto.getInsurancePolicyId()).orElse(null));
-        }
-        if (dto.getBenefitPackageId() != null) {
-            claim.setBenefitPackage(policyBenefitPackageRepository.findById(dto.getBenefitPackageId()).orElse(null));
-        }
+        // REMOVED: InsurancePolicy and PolicyBenefitPackage mapping
+        
         if (dto.getPreApprovalId() != null) {
             claim.setPreApproval(preApprovalRepository.findById(dto.getPreApprovalId()).orElse(null));
         }
@@ -164,6 +153,13 @@ public class ClaimMapper {
             dto.setMemberId(claim.getMember().getId());
             dto.setMemberFullNameArabic(claim.getMember().getFullNameArabic());
             dto.setMemberCivilId(claim.getMember().getCivilId());
+            
+            // Get benefit policy info from member instead of claim
+            if (claim.getMember().getBenefitPolicy() != null) {
+                dto.setBenefitPackageId(claim.getMember().getBenefitPolicy().getId());
+                dto.setBenefitPackageName(claim.getMember().getBenefitPolicy().getName());
+                dto.setBenefitPackageCode(claim.getMember().getBenefitPolicy().getPolicyCode());
+            }
         }
 
         if (claim.getInsuranceOrganization() != null) {
@@ -172,17 +168,7 @@ public class ClaimMapper {
             dto.setInsuranceCompanyCode(claim.getInsuranceOrganization().getCode());
         }
 
-        if (claim.getInsurancePolicy() != null) {
-            dto.setInsurancePolicyId(claim.getInsurancePolicy().getId());
-            dto.setInsurancePolicyName(claim.getInsurancePolicy().getName());
-            dto.setInsurancePolicyCode(claim.getInsurancePolicy().getCode());
-        }
-
-        if (claim.getBenefitPackage() != null) {
-            dto.setBenefitPackageId(claim.getBenefitPackage().getId());
-            dto.setBenefitPackageName(claim.getBenefitPackage().getName());
-            dto.setBenefitPackageCode(claim.getBenefitPackage().getCode());
-        }
+        // REMOVED: InsurancePolicy mapping - coverage via Member.benefitPolicy
 
         if (claim.getPreApproval() != null) {
             dto.setPreApprovalId(claim.getPreApproval().getId());

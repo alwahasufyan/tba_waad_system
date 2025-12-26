@@ -7,7 +7,11 @@ import com.waad.tba.modules.benefitpolicy.entity.BenefitPolicy.BenefitPolicyStat
 import com.waad.tba.modules.benefitpolicy.entity.BenefitPolicyRule;
 import com.waad.tba.modules.benefitpolicy.repository.BenefitPolicyRepository;
 import com.waad.tba.modules.benefitpolicy.repository.BenefitPolicyRuleRepository;
+import com.waad.tba.modules.claim.entity.Claim;
+import com.waad.tba.modules.claim.entity.ClaimLine;
+import com.waad.tba.modules.claim.repository.ClaimRepository;
 import com.waad.tba.modules.member.entity.Member;
+import com.waad.tba.modules.medicalcategory.MedicalCategory;
 import com.waad.tba.modules.medicalservice.MedicalService;
 import com.waad.tba.modules.medicalservice.MedicalServiceRepository;
 import lombok.Builder;
@@ -57,6 +61,7 @@ public class BenefitPolicyCoverageService {
     private final BenefitPolicyRepository policyRepository;
     private final BenefitPolicyRuleRepository ruleRepository;
     private final MedicalServiceRepository serviceRepository;
+    private final ClaimRepository claimRepository;
 
     // ═══════════════════════════════════════════════════════════════════════════
     // POLICY VALIDATION
@@ -330,6 +335,293 @@ public class BenefitPolicyCoverageService {
         return getCoverageForService(member, serviceId)
             .map(CoverageInfo::getCoveragePercent)
             .orElse(0);
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // AMOUNT LIMIT VALIDATION (Migrated from CoverageValidationService)
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    /**
+     * Validate amount against BenefitPolicy limits.
+     * This replaces the legacy CoverageValidationService.validateAmountLimits().
+     * 
+     * Validates:
+     * - Annual limit per member
+     * - Per-member limit on policy
+     * - Per-family limit on policy
+     * 
+     * @param member The member making the claim
+     * @param benefitPolicy The member's BenefitPolicy
+     * @param requestedAmount The requested claim amount
+     * @param serviceDate The date of service
+     * @throws BusinessRuleException if any limit is exceeded
+     */
+    public void validateAmountLimits(
+            Member member,
+            BenefitPolicy benefitPolicy,
+            BigDecimal requestedAmount,
+            LocalDate serviceDate) {
+        
+        if (benefitPolicy == null) {
+            throw new BusinessRuleException("Member has no BenefitPolicy assigned");
+        }
+        
+        if (requestedAmount == null || requestedAmount.compareTo(BigDecimal.ZERO) <= 0) {
+            return; // No amount to validate
+        }
+        
+        log.debug("🔍 Validating amount limits for member {} amount {} on {}",
+            member.getId(), requestedAmount, serviceDate);
+        
+        // Check annual limit from BenefitPolicy
+        BigDecimal annualLimit = benefitPolicy.getAnnualLimit();
+        if (annualLimit != null && annualLimit.compareTo(BigDecimal.ZERO) > 0) {
+            BigDecimal usedAmount = calculateUsedAmountForYear(member.getId(), serviceDate.getYear());
+            BigDecimal remainingLimit = annualLimit.subtract(usedAmount);
+            
+            if (requestedAmount.compareTo(remainingLimit) > 0) {
+                log.warn("❌ Annual limit exceeded: requested={}, remaining={}, annual={}", 
+                    requestedAmount, remainingLimit, annualLimit);
+                throw new BusinessRuleException(
+                    String.format("المبلغ المطلوب (%.2f) يتجاوز الحد السنوي المتبقي (%.2f). الحد السنوي: %.2f، المستخدم: %.2f",
+                        requestedAmount, remainingLimit, annualLimit, usedAmount)
+                );
+            }
+        }
+        
+        // Check per-member limit
+        BigDecimal perMemberLimit = benefitPolicy.getPerMemberLimit();
+        if (perMemberLimit != null && perMemberLimit.compareTo(BigDecimal.ZERO) > 0) {
+            BigDecimal totalUsed = calculateTotalUsedForMember(member.getId());
+            BigDecimal remaining = perMemberLimit.subtract(totalUsed);
+            
+            if (requestedAmount.compareTo(remaining) > 0) {
+                log.warn("❌ Per-member limit exceeded: requested={}, remaining={}", requestedAmount, remaining);
+                throw new BusinessRuleException(
+                    String.format("المبلغ المطلوب (%.2f) يتجاوز حد العضو المتبقي (%.2f)",
+                        requestedAmount, remaining)
+                );
+            }
+        }
+        
+        log.debug("✅ Amount limits validation passed for member {}", member.getId());
+    }
+
+    /**
+     * Validate waiting periods for a member against BenefitPolicy/BenefitPolicyRule.
+     * This replaces the legacy CoverageValidationService.validateWaitingPeriods().
+     * 
+     * Waiting period logic:
+     * 1. Check policy-level defaultWaitingPeriodDays
+     * 2. For each claim line, check BenefitPolicyRule.waitingPeriodDays (overrides default)
+     * 
+     * @param member The member making the claim
+     * @param benefitPolicy The member's BenefitPolicy
+     * @param claimLines Optional list of claim lines to validate per-service waiting
+     * @param serviceDate The date of service
+     * @throws BusinessRuleException if waiting period not satisfied
+     */
+    public void validateWaitingPeriods(
+            Member member,
+            BenefitPolicy benefitPolicy,
+            List<ClaimLine> claimLines,
+            LocalDate serviceDate) {
+        
+        if (benefitPolicy == null) {
+            return; // No policy to validate
+        }
+        
+        LocalDate memberStartDate = member.getStartDate();
+        if (memberStartDate == null) {
+            memberStartDate = member.getJoinDate();
+        }
+        if (memberStartDate == null) {
+            log.debug("Member {} has no start/join date, skipping waiting period check", member.getId());
+            return; // Cannot validate without dates
+        }
+        
+        long daysSinceEnrollment = java.time.temporal.ChronoUnit.DAYS.between(memberStartDate, serviceDate);
+        
+        // Check policy-level default waiting period
+        Integer defaultWaiting = benefitPolicy.getDefaultWaitingPeriodDays();
+        if (defaultWaiting != null && defaultWaiting > 0) {
+            if (daysSinceEnrollment < defaultWaiting) {
+                LocalDate eligibleDate = memberStartDate.plusDays(defaultWaiting);
+                throw new BusinessRuleException(
+                    String.format("فترة الانتظار العامة لم تكتمل. العضو سيكون مؤهلاً للتغطية من %s (مطلوب %d يوم، مضى %d يوم)",
+                        eligibleDate, defaultWaiting, daysSinceEnrollment)
+                );
+            }
+        }
+        
+        // Check per-service/category waiting periods from rules
+        if (claimLines != null && !claimLines.isEmpty()) {
+            for (ClaimLine line : claimLines) {
+                validateWaitingPeriodForClaimLine(benefitPolicy, line, memberStartDate, serviceDate, daysSinceEnrollment);
+            }
+        }
+        
+        log.debug("✅ Waiting period validation passed for member {}", member.getId());
+    }
+
+    /**
+     * Validate waiting period for a specific claim line.
+     * Uses service code to lookup the medical service.
+     */
+    private void validateWaitingPeriodForClaimLine(
+            BenefitPolicy benefitPolicy,
+            ClaimLine line,
+            LocalDate memberStartDate,
+            LocalDate serviceDate,
+            long daysSinceEnrollment) {
+        
+        String serviceCode = line.getServiceCode();
+        if (serviceCode == null || serviceCode.isBlank()) {
+            return; // No service code to check
+        }
+        
+        // Try to find the medical service by code
+        Optional<MedicalService> serviceOpt = serviceRepository.findByCode(serviceCode);
+        if (serviceOpt.isEmpty()) {
+            log.debug("Service code {} not found, skipping waiting period check for this line", serviceCode);
+            return;
+        }
+        
+        MedicalService service = serviceOpt.get();
+        Long categoryId = (service.getCategoryEntity() != null) 
+            ? service.getCategoryEntity().getId() 
+            : null;
+        
+        Optional<BenefitPolicyRule> ruleOpt = ruleRepository.findBestRuleForService(
+            benefitPolicy.getId(), service.getId(), categoryId);
+        
+        if (ruleOpt.isPresent()) {
+            BenefitPolicyRule rule = ruleOpt.get();
+            Integer ruleWaitingDays = rule.getWaitingPeriodDays();
+            
+            if (ruleWaitingDays != null && ruleWaitingDays > 0 && daysSinceEnrollment < ruleWaitingDays) {
+                LocalDate eligibleDate = memberStartDate.plusDays(ruleWaitingDays);
+                String serviceName = service.getNameAr() != null ? service.getNameAr() : service.getNameEn();
+                throw new BusinessRuleException(
+                    String.format("فترة الانتظار للخدمة '%s' لم تكتمل. العضو سيكون مؤهلاً من %s (مطلوب %d يوم)",
+                        serviceName, eligibleDate, ruleWaitingDays)
+                );
+            }
+        }
+    }
+
+    /**
+     * Validate that a service is covered under the BenefitPolicy.
+     * Checks if a BenefitPolicyRule exists for the service or its category.
+     * 
+     * @param serviceId The medical service ID
+     * @param benefitPolicy The BenefitPolicy to check
+     * @throws BusinessRuleException if service is not covered
+     */
+    public void validateServiceCoverage(Long serviceId, BenefitPolicy benefitPolicy) {
+        if (serviceId == null || benefitPolicy == null) {
+            return; // Nothing to validate
+        }
+        
+        MedicalService service = serviceRepository.findById(serviceId).orElse(null);
+        if (service == null) {
+            throw new BusinessRuleException("الخدمة الطبية غير موجودة: " + serviceId);
+        }
+        
+        Long categoryId = (service.getCategoryEntity() != null) 
+            ? service.getCategoryEntity().getId() 
+            : null;
+        
+        Optional<BenefitPolicyRule> ruleOpt = ruleRepository.findBestRuleForService(
+            benefitPolicy.getId(), serviceId, categoryId);
+        
+        if (ruleOpt.isEmpty()) {
+            String serviceName = service.getNameAr() != null ? service.getNameAr() : service.getNameEn();
+            throw new BusinessRuleException(
+                String.format("الخدمة '%s' غير مغطاة في وثيقة المزايا '%s'",
+                    serviceName, benefitPolicy.getName())
+            );
+        }
+        
+        // Check if the rule is active
+        BenefitPolicyRule rule = ruleOpt.get();
+        if (!rule.isActive()) {
+            String serviceName = service.getNameAr() != null ? service.getNameAr() : service.getNameEn();
+            throw new BusinessRuleException(
+                String.format("قاعدة التغطية للخدمة '%s' غير نشطة",
+                    serviceName)
+            );
+        }
+        
+        log.debug("✅ Service {} is covered under policy {}", serviceId, benefitPolicy.getName());
+    }
+
+    /**
+     * Validate service coverage by service code (legacy support).
+     * 
+     * @param serviceCode The service code
+     * @param benefitPolicy The BenefitPolicy to check
+     * @throws BusinessRuleException if service is not covered
+     */
+    public void validateServiceCoverageByCode(String serviceCode, BenefitPolicy benefitPolicy) {
+        if (serviceCode == null || serviceCode.isBlank() || benefitPolicy == null) {
+            return;
+        }
+        
+        // Try to find service by code
+        MedicalService service = serviceRepository.findByCode(serviceCode).orElse(null);
+        if (service != null) {
+            validateServiceCoverage(service.getId(), benefitPolicy);
+        } else {
+            log.warn("Service code {} not found in database, skipping coverage check", serviceCode);
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // HELPER METHODS FOR AMOUNT CALCULATION
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    /**
+     * Calculate used amount for a member in a specific year.
+     */
+    private BigDecimal calculateUsedAmountForYear(Long memberId, int year) {
+        List<Claim> claims = claimRepository.findByMemberId(memberId);
+        
+        return claims.stream()
+            .filter(c -> c.getVisitDate() != null && c.getVisitDate().getYear() == year)
+            .filter(c -> c.getApprovedAmount() != null)
+            .map(Claim::getApprovedAmount)
+            .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    /**
+     * Calculate total used for a member (all time).
+     */
+    private BigDecimal calculateTotalUsedForMember(Long memberId) {
+        List<Claim> claims = claimRepository.findByMemberId(memberId);
+        
+        return claims.stream()
+            .filter(c -> c.getApprovedAmount() != null)
+            .map(Claim::getApprovedAmount)
+            .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    /**
+     * Get remaining coverage for a member (for UI display).
+     */
+    public BigDecimal getRemainingCoverage(Member member, LocalDate asOfDate) {
+        BenefitPolicy policy = member.getBenefitPolicy();
+        if (policy == null) {
+            return null;
+        }
+        
+        BigDecimal annualLimit = policy.getAnnualLimit();
+        if (annualLimit == null || annualLimit.compareTo(BigDecimal.ZERO) <= 0) {
+            return null; // Unlimited or not configured
+        }
+        
+        BigDecimal used = calculateUsedAmountForYear(member.getId(), asOfDate.getYear());
+        return annualLimit.subtract(used).max(BigDecimal.ZERO);
     }
 
     // ═══════════════════════════════════════════════════════════════════════════

@@ -20,8 +20,6 @@ import com.waad.tba.modules.benefitpolicy.entity.BenefitPolicy;
 import com.waad.tba.modules.benefitpolicy.repository.BenefitPolicyRepository;
 import com.waad.tba.modules.employer.entity.Employer;
 import com.waad.tba.modules.employer.repository.EmployerRepository;
-import com.waad.tba.modules.insurance.entity.InsuranceCompany;
-import com.waad.tba.modules.insurance.repository.InsuranceCompanyRepository;
 import com.waad.tba.modules.member.dto.FamilyMemberDto;
 import com.waad.tba.modules.member.dto.MemberAttributeDto;
 import com.waad.tba.modules.member.dto.MemberCreateDto;
@@ -52,7 +50,6 @@ public class MemberService {
     private final MemberMapperV2 mapper;
 
     private final EmployerRepository employerRepo;
-    private final InsuranceCompanyRepository insuranceRepo;
     private final BenefitPolicyRepository benefitPolicyRepo;
     private final OrganizationRepository organizationRepo;
     private final AuthorizationService authorizationService;
@@ -152,19 +149,11 @@ public class MemberService {
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Employer organization not found with id: " + dto.getEmployerId()));
 
-        InsuranceCompany insuranceCompany = null;
-        if (dto.getInsuranceCompanyId() != null) {
-            insuranceCompany = insuranceRepo.findById(dto.getInsuranceCompanyId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Insurance company not found"));
-        }
-
         Member member = mapper.toEntity(dto);
 
         // Phase 1 Enterprise Fix: Mandatory Organization Link
         member.setEmployerOrganization(employerOrg);
         member.setEmployer(null); // Legacy ignored as per decision
-
-        member.setInsuranceCompany(insuranceCompany);
 
         // Auto-assign active BenefitPolicy for employer (if exists)
         // Note: autoAssignBenefitPolicy method might need update to use Organization
@@ -210,12 +199,6 @@ public class MemberService {
                 .orElseThrow(() -> new ResourceNotFoundException("Member not found: " + id));
 
         mapper.updateEntityFromDto(member, dto);
-
-        if (dto.getInsuranceCompanyId() != null) {
-            InsuranceCompany insuranceCompany = insuranceRepo.findById(dto.getInsuranceCompanyId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Insurance company not found"));
-            member.setInsuranceCompany(insuranceCompany);
-        }
 
         // Handle BenefitPolicy assignment
         if (dto.getBenefitPolicyId() != null) {
