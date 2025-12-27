@@ -171,15 +171,7 @@ const useRBACSidebar = () => {
             roles: ['SUPER_ADMIN', 'INSURANCE_ADMIN'],
             permissions: ['MANAGE_EMPLOYERS', 'VIEW_EMPLOYERS']
           },
-          {
-            id: 'insurance-companies',
-            title: 'شركات التأمين',
-            type: 'item',
-            url: '/insurance-companies',
-            icon: BusinessCenter,
-            roles: ['SUPER_ADMIN', 'INSURANCE_ADMIN'],
-            permissions: []
-          },
+          // NOTE: insurance-companies menu item REMOVED - No InsuranceCompany concept in backend
           {
             id: 'benefit-policies',
             title: 'وثائق المنافع',

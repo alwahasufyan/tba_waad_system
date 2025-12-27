@@ -1,9 +1,9 @@
 /**
- * PolicyLifecycleBar Component
- * Visual timeline of policy period with current position marker
+ * BenefitPolicyLifecycleBar Component
+ * Visual timeline of benefit policy period with current position marker
  * 
  * Usage:
- * <PolicyLifecycleBar 
+ * <BenefitPolicyLifecycleBar 
  *   startDate="2024-01-01"
  *   endDate="2024-12-31"
  *   showRenewalReminder={true}
@@ -20,7 +20,7 @@ import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import dayjs from 'dayjs';
 
-const PolicyLifecycleBar = ({
+const BenefitPolicyLifecycleBar = ({
   startDate,
   endDate,
   showRenewalReminder = true,
@@ -292,7 +292,7 @@ const PolicyLifecycleBar = ({
   );
 };
 
-PolicyLifecycleBar.propTypes = {
+BenefitPolicyLifecycleBar.propTypes = {
   startDate: PropTypes.string.isRequired,
   endDate: PropTypes.string.isRequired,
   showRenewalReminder: PropTypes.bool,
@@ -303,4 +303,4 @@ PolicyLifecycleBar.propTypes = {
   language: PropTypes.oneOf(['ar', 'en'])
 };
 
-export default PolicyLifecycleBar;
+export default BenefitPolicyLifecycleBar;

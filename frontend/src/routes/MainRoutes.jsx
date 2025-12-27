@@ -55,12 +55,8 @@ const VisitCreate = Loadable(lazy(() => import('pages/visits/VisitCreate')));
 const VisitEdit = Loadable(lazy(() => import('pages/visits/VisitEdit')));
 const VisitView = Loadable(lazy(() => import('pages/visits/VisitView')));
 
-// ==============================|| LAZY LOADING - POLICIES ||============================== //
-
-const PoliciesList = Loadable(lazy(() => import('pages/policies/PoliciesList')));
-const PolicyCreate = Loadable(lazy(() => import('pages/policies/PolicyCreate')));
-const PolicyEdit = Loadable(lazy(() => import('pages/policies/PolicyEdit')));
-const PolicyView = Loadable(lazy(() => import('pages/policies/PolicyView')));
+// ==============================|| POLICIES MODULE REMOVED ||============================== //
+// Policy module deleted - NO Policy concept in backend. Use BenefitPolicy only.
 
 // ==============================|| LAZY LOADING - PRE-APPROVALS ||============================== //
 
@@ -381,44 +377,7 @@ const MainRoutes = {
       )
     },
 
-    // Policies Module
-    {
-      path: 'policies',
-      children: [
-        {
-          path: '',
-          element: (
-            <RouteGuard allowedRoles={['ADMIN', 'EMPLOYER']}>
-              <PoliciesList />
-            </RouteGuard>
-          )
-        },
-        {
-          path: 'add',
-          element: (
-            <RouteGuard allowedRoles={['ADMIN', 'INSURANCE_COMPANY', 'REVIEWER']}>
-              <PolicyCreate />
-            </RouteGuard>
-          )
-        },
-        {
-          path: 'edit/:id',
-          element: (
-            <RouteGuard allowedRoles={['ADMIN', 'INSURANCE_COMPANY', 'REVIEWER']}>
-              <PolicyEdit />
-            </RouteGuard>
-          )
-        },
-        {
-          path: ':id',
-          element: (
-            <RouteGuard allowedRoles={['ADMIN', 'EMPLOYER']}>
-              <PolicyView />
-            </RouteGuard>
-          )
-        }
-      ]
-    },
+    // NOTE: Policies module REMOVED - Use BenefitPolicy only (no Policy concept in backend)
 
     // Pre-Approvals Module
     {

@@ -27,17 +27,11 @@ const PreApprovalEdit = () => {
   const { update, updating, error: updateError } = useUpdatePreApproval();
 
   const [members, setMembers] = useState([]);
-  const [policies, setPolicies] = useState([]);
-  const [packages, setPackages] = useState([]);
-
   const [loadingMembers, setLoadingMembers] = useState(false);
-  const [loadingPolicies, setLoadingPolicies] = useState(false);
-  const [loadingPackages, setLoadingPackages] = useState(false);
 
+  // NOTE: insurancePolicyId and benefitPackageId REMOVED - No Policy concept in backend. Use BenefitPolicy only.
   const [formData, setFormData] = useState({
     memberId: null,
-    insurancePolicyId: '',
-    benefitPackageId: '',
     providerName: '',
     doctorName: '',
     diagnosis: '',
@@ -52,15 +46,12 @@ const PreApprovalEdit = () => {
 
   useEffect(() => {
     fetchMembers();
-    fetchPolicies();
   }, []);
 
   useEffect(() => {
     if (preApproval) {
       setFormData({
         memberId: preApproval.member?.id || null,
-        insurancePolicyId: preApproval.insurancePolicy?.id || '',
-        benefitPackageId: preApproval.benefitPackage?.id || '',
         providerName: preApproval.providerName || '',
         doctorName: preApproval.doctorName || '',
         diagnosis: preApproval.diagnosis || '',
@@ -71,21 +62,8 @@ const PreApprovalEdit = () => {
         approvedAmount: preApproval.approvedAmount || '',
         attachmentsCount: preApproval.attachmentsCount || 0
       });
-
-      fetchPolicies();
-      if (preApproval.insurancePolicy?.id) {
-        fetchPackages(preApproval.insurancePolicy.id);
-      }
     }
   }, [preApproval]);
-
-  useEffect(() => {
-    if (formData.insurancePolicyId) {
-      fetchPackages(formData.insurancePolicyId);
-    } else {
-      setPackages([]);
-    }
-  }, [formData.insurancePolicyId]);
 
   const fetchMembers = async (searchTerm = '') => {
     try {
@@ -96,30 +74,6 @@ const PreApprovalEdit = () => {
       console.error('Error fetching members:', err);
     } finally {
       setLoadingMembers(false);
-    }
-  };
-
-  const fetchPolicies = async () => {
-    try {
-      setLoadingPolicies(true);
-      const result = await getInsurancePolicies({ page: 1, size: 1000 });
-      setPolicies(result.items || []);
-    } catch (err) {
-      console.error('Error fetching policies:', err);
-    } finally {
-      setLoadingPolicies(false);
-    }
-  };
-
-  const fetchPackages = async (policyId) => {
-    try {
-      setLoadingPackages(true);
-      const result = await getBenefitPackages(policyId);
-      setPackages(result || []);
-    } catch (err) {
-      console.error('Error fetching packages:', err);
-    } finally {
-      setLoadingPackages(false);
     }
   };
 
@@ -177,6 +131,7 @@ const PreApprovalEdit = () => {
     }
 
     try {
+      // NOTE: insurancePolicyId and benefitPackageId REMOVED from payload
       const payload = {
         providerName: formData.providerName.trim(),
         doctorName: formData.doctorName?.trim() || null,
@@ -186,8 +141,6 @@ const PreApprovalEdit = () => {
         status: formData.status,
         reviewerComment: formData.reviewerComment?.trim() || null,
         approvedAmount: formData.approvedAmount ? Number(formData.approvedAmount) : null,
-        insurancePolicyId: formData.insurancePolicyId || null,
-        benefitPackageId: formData.benefitPackageId || null,
         attachmentsCount: Number(formData.attachmentsCount) || 0
       };
 
@@ -255,70 +208,7 @@ const PreApprovalEdit = () => {
             />
           </Grid>
 
-          <Grid item xs={12} md={6}>
-            {/* Fixed Insurance Company - Single Tenant Mode */}
-            <TextField
-              fullWidth
-              label="شركة التأمين"
-              value={FIXED_INSURANCE_COMPANY.name}
-              InputProps={{ readOnly: true }}
-              disabled
-              helperText="شركة التأمين ثابتة في النظام"
-            />
-          </Grid>
-
-          <Grid item xs={12} md={6}>
-            <FormControl fullWidth>
-              <InputLabel>السياسة التأمينية (اختياري)</InputLabel>
-              <Select
-                name="insurancePolicyId"
-                value={formData.insurancePolicyId}
-                onChange={handleChange}
-                label="السياسة التأمينية (اختياري)"
-              >
-                <MenuItem value="">
-                  <em>بدون</em>
-                </MenuItem>
-                {loadingPolicies && (
-                  <MenuItem disabled>
-                    <em>جاري التحميل...</em>
-                  </MenuItem>
-                )}
-                {Array.isArray(policies) && policies.map((policy) => (
-                  <MenuItem key={policy.id} value={policy.id}>
-                    {policy.name} ({policy.code})
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Grid>
-
-          <Grid item xs={12} md={6}>
-            <FormControl fullWidth>
-              <InputLabel>الباقة الطبية (اختياري)</InputLabel>
-              <Select
-                name="benefitPackageId"
-                value={formData.benefitPackageId}
-                onChange={handleChange}
-                label="الباقة الطبية (اختياري)"
-                disabled={!formData.insurancePolicyId}
-              >
-                <MenuItem value="">
-                  <em>بدون</em>
-                </MenuItem>
-                {loadingPackages && (
-                  <MenuItem disabled>
-                    <em>جاري التحميل...</em>
-                  </MenuItem>
-                )}
-                {Array.isArray(packages) && packages.map((pkg) => (
-                  <MenuItem key={pkg.id} value={pkg.id}>
-                    {pkg.name} ({pkg.code})
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Grid>
+          {/* NOTE: Insurance Company & Policy fields REMOVED - No InsuranceCompany/Policy concept in backend */}
 
           <Grid item xs={12} md={6}>
             <TextField

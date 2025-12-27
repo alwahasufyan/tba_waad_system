@@ -219,29 +219,10 @@ const PreApprovalView = () => {
                   value={preApproval?.member?.civilId ?? preApproval?.memberCivilId} 
                 />
                 <InfoRow 
-                  label="شركة التأمين" 
-                  value={
-                    preApproval?.insuranceCompany?.name ?? preApproval?.insuranceCompanyName
-                      ? `${preApproval?.insuranceCompany?.name ?? preApproval?.insuranceCompanyName}${preApproval?.insuranceCompany?.code ? ` (${preApproval.insuranceCompany.code})` : ''}`
-                      : '-'
-                  } 
+                  label="جهة العمل" 
+                  value={preApproval?.member?.employerName ?? preApproval?.employerName ?? '-'} 
                 />
-                <InfoRow 
-                  label="السياسة التأمينية" 
-                  value={
-                    preApproval?.insurancePolicy?.name
-                      ? `${preApproval.insurancePolicy.name}${preApproval.insurancePolicy.code ? ` (${preApproval.insurancePolicy.code})` : ''}`
-                      : '-'
-                  } 
-                />
-                <InfoRow 
-                  label="الباقة الطبية" 
-                  value={
-                    preApproval?.benefitPackage?.name
-                      ? `${preApproval.benefitPackage.name}${preApproval.benefitPackage.code ? ` (${preApproval.benefitPackage.code})` : ''}`
-                      : '-'
-                  } 
-                />
+                {/* NOTE: InsuranceCompany/InsurancePolicy/BenefitPackage fields REMOVED - Use BenefitPolicy only */}
               </CardContent>
             </Card>
           </Grid>

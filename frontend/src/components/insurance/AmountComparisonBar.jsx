@@ -48,7 +48,7 @@ const AmountComparisonBar = ({
       rejected: 'المبلغ المرفوض',
       copay: `نسبة التحمل (${copayPercentage}%)`,
       deductible: 'مبلغ التحمل',
-      insurerPays: 'تدفع شركة التأمين',
+      insurerPays: 'تدفع الشركة',
       memberPays: 'يدفع المؤمَّن عليه',
       financialSummary: 'الملخص المالي'
     },

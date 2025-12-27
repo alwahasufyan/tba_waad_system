@@ -18,7 +18,6 @@ const ClaimCreate = () => {
 
   const [formData, setFormData] = useState({
     memberId: '',
-    insuranceCompanyId: '',
     providerName: '',
     diagnosis: '',
     visitDate: new Date().toISOString().split('T')[0],
@@ -67,16 +66,7 @@ const ClaimCreate = () => {
               type="number"
             />
           </Grid>
-          <Grid item xs={12} md={6}>
-            <TextField
-              fullWidth
-              required
-              label="رقم شركة التأمين"
-              value={formData.insuranceCompanyId}
-              onChange={handleChange('insuranceCompanyId')}
-              type="number"
-            />
-          </Grid>
+          {/* NOTE: insuranceCompanyId field REMOVED - No InsuranceCompany concept in backend */}
           <Grid item xs={12} md={6}>
             <TextField
               fullWidth

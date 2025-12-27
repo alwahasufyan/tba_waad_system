@@ -182,17 +182,7 @@ const ClaimsList = () => {
         }
       },
 
-      // Insurance Company Column
-      {
-        accessorKey: 'companyName',
-        header: 'شركة التأمين',
-        size: 150,
-        Cell: ({ row }) => (
-          <Typography variant="body2">
-            {row.original?.companyName ?? '-'}
-          </Typography>
-        )
-      },
+      // NOTE: Insurance Company column REMOVED - No InsuranceCompany concept in backend
 
       // Provider Column
       {

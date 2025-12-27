@@ -536,17 +536,7 @@ const MemberEdit = () => {
                 <TextField fullWidth label="Policy Number" value={form.policyNumber} onChange={handleChange('policyNumber')} />
               </Grid>
 
-              <Grid item xs={12} md={4}>
-                {/* Fixed Insurance Company - Single Tenant Mode */}
-                <TextField
-                  fullWidth
-                  label="شركة التأمين"
-                  value={FIXED_INSURANCE_COMPANY.name}
-                  InputProps={{ readOnly: true }}
-                  disabled
-                  helperText="شركة التأمين ثابتة في النظام"
-                />
-              </Grid>
+              {/* NOTE: Insurance Company field REMOVED - No InsuranceCompany concept in backend */}
 
               <Grid item xs={12} md={4}>
                 <FormControl fullWidth>

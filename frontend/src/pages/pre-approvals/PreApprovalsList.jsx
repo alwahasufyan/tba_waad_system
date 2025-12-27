@@ -185,17 +185,7 @@ const PreApprovalsList = () => {
         }
       },
 
-      // Insurance Company Column
-      {
-        accessorKey: 'insuranceCompanyName',
-        header: 'شركة التأمين',
-        size: 150,
-        Cell: ({ row }) => (
-          <Typography variant="body2">
-            {row.original?.insuranceCompanyName ?? '-'}
-          </Typography>
-        )
-      },
+      // NOTE: Insurance Company column REMOVED - No InsuranceCompany concept in backend
 
       // Provider Column
       {

@@ -45,7 +45,7 @@ const ROLE_LABELS = {
   ADMIN: 'مسؤول',
   EMPLOYER: 'جهة عمل',
   PROVIDER: 'مقدم خدمة',
-  INSURANCE_COMPANY: 'شركة تأمين',
+  TPA_ADMIN: 'مسؤول TPA',
   REVIEWER: 'مراجع طبي'
 };
 
@@ -54,7 +54,7 @@ const ROLE_COLORS = {
   ADMIN: 'primary',
   EMPLOYER: 'success',
   PROVIDER: 'info',
-  INSURANCE_COMPANY: 'warning',
+  TPA_ADMIN: 'warning',
   REVIEWER: 'secondary'
 };
 
@@ -113,11 +113,10 @@ export default function ProfileOverview() {
   const roleLabel = ROLE_LABELS[primaryRole] ?? primaryRole;
   const roleColor = ROLE_COLORS[primaryRole] ?? 'default';
   
-  // Get linked entity name
+  // Get linked entity name (Employer or Provider - NO InsuranceCompany concept)
   const getLinkedEntity = () => {
     if (user?.employerName) return user.employerName;
     if (user?.providerName) return user.providerName;
-    if (user?.insuranceCompanyName) return user.insuranceCompanyName;
     if (user?.companyName) return user.companyName;
     return 'شركة وعد (TPA)';
   };

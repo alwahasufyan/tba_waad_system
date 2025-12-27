@@ -8,7 +8,7 @@
 // Timeline & Progress Components
 export { default as StatusTimeline } from './StatusTimeline';
 export { default as CoverageGauge } from './CoverageGauge';
-export { default as PolicyLifecycleBar } from './PolicyLifecycleBar';
+export { default as BenefitPolicyLifecycleBar } from './BenefitPolicyLifecycleBar';
 export { default as ValidityCountdown } from './ValidityCountdown';
 
 // Financial Components

@@ -51,8 +51,6 @@ const LABELS = {
   inactive: 'غير نشط',
   basicInfo: 'المعلومات الأساسية',
   additionalInfo: 'معلومات إضافية',
-  insuranceCompany: 'شركة التأمين',
-  policy: 'البوليصة',
   createdAt: 'تاريخ الإنشاء',
   updatedAt: 'تاريخ التحديث',
   statistics: 'الإحصائيات',
@@ -244,21 +242,9 @@ const EmployerView = () => {
           />
         </SectionCard>
 
-        {/* Additional Information Section */}
-        {(employer.insuranceCompanyId || employer.policyId || employer.createdAt) && (
+        {/* Additional Information Section - Timestamps Only */}
+        {(employer.createdAt || employer.updatedAt) && (
           <SectionCard title={LABELS.additionalInfo}>
-            {employer.insuranceCompanyId && (
-              <InfoRow
-                label={LABELS.insuranceCompany}
-                value={employer.insuranceCompanyName || `ID: ${employer.insuranceCompanyId}`}
-              />
-            )}
-            {employer.policyId && (
-              <InfoRow
-                label={LABELS.policy}
-                value={employer.policyName || `ID: ${employer.policyId}`}
-              />
-            )}
             {employer.createdAt && (
               <InfoRow
                 label={LABELS.createdAt}

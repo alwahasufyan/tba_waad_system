@@ -71,10 +71,10 @@ const MOCK_USERS = [
     id: 5,
     name: 'عبدالله الحربي',
     email: 'abdullah@alwaha.com',
-    role: 'INSURANCE_COMPANY',
-    roleLabel: 'شركة تأمين',
+    role: 'TPA_ADMIN',
+    roleLabel: 'مسؤول TPA',
     status: 'ACTIVE',
-    affiliation: 'شركة الواحة للتأمين'
+    affiliation: 'شركة وعد TPA'
   },
   {
     id: 6,
@@ -94,7 +94,7 @@ const ROLES = [
   { key: 'ADMIN', label: 'مسؤول' },
   { key: 'EMPLOYER', label: 'جهة عمل' },
   { key: 'PROVIDER', label: 'مقدم خدمة' },
-  { key: 'INSURANCE_COMPANY', label: 'شركة تأمين' },
+  { key: 'TPA_ADMIN', label: 'مسؤول TPA' },
   { key: 'REVIEWER', label: 'مراجع طبي' }
 ];
 
@@ -104,7 +104,7 @@ const MODULES = [
   { key: 'visits', label: 'الزيارات' },
   { key: 'preApprovals', label: 'الموافقات المسبقة' },
   { key: 'medicalServices', label: 'الخدمات الطبية' },
-  { key: 'policies', label: 'الوثائق التأمينية' }
+  { key: 'benefitPolicies', label: 'وثائق المنافع' }
 ];
 
 // Permissions matrix: true = has access, false = no access
@@ -114,7 +114,7 @@ const PERMISSIONS_MATRIX = {
     ADMIN: true,
     EMPLOYER: true,
     PROVIDER: false,
-    INSURANCE_COMPANY: true,
+    TPA_ADMIN: true,
     REVIEWER: true
   },
   claims: {
@@ -122,7 +122,7 @@ const PERMISSIONS_MATRIX = {
     ADMIN: true,
     EMPLOYER: true,
     PROVIDER: true,
-    INSURANCE_COMPANY: true,
+    TPA_ADMIN: true,
     REVIEWER: true
   },
   visits: {
@@ -130,7 +130,7 @@ const PERMISSIONS_MATRIX = {
     ADMIN: true,
     EMPLOYER: true,
     PROVIDER: true,
-    INSURANCE_COMPANY: true,
+    TPA_ADMIN: true,
     REVIEWER: true
   },
   preApprovals: {
@@ -138,7 +138,7 @@ const PERMISSIONS_MATRIX = {
     ADMIN: true,
     EMPLOYER: true,
     PROVIDER: true,
-    INSURANCE_COMPANY: true,
+    TPA_ADMIN: true,
     REVIEWER: true
   },
   medicalServices: {
@@ -146,7 +146,7 @@ const PERMISSIONS_MATRIX = {
     ADMIN: true,
     EMPLOYER: false,
     PROVIDER: true,
-    INSURANCE_COMPANY: true,
+    TPA_ADMIN: true,
     REVIEWER: true
   },
   policies: {
@@ -154,7 +154,7 @@ const PERMISSIONS_MATRIX = {
     ADMIN: true,
     EMPLOYER: true,
     PROVIDER: false,
-    INSURANCE_COMPANY: true,
+    TPA_ADMIN: true,
     REVIEWER: true
   }
 };

@@ -290,11 +290,11 @@ const ar = {
     ipAddress: 'عنوان IP'
   },
 
-  // ==================== INSURANCE COMPANY ====================
-  insuranceCompany: {
-    fixed: 'شركة التأمين: الواحة للتأمين',
-    name: 'الواحة للتأمين',
-    locked: 'شركة التأمين ثابتة في النظام'
+  // ==================== TPA SYSTEM ====================
+  // NOTE: InsuranceCompany section removed - System operates as TPA (شركة وعد)
+  tpa: {
+    name: 'شركة وعد',
+    systemName: 'نظام إدارة التأمين الصحي'
   },
 
   // ==================== AUTH ====================

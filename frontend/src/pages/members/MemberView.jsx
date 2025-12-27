@@ -213,12 +213,13 @@ const MemberView = () => {
           <InfoRow label="المهنة" value={member?.occupation} />
         </SectionCard>
 
-        {/* Insurance Information */}
-        <SectionCard title="بيانات التأمين" icon={<LocalHospitalIcon color="primary" />}>
-          <InfoRow label="رقم البوليصة" value={member?.policyNumber} />
-          <InfoRow label="شركة التأمين" value={member?.insuranceCompanyName} />
-          <InfoRow label="باقة المنافع" value={member?.benefitPackageId} />
-        </SectionCard>
+        {/* NOTE: Insurance Company section REMOVED - No InsuranceCompany concept in backend */}
+        {/* Display policy number only if available */}
+        {member?.policyNumber && (
+          <SectionCard title="بيانات التغطية" icon={<LocalHospitalIcon color="primary" />}>
+            <InfoRow label="رقم البوليصة" value={member?.policyNumber} />
+          </SectionCard>
+        )}
 
         {/* Benefit Policy Information */}
         <SectionCard title="وثيقة المنافع" icon={<LocalHospitalIcon color="primary" />}>

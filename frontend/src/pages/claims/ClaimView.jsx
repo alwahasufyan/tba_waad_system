@@ -170,13 +170,8 @@ const ClaimView = () => {
                 <InfoRow label="رقم المطالبة" value={claim?.id} />
                 <InfoRow label="المؤمَّن عليه" value={claim?.memberFullNameArabic ?? claim?.memberFullNameEnglish} />
                 <InfoRow label="الرقم المدني" value={claim?.memberCivilId} />
-                <InfoRow label="شركة التأمين" value={claim?.companyName} />
-                {claim?.policyName && (
-                  <InfoRow label="السياسة التأمينية" value={claim.policyName} />
-                )}
-                {claim?.packageName && (
-                  <InfoRow label="الباقة الطبية" value={claim.packageName} />
-                )}
+                <InfoRow label="جهة العمل" value={claim?.employerName ?? '-'} />
+                {/* NOTE: InsuranceCompany/Policy/Package fields REMOVED - Use BenefitPolicy via member only */}
               </CardContent>
             </Card>
           </Grid>

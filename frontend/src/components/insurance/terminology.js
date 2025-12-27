@@ -88,8 +88,8 @@ export const INSURANCE_TERMS = {
     en: 'Rejected Amount'
   },
   insurerPays: {
-    ar: 'تدفع شركة التأمين',
-    en: 'Insurer Pays'
+    ar: 'تدفع الشركة',
+    en: 'Company Pays'
   },
   memberPays: {
     ar: 'يدفع المؤمَّن عليه',

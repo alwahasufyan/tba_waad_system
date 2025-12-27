@@ -12,17 +12,11 @@ const PreApprovalCreate = () => {
   const { create, creating, error } = useCreatePreApproval();
 
   const [members, setMembers] = useState([]);
-  const [policies, setPolicies] = useState([]);
-  const [packages, setPackages] = useState([]);
-
   const [loadingMembers, setLoadingMembers] = useState(false);
-  const [loadingPolicies, setLoadingPolicies] = useState(false);
-  const [loadingPackages, setLoadingPackages] = useState(false);
 
+  // NOTE: insurancePolicyId REMOVED - No Policy concept in backend. Use BenefitPolicy only.
   const [formData, setFormData] = useState({
     memberId: null,
-    insurancePolicyId: '',
-    benefitPackageId: '',
     providerName: '',
     doctorName: '',
     diagnosis: '',
@@ -34,16 +28,7 @@ const PreApprovalCreate = () => {
 
   useEffect(() => {
     fetchMembers();
-    fetchPolicies();
   }, []);
-
-  useEffect(() => {
-    if (formData.insurancePolicyId) {
-      fetchPackages(formData.insurancePolicyId);
-    } else {
-      setPackages([]);
-    }
-  }, [formData.insurancePolicyId]);
 
   const fetchMembers = async (searchTerm = '') => {
     try {
@@ -54,30 +39,6 @@ const PreApprovalCreate = () => {
       console.error('Error fetching members:', err);
     } finally {
       setLoadingMembers(false);
-    }
-  };
-
-  const fetchPolicies = async () => {
-    try {
-      setLoadingPolicies(true);
-      const result = await getInsurancePolicies({ page: 1, size: 1000 });
-      setPolicies(result.items || []);
-    } catch (err) {
-      console.error('Error fetching policies:', err);
-    } finally {
-      setLoadingPolicies(false);
-    }
-  };
-
-  const fetchPackages = async (policyId) => {
-    try {
-      setLoadingPackages(true);
-      const result = await getBenefitPackages(policyId);
-      setPackages(result || []);
-    } catch (err) {
-      console.error('Error fetching packages:', err);
-    } finally {
-      setLoadingPackages(false);
     }
   };
 
@@ -127,10 +88,9 @@ const PreApprovalCreate = () => {
     }
 
     try {
+      // NOTE: insurancePolicyId and benefitPackageId REMOVED from payload
       const payload = {
         memberId: formData.memberId,
-        insurancePolicyId: formData.insurancePolicyId || null,
-        benefitPackageId: formData.benefitPackageId || null,
         providerName: formData.providerName.trim(),
         doctorName: formData.doctorName?.trim() || null,
         diagnosis: formData.diagnosis.trim(),
@@ -185,70 +145,7 @@ const PreApprovalCreate = () => {
             />
           </Grid>
 
-          <Grid item xs={12} md={6}>
-            {/* Fixed Insurance Company - Single Tenant Mode */}
-            <TextField
-              fullWidth
-              label="شركة التأمين"
-              value={FIXED_INSURANCE_COMPANY.name}
-              InputProps={{ readOnly: true }}
-              disabled
-              helperText="شركة التأمين ثابتة في النظام"
-            />
-          </Grid>
-
-          <Grid item xs={12} md={6}>
-            <FormControl fullWidth>
-              <InputLabel>السياسة التأمينية (اختياري)</InputLabel>
-              <Select
-                name="insurancePolicyId"
-                value={formData.insurancePolicyId}
-                onChange={handleChange}
-                label="السياسة التأمينية (اختياري)"
-              >
-                <MenuItem value="">
-                  <em>بدون</em>
-                </MenuItem>
-                {loadingPolicies && (
-                  <MenuItem disabled>
-                    <em>جاري التحميل...</em>
-                  </MenuItem>
-                )}
-                {Array.isArray(policies) && policies.map((policy) => (
-                  <MenuItem key={policy.id} value={policy.id}>
-                    {policy.name} ({policy.code})
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Grid>
-
-          <Grid item xs={12} md={6}>
-            <FormControl fullWidth>
-              <InputLabel>الباقة الطبية (اختياري)</InputLabel>
-              <Select
-                name="benefitPackageId"
-                value={formData.benefitPackageId}
-                onChange={handleChange}
-                label="الباقة الطبية (اختياري)"
-                disabled={!formData.insurancePolicyId}
-              >
-                <MenuItem value="">
-                  <em>بدون</em>
-                </MenuItem>
-                {loadingPackages && (
-                  <MenuItem disabled>
-                    <em>جاري التحميل...</em>
-                  </MenuItem>
-                )}
-                {Array.isArray(packages) && packages.map((pkg) => (
-                  <MenuItem key={pkg.id} value={pkg.id}>
-                    {pkg.name} ({pkg.code})
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Grid>
+          {/* NOTE: Insurance Company & Policy fields REMOVED - No InsuranceCompany/Policy concept in backend */}
 
           <Grid item xs={12} md={6}>
             <TextField
