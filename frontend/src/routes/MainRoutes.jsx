@@ -140,6 +140,7 @@ const AuditLog = Loadable(lazy(() => import('pages/audit')));
 // ==============================|| LAZY LOADING - REPORTS ||============================== //
 
 const ReportsPage = Loadable(lazy(() => import('pages/reports')));
+const EmployerDashboard = Loadable(lazy(() => import('pages/reports/employer-dashboard')));
 
 // ==============================|| LAZY LOADING - ERROR PAGES ||============================== //
 
@@ -815,11 +816,24 @@ const MainRoutes = {
     // Reports Module
     {
       path: 'reports',
-      element: (
-        <RouteGuard allowedRoles={['ADMIN', 'SUPER_ADMIN', 'INSURANCE_COMPANY']}>
-          <ReportsPage />
-        </RouteGuard>
-      )
+      children: [
+        {
+          path: '',
+          element: (
+            <RouteGuard allowedRoles={['ADMIN', 'SUPER_ADMIN', 'INSURANCE_COMPANY', 'EMPLOYER_ADMIN']}>
+              <ReportsPage />
+            </RouteGuard>
+          )
+        },
+        {
+          path: 'employer-dashboard',
+          element: (
+            <RouteGuard allowedRoles={['ADMIN', 'SUPER_ADMIN', 'EMPLOYER_ADMIN']}>
+              <EmployerDashboard />
+            </RouteGuard>
+          )
+        }
+      ]
     },
 
     // Audit Log
