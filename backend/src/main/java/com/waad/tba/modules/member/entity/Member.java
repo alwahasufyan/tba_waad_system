@@ -12,7 +12,6 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import com.waad.tba.common.entity.Organization;
 import com.waad.tba.modules.benefitpolicy.entity.BenefitPolicy;
 import com.waad.tba.modules.employer.entity.Employer;
-import com.waad.tba.modules.policy.entity.Policy;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -64,19 +63,14 @@ public class Member {
     @JoinColumn(name = "insurance_org_id")
     private Organization insuranceOrganization;
 
-    // LEGACY: Old relationships (kept for backwards compatibility, will be removed
-    // in future)
+    // LEGACY: Old Employer relationship (kept for backwards compatibility)
     @Deprecated
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "employer_id", insertable = false, updatable = false)
     private Employer employer;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "policy_id")
-    private Policy policy;
-
     /**
-     * NEW: Benefit Policy for coverage rules.
+     * BenefitPolicy for coverage rules (CANONICAL - Single Source of Truth).
      * This is the source of truth for what benefits the member is entitled to.
      * Auto-assigned on creation based on employer's active policy.
      */
@@ -137,9 +131,6 @@ public class Member {
     // Insurance Information
     @Column(length = 100, name = "policy_number")
     private String policyNumber;
-
-    @Column(name = "benefit_package_id")
-    private Long benefitPackageId;
 
     // Employment Information
     @Column(length = 100, name = "employee_number")

@@ -65,11 +65,8 @@ public class MemberCreateDto {
     @Schema(description = "Policy number", example = "POL-2024-001")
     private String policyNumber;
 
-    @Schema(description = "Benefit package ID", example = "1")
-    private Long benefitPackageId;
-
-    @Schema(description = "Insurance company ID", example = "1")
-    private Long insuranceCompanyId;
+    @Schema(description = "Benefit Policy ID", example = "1")
+    private Long benefitPolicyId;
 
     // Employment Information
     @Schema(description = "Employer ID", example = "1", required = true)

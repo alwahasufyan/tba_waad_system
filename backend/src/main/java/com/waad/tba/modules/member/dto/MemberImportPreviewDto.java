@@ -96,7 +96,6 @@ public class MemberImportPreviewDto {
         private String cardNumber;
         private String fullName;
         private String employerName;
-        private String policyNumber;
         /**
          * Row status:
          * - NEW: New member will be created

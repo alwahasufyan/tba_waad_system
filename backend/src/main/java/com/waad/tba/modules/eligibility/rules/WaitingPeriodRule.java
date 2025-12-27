@@ -6,7 +6,6 @@ import com.waad.tba.modules.eligibility.domain.EligibilityReason;
 import com.waad.tba.modules.eligibility.domain.EligibilityRule;
 import com.waad.tba.modules.eligibility.domain.RuleResult;
 import com.waad.tba.modules.member.entity.Member;
-import com.waad.tba.modules.policy.entity.Policy;
 
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
@@ -18,8 +17,7 @@ import java.time.LocalDate;
  * Phase E1 - Eligibility Engine
  * 
  * Validates that the member has satisfied the waiting period.
- * Uses BenefitPolicy.defaultWaitingPeriodDays (canonical) or
- * falls back to Policy.generalWaitingPeriodDays (legacy).
+ * Uses BenefitPolicy.defaultWaitingPeriodDays as the canonical source.
  * 
  * This is a hard rule - failure stops evaluation.
  * 

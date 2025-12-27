@@ -60,15 +60,6 @@ public class MemberViewDto {
     @Schema(description = "Policy number", example = "POL-2024-001")
     private String policyNumber;
 
-    @Schema(description = "Benefit package ID", example = "1")
-    private Long benefitPackageId;
-
-    @Schema(description = "Insurance company ID", example = "1")
-    private Long insuranceCompanyId;
-
-    @Schema(description = "Insurance company name", example = "Kuwait Insurance Company")
-    private String insuranceCompanyName;
-
     // Benefit Policy Information
     @Schema(description = "Benefit Policy ID", example = "1")
     private Long benefitPolicyId;

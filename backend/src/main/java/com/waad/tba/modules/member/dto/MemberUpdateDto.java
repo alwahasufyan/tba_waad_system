@@ -56,13 +56,7 @@ public class MemberUpdateDto {
     @Schema(description = "Policy number", example = "POL-2024-001")
     private String policyNumber;
 
-    @Schema(description = "Benefit package ID", example = "1")
-    private Long benefitPackageId;
-
-    @Schema(description = "Insurance company ID", example = "1")
-    private Long insuranceCompanyId;
-
-    // Benefit Policy Assignment (Admin only)
+    // Benefit Policy Assignment
     @Schema(description = "Benefit Policy ID to assign to member", example = "1")
     private Long benefitPolicyId;
 

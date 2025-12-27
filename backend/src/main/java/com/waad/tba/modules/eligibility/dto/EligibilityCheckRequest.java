@@ -19,7 +19,7 @@ import java.time.LocalDate;
  * - serviceDate: The date of service
  * 
  * Optional:
- * - policyId: If not provided, uses member's current policy
+ * - benefitPolicyId: If not provided, uses member's current benefit policy
  * - providerId: For network validation (future)
  * - serviceCode: For service-specific rules (future)
  * 
@@ -40,10 +40,10 @@ public class EligibilityCheckRequest {
     private Long memberId;
 
     /**
-     * Policy ID to verify against
-     * Optional - if null, uses member's current active policy
+     * Benefit Policy ID to verify against
+     * Optional - if null, uses member's current active benefit policy
      */
-    private Long policyId;
+    private Long benefitPolicyId;
 
     /**
      * Provider ID for network validation
@@ -75,12 +75,12 @@ public class EligibilityCheckRequest {
     }
 
     /**
-     * Factory method with policy override
+     * Factory method with benefit policy override
      */
-    public static EligibilityCheckRequest of(Long memberId, Long policyId, LocalDate serviceDate) {
+    public static EligibilityCheckRequest of(Long memberId, Long benefitPolicyId, LocalDate serviceDate) {
         return EligibilityCheckRequest.builder()
                 .memberId(memberId)
-                .policyId(policyId)
+                .benefitPolicyId(benefitPolicyId)
                 .serviceDate(serviceDate)
                 .build();
     }
@@ -88,11 +88,11 @@ public class EligibilityCheckRequest {
     /**
      * Full factory method
      */
-    public static EligibilityCheckRequest of(Long memberId, Long policyId, Long providerId, 
+    public static EligibilityCheckRequest of(Long memberId, Long benefitPolicyId, Long providerId, 
                                               LocalDate serviceDate, String serviceCode) {
         return EligibilityCheckRequest.builder()
                 .memberId(memberId)
-                .policyId(policyId)
+                .benefitPolicyId(benefitPolicyId)
                 .providerId(providerId)
                 .serviceDate(serviceDate)
                 .serviceCode(serviceCode)

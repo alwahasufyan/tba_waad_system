@@ -2,7 +2,6 @@ package com.waad.tba.modules.eligibility.domain;
 
 import com.waad.tba.modules.benefitpolicy.entity.BenefitPolicy;
 import com.waad.tba.modules.member.entity.Member;
-import com.waad.tba.modules.policy.entity.Policy;
 import com.waad.tba.modules.provider.entity.Provider;
 import com.waad.tba.modules.employer.entity.Employer;
 import com.waad.tba.common.entity.Organization;
@@ -42,11 +41,6 @@ public class EligibilityContext {
      * Member ID to check
      */
     private final Long memberId;
-
-    /**
-     * Policy ID (may be auto-resolved from member)
-     */
-    private final Long policyId;
     
     /**
      * BenefitPolicy ID (may be auto-resolved from member)
@@ -76,11 +70,6 @@ public class EligibilityContext {
      * Resolved member entity
      */
     private final Member member;
-
-    /**
-     * Resolved policy entity (legacy - kept for backward compatibility)
-     */
-    private final Policy policy;
     
     /**
      * Resolved BenefitPolicy entity (canonical source)
@@ -151,13 +140,6 @@ public class EligibilityContext {
     public boolean hasMember() {
         return member != null;
     }
-
-    /**
-     * Check if policy was resolved (legacy)
-     */
-    public boolean hasPolicy() {
-        return policy != null;
-    }
     
     /**
      * Check if BenefitPolicy was resolved (canonical)
@@ -167,10 +149,10 @@ public class EligibilityContext {
     }
     
     /**
-     * Check if any policy (legacy or BenefitPolicy) was resolved
+     * Check if any policy exists (alias for hasBenefitPolicy)
      */
     public boolean hasAnyPolicy() {
-        return policy != null || benefitPolicy != null;
+        return benefitPolicy != null;
     }
 
     /**
@@ -188,13 +170,6 @@ public class EligibilityContext {
     }
 
     /**
-     * Get policy status safely (legacy)
-     */
-    public Policy.PolicyStatus getPolicyStatus() {
-        return policy != null ? policy.getStatus() : null;
-    }
-
-    /**
      * Get member's employer ID safely
      */
     public Long getMemberEmployerId() {
@@ -206,12 +181,12 @@ public class EligibilityContext {
     }
 
     /**
-     * Get policy's employer ID safely
+     * Get benefit policy's employer ID safely
      */
     public Long getPolicyEmployerId() {
-        if (policy == null) return null;
-        if (policy.getEmployerOrganization() != null) {
-            return policy.getEmployerOrganization().getId();
+        if (benefitPolicy == null) return null;
+        if (benefitPolicy.getEmployerOrganization() != null) {
+            return benefitPolicy.getEmployerOrganization().getId();
         }
         return null;
     }
@@ -225,44 +200,28 @@ public class EligibilityContext {
     }
 
     /**
-     * Check if the service date falls within policy coverage period
+     * Check if the service date falls within BenefitPolicy coverage period
      */
     public boolean serviceDateInCoveragePeriod() {
-        // First check BenefitPolicy (canonical)
         if (benefitPolicy != null && serviceDate != null) {
             return benefitPolicy.isEffectiveOn(serviceDate);
         }
-        
-        // Fallback to legacy Policy
-        if (policy == null || serviceDate == null) return false;
-        
-        LocalDate start = policy.getStartDate();
-        LocalDate end = policy.getEndDate();
-        
-        if (start == null || end == null) return false;
-        
-        return !serviceDate.isBefore(start) && !serviceDate.isAfter(end);
+        return false;
     }
     
     /**
-     * Check if service date is in BenefitPolicy coverage period
+     * Check if service date is in BenefitPolicy coverage period (alias)
      */
     public boolean serviceDateInBenefitPolicyCoveragePeriod() {
-        if (benefitPolicy == null || serviceDate == null) return false;
-        return benefitPolicy.isEffectiveOn(serviceDate);
+        return serviceDateInCoveragePeriod();
     }
     
     /**
-     * Get the effective waiting period days.
-     * Uses BenefitPolicy.defaultWaitingPeriodDays if available,
-     * otherwise falls back to legacy Policy.generalWaitingPeriodDays.
+     * Get the effective waiting period days from BenefitPolicy.
      */
     public Integer getEffectiveWaitingPeriodDays() {
         if (benefitPolicy != null && benefitPolicy.getDefaultWaitingPeriodDays() != null) {
             return benefitPolicy.getDefaultWaitingPeriodDays();
-        }
-        if (policy != null) {
-            return policy.getGeneralWaitingPeriodDays();
         }
         return 0;
     }

@@ -7,8 +7,6 @@ import com.waad.tba.modules.eligibility.entity.EligibilityCheck;
 import com.waad.tba.modules.eligibility.repository.EligibilityCheckRepository;
 import com.waad.tba.modules.member.entity.Member;
 import com.waad.tba.modules.member.repository.MemberRepository;
-import com.waad.tba.modules.policy.entity.Policy;
-import com.waad.tba.modules.policy.repository.PolicyRepository;
 import com.waad.tba.modules.provider.entity.Provider;
 import com.waad.tba.modules.provider.repository.ProviderRepository;
 import com.waad.tba.modules.rbac.entity.User;
@@ -49,7 +47,6 @@ public class EligibilityEngineServiceImpl implements EligibilityEngineService {
 
     // Repositories
     private final MemberRepository memberRepository;
-    private final PolicyRepository policyRepository;
     private final ProviderRepository providerRepository;
     private final EligibilityCheckRepository eligibilityCheckRepository;
 
@@ -137,20 +134,8 @@ public class EligibilityEngineServiceImpl implements EligibilityEngineService {
         if (request.getMemberId() != null) {
             member = memberRepository.findById(request.getMemberId()).orElse(null);
         }
-
-        // Resolve policy (from request or from member) - LEGACY
-        Policy policy = null;
-        Long policyId = request.getPolicyId();
         
-        if (policyId != null) {
-            policy = policyRepository.findById(policyId).orElse(null);
-        } else if (member != null && member.getPolicy() != null) {
-            // Auto-resolve from member
-            policy = member.getPolicy();
-            policyId = policy.getId();
-        }
-        
-        // Resolve BenefitPolicy from member (CANONICAL)
+        // Resolve BenefitPolicy from member (CANONICAL - only policy model)
         BenefitPolicy benefitPolicy = null;
         Long benefitPolicyId = null;
         if (member != null && member.getBenefitPolicy() != null) {
@@ -179,13 +164,11 @@ public class EligibilityEngineServiceImpl implements EligibilityEngineService {
         return EligibilityContext.builder()
                 .requestId(requestId)
                 .memberId(request.getMemberId())
-                .policyId(policyId)
                 .benefitPolicyId(benefitPolicyId)
                 .providerId(request.getProviderId())
                 .serviceDate(request.getServiceDate())
                 .serviceCode(request.getServiceCode())
                 .member(member)
-                .policy(policy)
                 .benefitPolicy(benefitPolicy)
                 .provider(provider)
                 .employerOrganization(member != null ? member.getEmployerOrganization() : null)
@@ -307,7 +290,7 @@ public class EligibilityEngineServiceImpl implements EligibilityEngineService {
      */
     private EligibilityResult.EligibilitySnapshot buildSnapshot(EligibilityContext context) {
         Member member = context.getMember();
-        Policy policy = context.getPolicy();
+        BenefitPolicy benefitPolicy = context.getBenefitPolicy();
         Provider provider = context.getProvider();
 
         return EligibilityResult.EligibilitySnapshot.builder()
@@ -317,13 +300,13 @@ public class EligibilityEngineServiceImpl implements EligibilityEngineService {
                 .memberCivilId(member != null ? member.getCivilId() : null)
                 .memberStatus(member != null && member.getStatus() != null ? member.getStatus().name() : null)
                 .memberCardNumber(member != null ? member.getCardNumber() : null)
-                // Policy
-                .policyId(policy != null ? policy.getId() : context.getPolicyId())
-                .policyNumber(policy != null ? policy.getPolicyNumber() : null)
-                .policyStatus(policy != null && policy.getStatus() != null ? policy.getStatus().name() : null)
-                .coverageStart(policy != null ? policy.getStartDate() : null)
-                .coverageEnd(policy != null ? policy.getEndDate() : null)
-                .productName(policy != null ? policy.getProductName() : null)
+                // Policy (BenefitPolicy)
+                .policyId(benefitPolicy != null ? benefitPolicy.getId() : context.getBenefitPolicyId())
+                .policyNumber(benefitPolicy != null ? benefitPolicy.getPolicyCode() : null)
+                .policyStatus(benefitPolicy != null && benefitPolicy.getStatus() != null ? benefitPolicy.getStatus().name() : null)
+                .coverageStart(benefitPolicy != null ? benefitPolicy.getEffectiveDate() : null)
+                .coverageEnd(benefitPolicy != null ? benefitPolicy.getExpirationDate() : null)
+                .productName(benefitPolicy != null ? benefitPolicy.getName() : null)
                 // Employer
                 .employerId(context.getMemberEmployerId())
                 .employerName(context.getEmployerOrganization() != null ? 
@@ -348,7 +331,7 @@ public class EligibilityEngineServiceImpl implements EligibilityEngineService {
                     .checkTimestamp(context.getCheckTimestamp())
                     // Input
                     .memberId(context.getMemberId())
-                    .policyId(context.getPolicyId())
+                    .policyId(context.getBenefitPolicyId())  // Using benefitPolicyId as the policy reference
                     .providerId(context.getProviderId())
                     .serviceDate(context.getServiceDate())
                     .serviceCode(context.getServiceCode())

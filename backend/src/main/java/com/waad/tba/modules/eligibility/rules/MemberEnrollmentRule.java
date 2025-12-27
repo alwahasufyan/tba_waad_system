@@ -1,11 +1,11 @@
 package com.waad.tba.modules.eligibility.rules;
 
+import com.waad.tba.modules.benefitpolicy.entity.BenefitPolicy;
 import com.waad.tba.modules.eligibility.domain.EligibilityContext;
 import com.waad.tba.modules.eligibility.domain.EligibilityReason;
 import com.waad.tba.modules.eligibility.domain.EligibilityRule;
 import com.waad.tba.modules.eligibility.domain.RuleResult;
 import com.waad.tba.modules.member.entity.Member;
-import com.waad.tba.modules.policy.entity.Policy;
 
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
@@ -14,8 +14,8 @@ import org.springframework.stereotype.Component;
  * Rule: Member Enrollment
  * Phase E1 - Eligibility Engine
  * 
- * Validates that the member is enrolled in the given policy.
- * Checks that the member's policy reference matches the policy being checked.
+ * Validates that the member is enrolled in a BenefitPolicy.
+ * Checks that the member has an assigned BenefitPolicy.
  * 
  * This is a hard rule - failure stops evaluation.
  * 
@@ -50,59 +50,36 @@ public class MemberEnrollmentRule implements EligibilityRule {
 
     @Override
     public boolean isApplicable(EligibilityContext context) {
-        return context.hasMember() && context.hasPolicy();
+        return context.hasMember();
     }
 
     @Override
     public RuleResult evaluate(EligibilityContext context) {
         Member member = context.getMember();
-        Policy policy = context.getPolicy();
 
-        // Check 1: Member has a policy reference
-        Policy memberPolicy = member.getPolicy();
-        if (memberPolicy == null && member.getPolicyNumber() == null) {
-            // Member is not enrolled in any policy
+        // Check: Member has a BenefitPolicy assigned
+        BenefitPolicy benefitPolicy = member.getBenefitPolicy();
+        if (benefitPolicy == null) {
             return RuleResult.fail(
                 EligibilityReason.MEMBER_NOT_ENROLLED,
-                "Member has no policy assigned"
+                "Member has no BenefitPolicy assigned"
             );
         }
 
-        // Check 2: Policy reference matches
-        boolean policyMatches = false;
-
-        // Check by policy ID
-        if (memberPolicy != null && memberPolicy.getId() != null) {
-            policyMatches = memberPolicy.getId().equals(policy.getId());
-        }
-
-        // Also check by policy number (fallback)
-        if (!policyMatches && member.getPolicyNumber() != null) {
-            policyMatches = member.getPolicyNumber().equals(policy.getPolicyNumber());
-        }
-
-        // Check 3: Same employer
-        if (!policyMatches) {
-            // Check if member's employer matches policy's employer
-            Long memberEmployerId = context.getMemberEmployerId();
-            Long policyEmployerId = context.getPolicyEmployerId();
-            
-            if (memberEmployerId != null && policyEmployerId != null) {
-                policyMatches = memberEmployerId.equals(policyEmployerId);
-            }
-        }
-
-        if (!policyMatches) {
+        // Check: BenefitPolicy is active
+        if (benefitPolicy.getStatus() != BenefitPolicy.BenefitPolicyStatus.ACTIVE) {
             return RuleResult.fail(
-                EligibilityReason.MEMBER_NOT_ENROLLED,
+                EligibilityReason.POLICY_INACTIVE,
                 String.format(
-                    "Member: %s is not enrolled in Policy: %s",
-                    member.getFullName(),
-                    policy.getPolicyNumber()
+                    "Member's BenefitPolicy: %s is not ACTIVE (status: %s)",
+                    benefitPolicy.getPolicyCode(),
+                    benefitPolicy.getStatus()
                 )
             );
         }
 
-        return RuleResult.pass();
+        return RuleResult.pass(
+            String.format("Member enrolled in BenefitPolicy: %s", benefitPolicy.getPolicyCode())
+        );
     }
 }

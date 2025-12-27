@@ -49,8 +49,6 @@ import com.waad.tba.modules.member.repository.MemberRepository;
 import com.waad.tba.common.entity.Organization;
 import com.waad.tba.common.enums.OrganizationType;
 import com.waad.tba.common.repository.OrganizationRepository;
-import com.waad.tba.modules.policy.entity.Policy;
-import com.waad.tba.modules.policy.repository.PolicyRepository;
 import com.waad.tba.modules.rbac.entity.User;
 import com.waad.tba.security.AuthorizationService;
 
@@ -66,11 +64,11 @@ import lombok.extern.slf4j.Slf4j;
  * - Members are ALWAYS CREATED NEW
  * - card_number from Excel is IGNORED (Security/Identity Safety)
  * - Matching by name/civil_id is DISABLED for Phase 1
+ * - BenefitPolicy assignment is done separately (not via Excel import)
  * 
  * Column Mappings (Odoo → TBA):
  * - name / full_name → fullNameArabic (MANDATORY)
  * - company / employer → employerOrganization (MANDATORY LOOKUP)
- * - policy → policy (lookup)
  * - national_id / civil_id → civilId (optional, no uniqueness constraint)
  * - barcode / badge_id → IGNORED
  * - card_number → IGNORED
@@ -86,7 +84,6 @@ public class MemberExcelImportService {
     private final MemberImportErrorRepository importErrorRepository;
     private final EmployerRepository employerRepository;
     private final OrganizationRepository organizationRepository;
-    private final PolicyRepository policyRepository;
     private final AuthorizationService authorizationService;
     private final ObjectMapper objectMapper;
 
@@ -110,11 +107,6 @@ public class MemberExcelImportService {
                     "work_company", "organization", "employer_code",
                     "جهة العمل", "الشركة", "اسم الشركة", "المؤسسة", "جهة الانتساب",
                     "صاحب العمل", "الجهة", "مكان العمل", "كود الجهة"
-            },
-            // Policy - الوثيقة (Optional)
-            new String[] {
-                    "policy", "policy_number", "policy_id", "policy_no", "insurance_policy",
-                    "رقم الوثيقة", "الوثيقة", "رقم البوليصة", "وثيقة التأمين", "رقم العقد"
             });
 
     /**
@@ -595,7 +587,6 @@ public class MemberExcelImportService {
         String cardNumber = getFieldValue(row, fieldToColumnIndex, "cardNumber");
         String fullName = getFieldValue(row, fieldToColumnIndex, "fullName");
         String employerName = getFieldValue(row, fieldToColumnIndex, "employer");
-        String policyNumber = getFieldValue(row, fieldToColumnIndex, "policy");
 
         // ═══════════════════════════════════════════════════════════════════════════
         // CRITICAL VALIDATIONS (ERROR) - These block import
@@ -656,21 +647,6 @@ public class MemberExcelImportService {
             }
         }
 
-        // policy is OPTIONAL - just a warning if not found
-        if (policyNumber != null && !policyNumber.isBlank()) {
-            if (policyRepository.findByPolicyNumber(policyNumber).isEmpty()) {
-                rowWarnings.add("الوثيقة غير موجودة: " + policyNumber);
-                validationErrors.add(ImportValidationErrorDto.builder()
-                        .rowNumber(rowNum)
-                        .field("policy")
-                        .value(policyNumber)
-                        .message("الوثيقة غير موجودة - Policy not found: " + policyNumber)
-                        .severity("WARNING")
-                        .build());
-                hasWarning = true;
-            }
-        }
-
         // Extract attributes
         for (Map.Entry<String, Integer> entry : fieldToColumnIndex.entrySet()) {
             if (entry.getKey().startsWith("attr:")) {
@@ -695,7 +671,6 @@ public class MemberExcelImportService {
                 .cardNumber(cardNumber)
                 .fullName(fullName)
                 .employerName(employerName)
-                .policyNumber(policyNumber)
                 .attributes(attributes)
                 .status(status)
                 .errors(rowErrors)
@@ -721,7 +696,6 @@ public class MemberExcelImportService {
         String cardNumber = getFieldValue(row, fieldToColumnIndex, "cardNumber");
         String fullName = getFieldValue(row, fieldToColumnIndex, "fullName");
         String employerName = getFieldValue(row, fieldToColumnIndex, "employer");
-        String policyNumber = getFieldValue(row, fieldToColumnIndex, "policy");
 
         // Optional: civil_id is no longer the matching key
         String civilId = getFieldValue(row, fieldToColumnIndex, "civilId");
@@ -775,14 +749,7 @@ public class MemberExcelImportService {
             return ImportRowResult.skipped();
         }
 
-        // Find policy (optional - no skip if not found)
-        Policy policy = null;
-        if (policyNumber != null && !policyNumber.isBlank()) {
-            policy = policyRepository.findByPolicyNumber(policyNumber).orElse(null);
-            if (policy == null) {
-                log.debug("ℹ️ Row {}: Policy '{}' not found, continuing without policy", rowNum, policyNumber);
-            }
-        }
+        // Note: BenefitPolicy assignment is done separately, not via Excel import
 
         // Phase 1 Enterprise Fix: ALWAYS CREATE NEW MEMBER
         // Ignore card_number for matching. Auto-generate it.
@@ -795,7 +762,7 @@ public class MemberExcelImportService {
                 .fullNameArabic(fullName)
                 // .employer(employer) // Legacy: Set to null explicitly
                 .employerOrganization(employerOrg) // Mandatory New Field
-                .policy(policy)
+                // Note: benefitPolicy is assigned separately, not during import
                 .status(MemberStatus.ACTIVE)
                 .active(true)
                 .build();

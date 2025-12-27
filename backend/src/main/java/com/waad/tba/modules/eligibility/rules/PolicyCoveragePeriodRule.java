@@ -5,7 +5,6 @@ import com.waad.tba.modules.eligibility.domain.EligibilityContext;
 import com.waad.tba.modules.eligibility.domain.EligibilityReason;
 import com.waad.tba.modules.eligibility.domain.EligibilityRule;
 import com.waad.tba.modules.eligibility.domain.RuleResult;
-import com.waad.tba.modules.policy.entity.Policy;
 
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
@@ -17,8 +16,7 @@ import java.time.format.DateTimeFormatter;
  * Rule: Policy Coverage Period
  * Phase E1 - Eligibility Engine
  * 
- * Validates that the service date falls within the policy coverage period.
- * Checks BenefitPolicy first (canonical), then falls back to Policy (legacy).
+ * Validates that the service date falls within the BenefitPolicy coverage period.
  * This is a hard rule - failure stops evaluation.
  * 
  * Priority: 50
@@ -54,26 +52,21 @@ public class PolicyCoveragePeriodRule implements EligibilityRule {
 
     @Override
     public boolean isApplicable(EligibilityContext context) {
-        return context.hasAnyPolicy() && context.getServiceDate() != null;
+        return context.hasBenefitPolicy() && context.getServiceDate() != null;
     }
 
     @Override
     public RuleResult evaluate(EligibilityContext context) {
         LocalDate serviceDate = context.getServiceDate();
         
-        // Check BenefitPolicy first (canonical)
+        // Check BenefitPolicy (canonical source)
         if (context.hasBenefitPolicy()) {
             return evaluateBenefitPolicy(context.getBenefitPolicy(), serviceDate);
         }
         
-        // Fallback to legacy Policy
-        if (context.hasPolicy()) {
-            return evaluateLegacyPolicy(context.getPolicy(), serviceDate);
-        }
-        
         return RuleResult.fail(
             EligibilityReason.POLICY_NOT_FOUND,
-            "No policy to evaluate coverage period"
+            "No BenefitPolicy to evaluate coverage period"
         );
     }
     
@@ -123,55 +116,6 @@ public class PolicyCoveragePeriodRule implements EligibilityRule {
         
         return RuleResult.pass(
             String.format("BenefitPolicy coverage: %s to %s", startDate.format(DATE_FORMAT), endDate.format(DATE_FORMAT))
-        );
-    }
-    
-    private RuleResult evaluateLegacyPolicy(Policy policy, LocalDate serviceDate) {
-        LocalDate startDate = policy.getStartDate();
-        LocalDate endDate = policy.getEndDate();
-
-        // Check start date
-        if (startDate == null) {
-            return RuleResult.fail(
-                EligibilityReason.POLICY_INACTIVE,
-                "Policy has no start date defined"
-            );
-        }
-
-        // Check end date
-        if (endDate == null) {
-            return RuleResult.fail(
-                EligibilityReason.POLICY_INACTIVE,
-                "Policy has no end date defined"
-            );
-        }
-
-        // Service date before coverage start
-        if (serviceDate.isBefore(startDate)) {
-            return RuleResult.fail(
-                EligibilityReason.SERVICE_DATE_BEFORE_COVERAGE,
-                String.format(
-                    "Service date: %s, Coverage starts: %s",
-                    serviceDate.format(DATE_FORMAT),
-                    startDate.format(DATE_FORMAT)
-                )
-            );
-        }
-
-        // Service date after coverage end
-        if (serviceDate.isAfter(endDate)) {
-            return RuleResult.fail(
-                EligibilityReason.SERVICE_DATE_AFTER_COVERAGE,
-                String.format(
-                    "Service date: %s, Coverage ends: %s",
-                    serviceDate.format(DATE_FORMAT),
-                    endDate.format(DATE_FORMAT)
-                )
-            );
-        }
-
-        return RuleResult.pass(
-            String.format("Coverage: %s to %s", startDate.format(DATE_FORMAT), endDate.format(DATE_FORMAT))
         );
     }
 }

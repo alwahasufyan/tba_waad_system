@@ -44,7 +44,6 @@ public class MemberMapperV2 {
                 .address(dto.getAddress())
                 .nationality(dto.getNationality())
                 .policyNumber(dto.getPolicyNumber())
-                .benefitPackageId(dto.getBenefitPackageId())
                 .employeeNumber(dto.getEmployeeNumber())
                 .joinDate(dto.getJoinDate())
                 .occupation(dto.getOccupation())
@@ -63,7 +62,7 @@ public class MemberMapperV2 {
             entity.setEmployer(employer);
         }
 
-        // InsuranceCompany removed - coverage now via BenefitPolicy
+        // BenefitPolicy assignment is done via BenefitPolicyId in service layer
 
         return entity;
     }
@@ -85,7 +84,7 @@ public class MemberMapperV2 {
         if (dto.getAddress() != null) entity.setAddress(dto.getAddress());
         if (dto.getNationality() != null) entity.setNationality(dto.getNationality());
         if (dto.getPolicyNumber() != null) entity.setPolicyNumber(dto.getPolicyNumber());
-        if (dto.getBenefitPackageId() != null) entity.setBenefitPackageId(dto.getBenefitPackageId());
+        // Note: benefitPolicy assignment is done via service layer, not mapper
         if (dto.getEmployeeNumber() != null) entity.setEmployeeNumber(dto.getEmployeeNumber());
         if (dto.getJoinDate() != null) entity.setJoinDate(dto.getJoinDate());
         if (dto.getOccupation() != null) entity.setOccupation(dto.getOccupation());
@@ -114,7 +113,6 @@ public class MemberMapperV2 {
                 .address(entity.getAddress())
                 .nationality(entity.getNationality())
                 .policyNumber(entity.getPolicyNumber())
-                .benefitPackageId(entity.getBenefitPackageId())
                 .employeeNumber(entity.getEmployeeNumber())
                 .joinDate(entity.getJoinDate())
                 .occupation(entity.getOccupation())
@@ -134,12 +132,19 @@ public class MemberMapperV2 {
                 .updatedAt(entity.getUpdatedAt())
                 .build();
 
+        // Map BenefitPolicy information
+        if (entity.getBenefitPolicy() != null) {
+            dto.setBenefitPolicyId(entity.getBenefitPolicy().getId());
+            dto.setBenefitPolicyName(entity.getBenefitPolicy().getName());
+            dto.setBenefitPolicyCode(entity.getBenefitPolicy().getPolicyCode());
+        }
+
         if (entity.getEmployer() != null) {
             dto.setEmployerId(entity.getEmployer().getId());
             dto.setEmployerName(entity.getEmployer().getNameAr());
         }
 
-        // InsuranceCompany removed - organization info now via employerOrganization
+        // Organization info via employerOrganization
         if (entity.getEmployerOrganization() != null) {
             dto.setEmployerId(entity.getEmployerOrganization().getId());
             dto.setEmployerName(entity.getEmployerOrganization().getName());
