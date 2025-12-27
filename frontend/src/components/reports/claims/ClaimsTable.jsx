@@ -46,14 +46,23 @@ const formatDate = (dateString) => {
 };
 
 /**
+ * Safe string renderer with fallback
+ */
+const safeString = (value) => {
+  if (value == null || value === '') return '—';
+  return String(value);
+};
+
+/**
  * Table columns configuration
+ * All columns are null-safe with fallback rendering
  */
 const COLUMNS = [
-  { id: 'id', label: 'رقم المطالبة', minWidth: 100, align: 'center' },
-  { id: 'memberName', label: 'اسم العضو', minWidth: 150 },
-  { id: 'employerName', label: 'صاحب العمل', minWidth: 150 },
-  { id: 'providerName', label: 'مقدم الخدمة', minWidth: 150 },
-  { id: 'status', label: 'الحالة', minWidth: 120, align: 'center' },
+  { id: 'id', label: 'رقم المطالبة', minWidth: 100, align: 'center', format: safeString },
+  { id: 'memberName', label: 'اسم العضو', minWidth: 150, format: safeString },
+  { id: 'employerName', label: 'صاحب العمل', minWidth: 150, format: safeString },
+  { id: 'providerName', label: 'مقدم الخدمة', minWidth: 150, format: safeString },
+  { id: 'status', label: 'الحالة', minWidth: 120, align: 'center' }, // Handled by ClaimStatusChip
   { id: 'requestedAmount', label: 'المبلغ المطلوب', minWidth: 120, align: 'right', format: formatCurrency },
   { id: 'approvedAmount', label: 'المبلغ المعتمد', minWidth: 120, align: 'right', format: formatCurrency },
   { id: 'visitDate', label: 'تاريخ الزيارة', minWidth: 110, align: 'center', format: formatDate },

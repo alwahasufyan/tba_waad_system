@@ -1,11 +1,12 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { Chip } from '@mui/material';
+import { Chip, Typography } from '@mui/material';
 import { CLAIM_STATUS, CLAIM_STATUS_LABELS } from 'hooks/useClaimsReport';
 
 /**
  * Color mapping for claim statuses
  * Matches design spec exactly
+ * ALL 7 statuses are mapped for future-proofing
  */
 const STATUS_COLORS = {
   [CLAIM_STATUS.DRAFT]: { bg: '#9e9e9e', color: '#fff' },           // Gray
@@ -18,15 +19,34 @@ const STATUS_COLORS = {
 };
 
 /**
+ * Default/fallback colors for unknown statuses
+ */
+const FALLBACK_COLORS = { bg: '#757575', color: '#fff' };
+
+/**
  * ClaimStatusChip Component
  * 
- * Displays claim status as a colored chip with Arabic label
+ * Displays claim status as a colored chip with Arabic label.
+ * Handles null/undefined status gracefully.
+ * All 7 ClaimStatus enum values are fully mapped.
  * 
  * @param {string} status - Claim status enum value
  * @param {string} size - Chip size ('small' | 'medium')
  */
 const ClaimStatusChip = ({ status, size = 'small' }) => {
-  const colors = STATUS_COLORS[status] || { bg: '#9e9e9e', color: '#fff' };
+  // Null-safe: Handle missing status
+  if (!status) {
+    return (
+      <Typography variant="body2" color="text.disabled">
+        —
+      </Typography>
+    );
+  }
+
+  // Get colors with fallback for unknown statuses
+  const colors = STATUS_COLORS[status] || FALLBACK_COLORS;
+  
+  // Get label with fallback to raw status value
   const label = CLAIM_STATUS_LABELS[status] || status;
 
   return (
@@ -45,8 +65,13 @@ const ClaimStatusChip = ({ status, size = 'small' }) => {
 };
 
 ClaimStatusChip.propTypes = {
-  status: PropTypes.string.isRequired,
+  status: PropTypes.string,
   size: PropTypes.oneOf(['small', 'medium'])
+};
+
+ClaimStatusChip.defaultProps = {
+  status: null,
+  size: 'small'
 };
 
 export default ClaimStatusChip;

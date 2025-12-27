@@ -1,6 +1,5 @@
-import React, { useState, useMemo } from 'react';
-import useAuth from 'contexts/useAuth';
-import { useEmployersList } from 'hooks/useEmployers';
+import React, { useState } from 'react';
+import useEmployerScope from 'hooks/useEmployerScope';
 import useClaimsReport, { DEFAULT_FILTERS } from 'hooks/useClaimsReport';
 
 // MUI Components
@@ -11,13 +10,20 @@ import {
   IconButton,
   Tooltip,
   Alert,
-  Chip
+  Chip,
+  AlertTitle,
+  List,
+  ListItem,
+  ListItemIcon,
+  ListItemText
 } from '@mui/material';
 
 // MUI Icons
 import RefreshIcon from '@mui/icons-material/Refresh';
 import WarningIcon from '@mui/icons-material/Warning';
 import InfoIcon from '@mui/icons-material/Info';
+import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
+import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 
 // Components
 import MainCard from 'components/MainCard';
@@ -35,24 +41,29 @@ import { ClaimsFilters, ClaimsTable } from 'components/reports/claims';
  * - EMPLOYER_ADMIN / REVIEWER → Own employer only, selector disabled
  * - PROVIDER → No access (blocked by route guard)
  * 
- * Known Limitations:
+ * Known Limitations (documented in UI):
  * - No date range filtering (client-side only)
  * - No backend aggregation
  * - Large datasets paginated client-side
+ * - Filters apply to loaded data only
  */
 const ClaimsReport = () => {
-  const { user } = useAuth();
+  // Use centralized employer scope hook (RBAC enforcement)
+  const [selectedEmployerId, setSelectedEmployerId] = useState(null);
+  const {
+    canSelectEmployer,
+    effectiveEmployerId,
+    employers,
+    isEmployerLocked,
+    userEmployerId
+  } = useEmployerScope(selectedEmployerId);
 
-  // RBAC: Determine role-based access
-  const userRole = user?.role || user?.roles?.[0];
-  const isAdminRole = ['SUPER_ADMIN', 'ADMIN'].includes(userRole);
-  const isEmployerLocked = ['EMPLOYER_ADMIN', 'REVIEWER'].includes(userRole);
-  const canSelectEmployer = isAdminRole;
-
-  // State: Selected employer
-  const [selectedEmployerId, setSelectedEmployerId] = useState(
-    isEmployerLocked ? user?.employerId : null
-  );
+  // Initialize selected employer for locked roles
+  React.useEffect(() => {
+    if (isEmployerLocked && userEmployerId && !selectedEmployerId) {
+      setSelectedEmployerId(userEmployerId);
+    }
+  }, [isEmployerLocked, userEmployerId, selectedEmployerId]);
 
   // State: Filters
   const [filters, setFilters] = useState(DEFAULT_FILTERS);
@@ -60,17 +71,6 @@ const ClaimsReport = () => {
   // State: Pagination
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(25);
-
-  // Effective employer ID for API calls
-  const effectiveEmployerId = isEmployerLocked ? user?.employerId : selectedEmployerId;
-
-  // Fetch employers list (for admin selector)
-  const { data: employersData, loading: employersLoading } = useEmployersList();
-  const employers = useMemo(() => {
-    if (!employersData) return [];
-    const list = employersData.items ?? employersData.content ?? employersData;
-    return Array.isArray(list) ? list : [];
-  }, [employersData]);
 
   // Fetch claims data
   const {
@@ -80,11 +80,15 @@ const ClaimsReport = () => {
     loading,
     error,
     isEmpty,
+    pagination,
     refetch
   } = useClaimsReport({
     employerId: effectiveEmployerId,
     filters
   });
+
+  // Check if we have partial data (large dataset warning)
+  const hasPartialData = pagination.totalElements > totalFetched;
 
   // Handlers
   const handleEmployerChange = (employerId) => {
@@ -150,15 +154,57 @@ const ClaimsReport = () => {
         </Alert>
       )}
 
-      {/* Known Limitations Notice */}
+      {/* Large Dataset Warning */}
+      {hasPartialData && (
+        <Alert
+          severity="warning"
+          icon={<ErrorOutlineIcon />}
+          sx={{ mb: 2 }}
+        >
+          <AlertTitle>تحذير: بيانات جزئية</AlertTitle>
+          <Typography variant="body2">
+            تم تحميل {totalFetched.toLocaleString('ar-SA')} سجل من أصل {pagination.totalElements.toLocaleString('ar-SA')} سجل.
+            الفلاتر تطبق على البيانات المحمّلة فقط. النتائج قد تكون غير شاملة.
+          </Typography>
+        </Alert>
+      )}
+
+      {/* Report Limitations Notice - Enhanced */}
       <Alert
         severity="info"
         icon={<InfoIcon />}
         sx={{ mb: 2 }}
       >
-        <Typography variant="body2">
-          📊 هذا التقرير يعرض البيانات للفترة الكاملة. فلترة التاريخ غير متاحة في هذا الإصدار.
-        </Typography>
+        <AlertTitle>حدود التقرير (الإصدار الحالي)</AlertTitle>
+        <List dense disablePadding sx={{ mt: 0.5 }}>
+          <ListItem disableGutters sx={{ py: 0 }}>
+            <ListItemIcon sx={{ minWidth: 28 }}>
+              <CheckCircleOutlineIcon fontSize="small" color="info" />
+            </ListItemIcon>
+            <ListItemText 
+              primary="لا توجد فلترة بنطاق التاريخ في هذا الإصدار"
+              primaryTypographyProps={{ variant: 'body2' }}
+            />
+          </ListItem>
+          <ListItem disableGutters sx={{ py: 0 }}>
+            <ListItemIcon sx={{ minWidth: 28 }}>
+              <CheckCircleOutlineIcon fontSize="small" color="info" />
+            </ListItemIcon>
+            <ListItemText 
+              primary="التجميع والحسابات تتم على جانب العميل (Client-side)"
+              primaryTypographyProps={{ variant: 'body2' }}
+            />
+          </ListItem>
+          <ListItem disableGutters sx={{ py: 0 }}>
+            <ListItemIcon sx={{ minWidth: 28 }}>
+              <CheckCircleOutlineIcon fontSize="small" color="info" />
+            </ListItemIcon>
+            <ListItemText 
+              primary="الفلاتر تطبق على البيانات المحمّلة فقط"
+              primaryTypographyProps={{ variant: 'body2' }}
+            />
+          </ListItem>
+        </List>
       </Alert>
 
       {/* Filters */}
