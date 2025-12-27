@@ -141,6 +141,7 @@ const AuditLog = Loadable(lazy(() => import('pages/audit')));
 
 const ReportsPage = Loadable(lazy(() => import('pages/reports')));
 const EmployerDashboard = Loadable(lazy(() => import('pages/reports/employer-dashboard')));
+const ClaimsReport = Loadable(lazy(() => import('pages/reports/claims')));
 
 // ==============================|| LAZY LOADING - ERROR PAGES ||============================== //
 
@@ -830,6 +831,14 @@ const MainRoutes = {
           element: (
             <RouteGuard allowedRoles={['ADMIN', 'SUPER_ADMIN', 'EMPLOYER_ADMIN']}>
               <EmployerDashboard />
+            </RouteGuard>
+          )
+        },
+        {
+          path: 'claims',
+          element: (
+            <RouteGuard allowedRoles={['SUPER_ADMIN', 'ADMIN', 'EMPLOYER_ADMIN', 'REVIEWER']}>
+              <ClaimsReport />
             </RouteGuard>
           )
         }

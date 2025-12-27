@@ -44,19 +44,19 @@ export const filterMenuByRoles = (menuItems, userRoles = []) => {
   const roleRules = {
     EMPLOYER: {
       hide: ['employers', 'providers', 'provider-contracts', 'policies', 'audit', 'claims-inbox', 'pre-approvals-inbox', 'settlement-inbox', 'admin-users', 'rbac'],
-      show: ['dashboard', 'members', 'claims', 'visits', 'pre-approvals', 'medical-categories', 'medical-services', 'medical-packages', 'benefit-policies', 'settings', 'reports', 'employer-dashboard']
+      show: ['dashboard', 'members', 'claims', 'visits', 'pre-approvals', 'medical-categories', 'medical-services', 'medical-packages', 'benefit-policies', 'settings', 'reports', 'employer-dashboard', 'claims-report']
     },
     EMPLOYER_ADMIN: {
       hide: ['employers', 'providers', 'provider-contracts', 'policies', 'claims-inbox', 'pre-approvals-inbox', 'settlement-inbox', 'admin-users', 'rbac'],
-      show: ['dashboard', 'members', 'claims', 'visits', 'pre-approvals', 'medical-categories', 'medical-services', 'medical-packages', 'benefit-policies', 'settings', 'reports', 'employer-dashboard', 'audit']
+      show: ['dashboard', 'members', 'claims', 'visits', 'pre-approvals', 'medical-categories', 'medical-services', 'medical-packages', 'benefit-policies', 'settings', 'reports', 'employer-dashboard', 'claims-report', 'audit']
     },
     INSURANCE_COMPANY: {
       hide: ['employers', 'admin-users', 'rbac'],
-      show: ['dashboard', 'members', 'providers', 'claims', 'visits', 'pre-approvals', 'medical-categories', 'medical-services', 'medical-packages', 'benefit-policies', 'provider-contracts', 'audit', 'settings', 'reports', 'employer-dashboard']
+      show: ['dashboard', 'members', 'providers', 'claims', 'visits', 'pre-approvals', 'medical-categories', 'medical-services', 'medical-packages', 'benefit-policies', 'provider-contracts', 'audit', 'settings', 'reports', 'employer-dashboard', 'claims-report']
     },
     REVIEWER: {
       hide: ['employers', 'providers', 'members', 'visits', 'provider-contracts', 'policies', 'settlement-inbox', 'benefit-policies', 'admin-users', 'rbac'],
-      show: ['dashboard', 'claims', 'pre-approvals', 'medical-categories', 'medical-services', 'medical-packages', 'audit', 'settings', 'reports']
+      show: ['dashboard', 'claims', 'pre-approvals', 'medical-categories', 'medical-services', 'medical-packages', 'audit', 'settings', 'reports', 'claims-report']
     },
     FINANCE: {
       hide: ['employers', 'providers', 'members', 'visits', 'provider-contracts', 'policies', 'claims-inbox', 'pre-approvals-inbox', 'benefit-policies', 'admin-users', 'rbac'],
@@ -291,6 +291,12 @@ const menuItem = [
             title: 'لوحة صاحب العمل',
             type: 'item',
             url: '/reports/employer-dashboard'
+          },
+          {
+            id: 'claims-report',
+            title: 'تقرير المطالبات',
+            type: 'item',
+            url: '/reports/claims'
           }
         ]
       },
