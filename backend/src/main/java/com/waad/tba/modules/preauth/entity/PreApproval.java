@@ -189,9 +189,9 @@ public class PreApproval {
     @JoinColumn(name = "created_by_user_id")
     private User createdBy;
 
-    @NotNull(message = "Company ID is required")
-    @Column(nullable = false)
-    private Long companyId;
+    // REMOVED: companyId field (Architecture Refactor 2025-12-27)
+    // Employer context is now derived via: preApproval.getMember().getEmployerOrganization()
+    // See: COMPANY-EMPLOYER-REFACTOR-SUMMARY.md
 
     @Builder.Default
     @Column(nullable = false)

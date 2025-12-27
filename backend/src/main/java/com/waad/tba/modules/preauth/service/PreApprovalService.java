@@ -147,6 +147,8 @@ public class PreApprovalService {
         // Generate approval number
         String approvalNumber = generateApprovalNumber();
 
+        // Architecture Note: Employer context is derived via member.getEmployerOrganization()
+        // No companyId field - PreApproval is purely employer-centric
         PreApproval preApproval = PreApproval.builder()
                 .approvalNumber(approvalNumber)
                 .type(request.getType())
@@ -162,7 +164,6 @@ public class PreApprovalService {
                 .requestDate(LocalDate.now())
                 .expectedServiceDate(request.getExpectedServiceDate())
                 .requestReason(request.getRequestReason())
-                .companyId(null) // Employer no longer has company relation
                 .status(PreApproval.ApprovalStatus.PENDING)
                 .build();
 

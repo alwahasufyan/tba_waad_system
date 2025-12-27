@@ -68,10 +68,13 @@ public class User {
     private Long employerId;
 
     /**
-     * Company ID - for INSURANCE_ADMIN users
-     * Links the user to a specific insurance/reviewer company.
-     * Used to restrict access to company-specific data.
+     * @deprecated Legacy field kept for backwards compatibility.
+     * NOT used for operational filtering or authorization.
+     * All operational data access is employer-centric via employerId.
+     * This field may be used for INSURANCE_ADMIN display purposes only.
+     * See: COMPANY-EMPLOYER-REFACTOR-SUMMARY.md (2025-12-27)
      */
+    @Deprecated
     @Column(name = "company_id")
     private Long companyId;
 

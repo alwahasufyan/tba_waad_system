@@ -81,15 +81,10 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
            "LOWER(m.cardNumber) LIKE LOWER(CONCAT('%', :query, '%'))")
     List<Member> search(@Param("query") String query);
     
-    @Query("SELECT m FROM Member m WHERE m.insuranceCompany.id = :companyId")
-    Page<Member> findByInsuranceCompanyIdPaged(@Param("companyId") Long companyId, Pageable pageable);
-    
-    @Query("SELECT m FROM Member m WHERE m.insuranceCompany.id = :companyId AND (" +
-           "LOWER(m.fullNameEnglish) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
-           "LOWER(m.fullNameArabic) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
-           "LOWER(m.civilId) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
-           "LOWER(m.cardNumber) LIKE LOWER(CONCAT('%', :search, '%')))")
-    Page<Member> searchByInsuranceCompany(@Param("companyId") Long companyId, @Param("search") String search, Pageable pageable);
+    // REMOVED: findByInsuranceCompanyIdPaged and searchByInsuranceCompany (Architecture Refactor 2025-12-27)
+    // Insurance company filtering is not part of operational data access.
+    // Use employer-based queries via employerOrganization instead.
+    // See: COMPANY-EMPLOYER-REFACTOR-SUMMARY.md
 
     // ═══════════════════════════════════════════════════════════════════════════
     // ORGANIZATION-BASED QUERIES (Canonical Model)

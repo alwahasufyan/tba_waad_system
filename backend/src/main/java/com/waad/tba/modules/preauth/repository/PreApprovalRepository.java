@@ -23,9 +23,9 @@ public interface PreApprovalRepository extends JpaRepository<PreApproval, Long> 
     
     List<PreApproval> findByProviderId(Long providerId);
     
-    List<PreApproval> findByCompanyId(Long companyId);
-    
-    Page<PreApproval> findByCompanyId(Long companyId, Pageable pageable);
+    // REMOVED: findByCompanyId methods (Architecture Refactor 2025-12-27)
+    // Use findByMemberEmployerOrganizationId() instead if employer filtering is needed
+    // Employer context: preApproval.getMember().getEmployerOrganization()
     
     List<PreApproval> findByStatus(PreApproval.ApprovalStatus status);
     
@@ -43,11 +43,18 @@ public interface PreApprovalRepository extends JpaRepository<PreApproval, Long> 
         @Param("date") LocalDate date
     );
     
+    // REMOVED: findByCompanyAndStatuses (Architecture Refactor 2025-12-27)
+    // Use employer-based filtering via member.employerOrganization instead
+    
+    /**
+     * Find pre-approvals by employer organization and statuses.
+     * Employer context is derived via Member → Organization(type=EMPLOYER)
+     */
     @Query("SELECT pa FROM PreApproval pa " +
-           "WHERE pa.companyId = :companyId " +
+           "WHERE pa.member.employerOrganization.id = :employerOrgId " +
            "AND pa.status IN :statuses")
-    Page<PreApproval> findByCompanyAndStatuses(
-        @Param("companyId") Long companyId,
+    Page<PreApproval> findByEmployerOrganizationAndStatuses(
+        @Param("employerOrgId") Long employerOrgId,
         @Param("statuses") List<PreApproval.ApprovalStatus> statuses,
         Pageable pageable
     );

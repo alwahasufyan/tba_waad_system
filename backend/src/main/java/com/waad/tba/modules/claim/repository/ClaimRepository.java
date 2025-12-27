@@ -16,9 +16,6 @@ public interface ClaimRepository extends JpaRepository<Claim, Long> {
 
     @Query("SELECT c FROM Claim c " +
            "LEFT JOIN FETCH c.member m " +
-           "LEFT JOIN FETCH c.insuranceCompany ic " +
-           "LEFT JOIN FETCH c.insurancePolicy ip " +
-           "LEFT JOIN FETCH c.benefitPackage bp " +
            "LEFT JOIN FETCH c.preApproval pa " +
            "WHERE c.active = true " +
            "AND (LOWER(c.providerName) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
@@ -33,9 +30,6 @@ public interface ClaimRepository extends JpaRepository<Claim, Long> {
     @Query("SELECT c FROM Claim c " +
            "LEFT JOIN FETCH c.member m " +
            "LEFT JOIN FETCH m.employer e " +
-           "LEFT JOIN FETCH c.insuranceCompany ic " +
-           "LEFT JOIN FETCH c.insurancePolicy ip " +
-           "LEFT JOIN FETCH c.benefitPackage bp " +
            "LEFT JOIN FETCH c.preApproval pa " +
            "WHERE c.active = true " +
            "AND m.employer.id = :employerId " +
@@ -67,18 +61,12 @@ public interface ClaimRepository extends JpaRepository<Claim, Long> {
 
     @Query("SELECT c FROM Claim c " +
            "LEFT JOIN FETCH c.member " +
-           "LEFT JOIN FETCH c.insuranceCompany " +
-           "LEFT JOIN FETCH c.insurancePolicy " +
-           "LEFT JOIN FETCH c.benefitPackage " +
            "LEFT JOIN FETCH c.preApproval " +
            "WHERE c.member.id = :memberId AND c.active = true")
     List<Claim> findByMemberId(@Param("memberId") Long memberId);
 
     @Query("SELECT c FROM Claim c " +
            "LEFT JOIN FETCH c.member " +
-           "LEFT JOIN FETCH c.insuranceCompany " +
-           "LEFT JOIN FETCH c.insurancePolicy " +
-           "LEFT JOIN FETCH c.benefitPackage " +
            "LEFT JOIN FETCH c.preApproval " +
            "WHERE c.preApproval.id = :preApprovalId AND c.active = true")
     List<Claim> findByPreApprovalId(@Param("preApprovalId") Long preApprovalId);
@@ -113,10 +101,10 @@ public interface ClaimRepository extends JpaRepository<Claim, Long> {
 
     /**
      * Find claims by status list with pagination (for inbox views).
+     * Architecture Note: Insurance company joins removed - not used for filtering.
      */
     @Query("SELECT c FROM Claim c " +
            "LEFT JOIN FETCH c.member m " +
-           "LEFT JOIN FETCH c.insuranceCompany " +
            "WHERE c.active = true " +
            "AND c.status IN :statuses")
     Page<Claim> findByStatusIn(@Param("statuses") List<com.waad.tba.modules.claim.entity.ClaimStatus> statuses, 
@@ -127,7 +115,6 @@ public interface ClaimRepository extends JpaRepository<Claim, Long> {
      */
     @Query("SELECT c FROM Claim c " +
            "LEFT JOIN FETCH c.member m " +
-           "LEFT JOIN FETCH c.insuranceCompany " +
            "WHERE c.active = true " +
            "AND c.status = :status")
     Page<Claim> findByStatus(@Param("status") com.waad.tba.modules.claim.entity.ClaimStatus status, 
